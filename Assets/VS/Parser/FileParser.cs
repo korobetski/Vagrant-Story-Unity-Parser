@@ -9,6 +9,7 @@ public class FileParser
     public FileStream fileStream;
     public BinaryReader buffer;
     public bool UseDebug = false;
+    public bool Parsed = false;
     public string FilePath { get => _filePath; set => _filePath = value; }
     public string FileName { get => _fileName; set => _fileName = value; }
     public string Ext { get => _ext; }
