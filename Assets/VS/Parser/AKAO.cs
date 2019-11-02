@@ -237,6 +237,7 @@ namespace VS.Parser
                     {
                         AKAOArticulation arti = new AKAOArticulation(buffer);
                         articulations[i] = arti;
+                        //Debug.Log("ID : " + i + " unityKey : " + arti.unityKey + " fineTune : " + arti.fineTune + " adr1 : " + arti.adr1 + " adr2 : " + arti.adr2);
                     }
 
                     // Samples section here
@@ -573,6 +574,7 @@ namespace VS.Parser
             uint octave = 0;
 
             long repeatBegin = 0;
+            int repeatNumber = 0;
             List<long> repeaterEndPositions = new List<long>();
 
 
@@ -656,7 +658,7 @@ namespace VS.Parser
 
                         uint duration = delta_time_table[k];
                         delta += (ushort)duration;
-                        curTrack.AddEvent(new EvRest(delta));
+                        curTrack.AddEvent(new EvTieTime(delta));
                     }
                 }
                 else if ((STATUS_BYTE >= 0xF0) && (STATUS_BYTE <= 0xFB)) // Alternate Note On ?
@@ -690,7 +692,7 @@ namespace VS.Parser
                         case 0xA1:// Program Change
                             //articulations[articulationId]
                             timeDebug += delta;
-                            curTrack.AddEvent(new EvProgramChange(channel, buffer.ReadByte(), delta));
+                            curTrack.AddEvent(new EvProgramChange(channel, (byte)(buffer.ReadByte() + instruments.Length), delta));
                             delta = 0;
                             break;
                         case 0xA2: // Unknown
@@ -850,22 +852,18 @@ namespace VS.Parser
                             if (!repeaterEndPositions.Contains(buffer.BaseStream.Position))
                             {
                                 repeaterEndPositions.Add(buffer.BaseStream.Position);
-                                if (repeatBegin != 0)
-                                {
-                                    buffer.BaseStream.Position = repeatBegin;
-                                }
+                                repeatNumber = loopId;
                             }
+
+                            if (repeatNumber >= 2 && repeatBegin != 0)
+                            {
+                                buffer.BaseStream.Position = repeatBegin;
+                                repeatNumber--;
+                            }
+
                             curTrack.AddEvent(new EvRepeatEnd(loopId));
                             break;
                         case 0xCA: // Repeat End
-                            if (!repeaterEndPositions.Contains(buffer.BaseStream.Position))
-                            {
-                                repeaterEndPositions.Add(buffer.BaseStream.Position);
-                                if (repeatBegin != 0)
-                                {
-                                    buffer.BaseStream.Position = repeatBegin;
-                                }
-                            }
                             curTrack.AddEvent(new EvRepeatEnd());
                             break;
                         case 0xCB: // Unknown
@@ -1075,6 +1073,7 @@ namespace VS.Parser
                                     curTrack.AddEvent(new EvUnknown(STATUS_BYTE, Meta));
                                     break;
                                 case 0x14: // Program Change
+                                    //curTrack.AddEvent(new EvProgramChange(channel, (byte)(buffer.ReadByte() + instruments.Length)));
                                     curTrack.AddEvent(new EvProgramChange(channel, buffer.ReadByte()));
                                     delta = 0;
                                     break;
@@ -1131,7 +1130,7 @@ namespace VS.Parser
                 {
                     events = new List<AKAOEvent>();
                 }
-                Debug.Log(timeDebug+"     AddEvent : " +ev);
+                //Debug.Log(timeDebug+"     AddEvent : " +ev);
                 events.Add(ev);
             }
             public void AddTime(uint t)
@@ -1249,6 +1248,18 @@ namespace VS.Parser
             private uint denom;
             private byte clocks = 0x24;
             private byte quart = 0x08;
+            /*
+             * uint32_t TimeSigEvent::WriteEvent(vector<uint8_t> &buf, uint32_t time) {
+  //denom is expressed in power of 2... so if we have 6/8 time.  it's 6 = 2^x  ==  ln6 / ln2
+  uint8_t data[4] = {
+      numer,
+      (uint8_t) (log((double) denom) / 0.69314718055994530941723212145818),
+      ticksPerQuarter,
+      8
+  };
+  return WriteMetaEvent(buf, time, 0x58, data, 4);
+}
+*/
 
             public EvTimeSign(uint num, uint denom)
             {
@@ -1282,11 +1293,13 @@ namespace VS.Parser
             public EvVolume(uint channel, uint volume, ushort delta = 0x00)
             {
                 this.volume = volume;
+                double val = Math.Round(Math.Sqrt((volume / 127.0f)) * 127.0f);
+
 
                 deltaTime = delta;
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x07;
-                midiArg2 = (byte)volume;
+                midiArg2 = (byte)val;
             }
         }
         private class EvPan : AKAOEvent
@@ -1322,7 +1335,8 @@ namespace VS.Parser
             {
                 deltaTime = delta;
                 midiStatusByte = (byte)(0xC0 + channel);
-                midiArg1 = articulationId;
+                //Debug.Log("EvProgramChange : art -> "+ articulationId);
+                midiArg1 = (byte)articulationId;
             }
         }
         private class EvReverbOn : AKAOEvent
@@ -1426,7 +1440,7 @@ namespace VS.Parser
         {
             public EvRepeatStart()
             {
-                Debug.Log("RS ------------------------------------------------------------------------------------------------------------");
+                //Debug.Log("RS ------------------------------------------------------------------------------------------------------------");
             }
         }
         private class EvRepeatEnd : AKAOEvent
@@ -1435,13 +1449,13 @@ namespace VS.Parser
 
             public EvRepeatEnd()
             {
-                Debug.Log("RE --------------------------------------------------------------------------------");
+                //Debug.Log("RE --------------------------------------------------------------------------------");
             }
 
             public EvRepeatEnd(int loopId)
             {
                 this.loopId = loopId;
-                Debug.Log("RE" + loopId + " --------------------------------------------------------------------------------");
+                //Debug.Log("RE" + loopId + " --------------------------------------------------------------------------------");
             }
         }
         private class EvEndTrack : AKAOEvent
