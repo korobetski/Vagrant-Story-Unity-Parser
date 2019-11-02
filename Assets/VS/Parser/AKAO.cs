@@ -573,8 +573,10 @@ namespace VS.Parser
             uint octave = 0;
 
             long repeatBegin = 0;
+            List<long> repeaterEndPositions = new List<long>();
 
 
+            Debug.Log("## TRACK : " + cTrackId+"   -----------------------------------------------------------------------");
             while (buffer.BaseStream.Position < end)
             {
                 AKAOTrack curTrack;
@@ -607,7 +609,7 @@ namespace VS.Parser
                 byte STATUS_BYTE = buffer.ReadByte();
                 int i, k;
 
-                //Debug.Log("STATUS_BYTE : "+ STATUS_BYTE);
+                //Debug.Log(timeDebug+"    STATUS_BYTE : " + STATUS_BYTE);
                 if (STATUS_BYTE <= 0x9F)
                 {
                     i = STATUS_BYTE / 11;
@@ -654,7 +656,7 @@ namespace VS.Parser
 
                         uint duration = delta_time_table[k];
                         delta += (ushort)duration;
-                        curTrack.AddEvent(new EvTieTime(delta));
+                        curTrack.AddEvent(new EvRest(delta));
                     }
                 }
                 else if ((STATUS_BYTE >= 0xF0) && (STATUS_BYTE <= 0xFB)) // Alternate Note On ?
@@ -686,10 +688,9 @@ namespace VS.Parser
                             delta = 0;
                             break;
                         case 0xA1:// Program Change
-                            uint articulationId = buffer.ReadByte();
                             //articulations[articulationId]
                             timeDebug += delta;
-                            curTrack.AddEvent(new EvProgramChange(channel, articulationId, delta));
+                            curTrack.AddEvent(new EvProgramChange(channel, buffer.ReadByte(), delta));
                             delta = 0;
                             break;
                         case 0xA2: // Unknown
@@ -846,18 +847,24 @@ namespace VS.Parser
                             break;
                         case 0xC9: // Repeat End
                             int loopId = buffer.ReadByte();
-                            if (repeatBegin > 0)
+                            if (!repeaterEndPositions.Contains(buffer.BaseStream.Position))
                             {
-                                buffer.BaseStream.Position = repeatBegin;
-                                repeatBegin = 0;
+                                repeaterEndPositions.Add(buffer.BaseStream.Position);
+                                if (repeatBegin != 0)
+                                {
+                                    buffer.BaseStream.Position = repeatBegin;
+                                }
                             }
                             curTrack.AddEvent(new EvRepeatEnd(loopId));
                             break;
                         case 0xCA: // Repeat End
-                            if (repeatBegin > 0)
+                            if (!repeaterEndPositions.Contains(buffer.BaseStream.Position))
                             {
-                                buffer.BaseStream.Position = repeatBegin;
-                                repeatBegin = 0;
+                                repeaterEndPositions.Add(buffer.BaseStream.Position);
+                                if (repeatBegin != 0)
+                                {
+                                    buffer.BaseStream.Position = repeatBegin;
+                                }
                             }
                             curTrack.AddEvent(new EvRepeatEnd());
                             break;
@@ -987,8 +994,8 @@ namespace VS.Parser
                             break;
                         case 0xFC: // Tie
                             value = buffer.ReadByte();
-                            //curTrack.AddEvent(new EvTieTime(value));
                             delta += (ushort)value;
+                            curTrack.AddEvent(new EvTieTime(value));
                             break;
                         case 0xFD: // Rest
                             duration = buffer.ReadByte();
@@ -996,10 +1003,11 @@ namespace VS.Parser
                             {
                                 timeDebug += delta;
                                 curTrack.AddEvent(new EvNoteOff(channel, prevKey, delta));
+                                delta = 0;
                                 playingNote = false;
                             }
                             delta += (ushort) duration;
-                            //curTrack.AddEvent(new EvRest(duration));
+                            curTrack.AddEvent(new EvRest(duration));
                             break;
                         case 0xFE: // Meta Event
                             byte Meta = buffer.ReadByte();
@@ -1039,6 +1047,7 @@ namespace VS.Parser
                                     }
                                     timeDebug = 0;
                                     delta = 0;
+                                    Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
                                     break;
                                 case 0x07: // End Track
                                     b = buffer.ReadBytes(2);
@@ -1050,6 +1059,7 @@ namespace VS.Parser
                                     }
                                     timeDebug = 0;
                                     delta = 0;
+                                    Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
                                     break;
                                 case 0x09: // Repeat Break
                                     b = buffer.ReadBytes(3);
@@ -1065,8 +1075,7 @@ namespace VS.Parser
                                     curTrack.AddEvent(new EvUnknown(STATUS_BYTE, Meta));
                                     break;
                                 case 0x14: // Program Change
-                                    uint program = buffer.ReadByte();
-                                    curTrack.AddEvent(new EvProgramChange(channel, program));
+                                    curTrack.AddEvent(new EvProgramChange(channel, buffer.ReadByte()));
                                     delta = 0;
                                     break;
                                 case 0x15: // Time Signature
@@ -1079,8 +1088,7 @@ namespace VS.Parser
                                     curTrack.AddEvent(new EvMaker(b[0], b[1]));
                                     break;
                                 case 0x1C: // Unknown
-                                    value = buffer.ReadByte();
-                                    curTrack.AddEvent(new EvUnknown(STATUS_BYTE, (byte)value));
+                                    curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
                                     break;
                                 default:
                                     curTrack.AddEvent(new EvUnknown(STATUS_BYTE, Meta));
@@ -1123,7 +1131,7 @@ namespace VS.Parser
                 {
                     events = new List<AKAOEvent>();
                 }
-                Debug.Log("     AddEvent : " +ev);
+                Debug.Log(timeDebug+"     AddEvent : " +ev);
                 events.Add(ev);
             }
             public void AddTime(uint t)
@@ -1310,14 +1318,11 @@ namespace VS.Parser
             49-56       Ensemble                113-120     Percussive
             57-64       Brass                   121-128     Sound Effects
             */
-            private uint articulationId;
-            public EvProgramChange(uint channel, uint articulationId, ushort delta = 0x00)
+            public EvProgramChange(uint channel, byte articulationId, ushort delta = 0x00)
             {
-                this.articulationId = articulationId;
-
                 deltaTime = delta;
                 midiStatusByte = (byte)(0xC0 + channel);
-                midiArg1 = (byte)articulationId;
+                midiArg1 = articulationId;
             }
         }
         private class EvReverbOn : AKAOEvent
@@ -1389,7 +1394,7 @@ namespace VS.Parser
 
             public EvNoteOn(uint channel, uint key, uint velocity, ushort t = 0x00)
             {
-                Debug.Log("EvNoteOn : " + channel + " k : " + key +" vel : "+ velocity + "  t : " + t);
+                //Debug.Log("EvNoteOn : " + channel + " k : " + key +" vel : "+ velocity + "  t : " + t);
                 this.key = key;
                 this.velocity = velocity;
 
@@ -1421,7 +1426,7 @@ namespace VS.Parser
         {
             public EvRepeatStart()
             {
-
+                Debug.Log("RS ------------------------------------------------------------------------------------------------------------");
             }
         }
         private class EvRepeatEnd : AKAOEvent
@@ -1430,18 +1435,20 @@ namespace VS.Parser
 
             public EvRepeatEnd()
             {
-
+                Debug.Log("RE --------------------------------------------------------------------------------");
             }
 
             public EvRepeatEnd(int loopId)
             {
                 this.loopId = loopId;
+                Debug.Log("RE" + loopId + " --------------------------------------------------------------------------------");
             }
         }
         private class EvEndTrack : AKAOEvent
         {
             public EvEndTrack()
             {
+                //Debug.Log("EndTrk --------------------------------------------------------------------------------");
 
             }
         }
@@ -1768,6 +1775,16 @@ namespace VS.Parser
 
         private class EvOctaveDown : AKAOEvent
         {
+        }
+
+        private class EvRest : AKAOEvent
+        {
+            private uint duration;
+
+            public EvRest(uint duration)
+            {
+                this.duration = duration;
+            }
         }
     }
 
