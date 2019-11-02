@@ -15,25 +15,22 @@ namespace VS.Parser
 {
     public class SHP : FileParser
     {
-        public uint numBones;
-        public uint numGroups;
-        public uint numTriangles;
-        public uint numQuads;
-        public uint numPolys;
-        public uint numFaces;
-
-        public List<VSBone> bones;
-        public List<VSGroup> groups;
-        public List<VSVertex> vertices;
-        public List<VSFace> faces;
-
-        public bool UseDebug = false;
-
         public Mesh mesh;
         public Texture2D texture;
         public Material material;
-        private TIM tim;
         public GameObject shapeGo;
+
+        private uint numBones;
+        private uint numGroups;
+        private uint numTriangles;
+        private uint numQuads;
+        private uint numPolys;
+        private uint numFaces;
+        private List<VSBone> bones;
+        private List<VSGroup> groups;
+        private List<VSVertex> vertices;
+        private List<VSFace> faces;
+        private TIM tim;
 
         public SHP()
         {

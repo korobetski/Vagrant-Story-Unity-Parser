@@ -12,12 +12,11 @@ namespace VS.Parser
 {
     public class SEQ : FileParser
     {
-        uint numBones;
-        long numAnimations;
-
-        public bool UseDebug = false;
         public VSAnim[] animations;
         public AnimationClip[] clips;
+
+        private uint numBones;
+        private long numAnimations;
 
         public SEQ()
         {

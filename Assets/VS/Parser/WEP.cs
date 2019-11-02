@@ -12,8 +12,6 @@ namespace VS.Parser
 {
     public class WEP : FileParser
     {
-        public bool UseDebug = false;
-        public bool Parsed = false;
         public bool GOBuilded = false;
         public bool PrefabBuilded = false;
         public bool DrawPNG = false;

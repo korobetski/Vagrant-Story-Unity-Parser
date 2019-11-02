@@ -19,7 +19,6 @@ namespace VS.Parser
         public string ZoneID = "";
         public string UnitID = "";
 
-        public bool Parsed = false;
         public bool GOBuilded = false;
         public bool PrefabBuilded = false;
         public bool DrawPNG = false;

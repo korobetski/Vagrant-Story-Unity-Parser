@@ -404,6 +404,8 @@ namespace VS.Parser
             {
                 buffer.BaseStream.Position = ptrScriptSection;
             }
+            // See Opcode.cs
+
 
             // Door section
             if (UseDebug)

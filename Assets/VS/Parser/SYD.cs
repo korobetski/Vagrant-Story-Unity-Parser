@@ -12,8 +12,6 @@ namespace VS.Parser
 {
     public class SYD : FileParser
     {
-        public bool UseDebug = false;
-        public bool Parsed = false;
         public void Parse(string filePath)
         {
             PreParse(filePath);

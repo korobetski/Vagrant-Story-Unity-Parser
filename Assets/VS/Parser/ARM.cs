@@ -12,7 +12,6 @@ namespace VS.Parser
 {
     public class ARM : FileParser
     {
-        public bool Parsed = false;
         public bool GOBuilded = false;
         public bool PrefabBuilded = false;
         public GameObject ARMGO;

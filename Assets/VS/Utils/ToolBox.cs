@@ -1,12 +1,28 @@
 ﻿using System;
 using System.IO;
 using UnityEngine;
-
+using System.Collections;
 
 namespace VS.Utils
 {
     public class ToolBox
     {
+        public static uint GetNumPositiveBits(int bnumt)
+        {
+            uint inc = 0;
+            BitArray b = new BitArray(new int[] { bnumt });
+            if (bnumt != 0)
+            {
+                for (var j = 0; j < b.Length; j++)
+                {
+                    if (b.Get(j))
+                    {
+                        inc++;
+                    }
+                }
+            }
+            return inc;
+        }
 
         public static string GetGameObjectPath(GameObject obj, string baseName)
         {
