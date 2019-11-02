@@ -542,6 +542,7 @@ namespace VS.Parser
                 midiByte.AddRange(new byte[] { 0x00, 0xFF, 0x2F, 0x00 }); // End Track
             }
 
+            ToolBox.DirExNorCreate("Assets/Resources/Sounds/");
             using (FileStream fs = File.Create("Assets/Resources/Sounds/" + name + ".mid"))
             {
                 for (int i = 0; i < midiByte.Count; i++)
@@ -551,6 +552,7 @@ namespace VS.Parser
                 fs.Close();
             }
         }
+
 
         private void SetTracks()
         {
@@ -568,6 +570,7 @@ namespace VS.Parser
             uint channel = 0;
             uint octave = 0;
 
+
             while (buffer.BaseStream.Position < end)
             {
                 AKAOTrack curTrack;
@@ -584,6 +587,7 @@ namespace VS.Parser
                 byte STATUS_BYTE = buffer.ReadByte();
                 int i, k;
 
+                //Debug.Log("STATUS_BYTE : "+ STATUS_BYTE);
                 if (STATUS_BYTE <= 0x9F)
                 {
                     i = STATUS_BYTE / 11;
@@ -601,6 +605,7 @@ namespace VS.Parser
                             delta = 0;
                             playingNote = false;
                         }
+
                         uint relativeKey = (uint)i;
                         uint baseKey = octave * 12;
                         uint key = baseKey + relativeKey;
@@ -612,7 +617,8 @@ namespace VS.Parser
                     else if (STATUS_BYTE < 0x8F) // Tie
                     {
                         uint duration = delta_time_table[k];
-                        delta = (ushort)duration;
+                        delta += (ushort)duration;
+                        curTrack.AddEvent(new EvTieTime(duration));
                     }
                     else // Rest
                     {
@@ -622,8 +628,10 @@ namespace VS.Parser
                             delta = 0;
                             playingNote = false;
                         }
+
                         uint duration = delta_time_table[k];
-                        delta = (ushort)duration;
+                        delta += (ushort)duration;
+                        curTrack.AddEvent(new EvTieTime(delta));
                     }
                 }
                 else if ((STATUS_BYTE >= 0xF0) && (STATUS_BYTE <= 0xFB)) // Alternate Note On ?
@@ -935,7 +943,7 @@ namespace VS.Parser
                         case 0xFC: // Tie
                             value = buffer.ReadByte();
                             //curTrack.AddEvent(new EvTieTime(value));
-                            delta = (ushort)value;
+                            delta += (ushort)value;
                             break;
                         case 0xFD: // Rest
                             duration = buffer.ReadByte();
@@ -982,6 +990,7 @@ namespace VS.Parser
                                     {
                                         curTrack = tracks[cTrackId];
                                     }
+                                    delta = 0;
                                     break;
                                 case 0x07: // End Track
                                     b = buffer.ReadBytes(2);
@@ -991,6 +1000,7 @@ namespace VS.Parser
                                     {
                                         curTrack = tracks[cTrackId];
                                     }
+                                    delta = 0;
                                     break;
                                 case 0x09: // Repeat Break
                                     b = buffer.ReadBytes(3);
@@ -1064,7 +1074,7 @@ namespace VS.Parser
                 {
                     events = new List<AKAOEvent>();
                 }
-                //Debug.Log("AddEvent : "+ev);
+                Debug.Log("AddEvent : "+ev);
                 events.Add(ev);
             }
             public void AddTime(uint t)
@@ -1081,7 +1091,7 @@ namespace VS.Parser
 
         private class AKAOEvent
         {
-            internal byte deltaTime = 0x00;
+            internal ushort deltaTime = 0x00;
             internal byte midiStatusByte;
             internal byte? midiArg1;
             internal byte? midiArg2;
@@ -1212,11 +1222,11 @@ namespace VS.Parser
         {
             private uint volume;
 
-            public EvVolume(uint channel, uint volume, uint delta = 0x00)
+            public EvVolume(uint channel, uint volume, ushort delta = 0x00)
             {
                 this.volume = volume;
 
-                deltaTime = (byte)delta;
+                deltaTime = delta;
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x07;
                 midiArg2 = (byte)volume;
@@ -1226,11 +1236,11 @@ namespace VS.Parser
         {
             private int pan;
 
-            public EvPan(uint channel, int pan, uint delta = 0x00)
+            public EvPan(uint channel, int pan, ushort delta = 0x00)
             {
                 this.pan = pan;
 
-                deltaTime = (byte)delta;
+                deltaTime = delta;
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x0A;
                 midiArg2 = (byte)pan;
@@ -1252,11 +1262,11 @@ namespace VS.Parser
             57-64       Brass                   121-128     Sound Effects
             */
             private uint articulationId;
-            public EvProgramChange(uint channel, uint articulationId, uint delta = 0x00)
+            public EvProgramChange(uint channel, uint articulationId, ushort delta = 0x00)
             {
                 this.articulationId = articulationId;
 
-                deltaTime = (byte)delta;
+                deltaTime = delta;
                 midiStatusByte = (byte)(0xC0 + channel);
                 midiArg1 = (byte)articulationId;
             }
@@ -1284,12 +1294,12 @@ namespace VS.Parser
         {
             private long tempo;
 
-            public EvTempo(byte val1, byte val2, uint t)
+            public EvTempo(byte val1, byte val2, ushort t)
             {
                 tempo = (long)(((val2 << 8) + val1) / 218.4555555555555555555555555);
                 uint microSecs = (UInt32)Math.Round((double)60000000 / tempo);
 
-                deltaTime = (byte)t;
+                deltaTime = t;
                 midiStatusByte = 0xFF;
                 midiArg1 = (byte)0x51;
                 midiArg2 = (byte)0x03;
@@ -1301,11 +1311,11 @@ namespace VS.Parser
         {
             private uint expression;
 
-            public EvExpr(uint channel, uint expression, uint delta = 0x00)
+            public EvExpr(uint channel, uint expression, ushort delta = 0x00)
             {
                 this.expression = expression;
 
-                deltaTime = (byte)delta;
+                deltaTime = delta;
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x0B;
                 midiArg2 = (byte)expression;
@@ -1321,12 +1331,13 @@ namespace VS.Parser
             */
             private uint velocity;
 
-            public EvNoteOn(uint channel, uint key, uint velocity, uint t = 0x00)
+            public EvNoteOn(uint channel, uint key, uint velocity, ushort t = 0x00)
             {
+                Debug.Log("EvNoteOn : " + channel + " k : " + key +" vel : "+ velocity + "  t : " + t);
                 this.key = key;
                 this.velocity = velocity;
 
-                deltaTime = (byte)t;
+                deltaTime = t;
                 midiStatusByte = (byte)(0x90 + channel);
                 midiArg1 = (byte)key;
                 midiArg2 = (byte)velocity;
@@ -1337,11 +1348,12 @@ namespace VS.Parser
             //"8nH + 2 Bytes"; // 1000	MIDI channel [0 - 15]	Key Number [0 - 127]	Velocity [0 - 127]
             private uint key;
 
-            public EvNoteOff(uint channel, uint key, uint t)
+            public EvNoteOff(uint channel, uint key, ushort t)
             {
+                Debug.Log("EvNoteOff : "+channel+" k : "+key+"  t : "+t);
                 this.key = key;
 
-                deltaTime = (byte)t;
+                deltaTime = t;
                 midiStatusByte = (byte)(0x80 + channel);
                 midiArg1 = (byte)key;
                 midiArg2 = 0x40; // Standard velocity
@@ -1654,6 +1666,7 @@ namespace VS.Parser
 
             public EvTieTime(uint value)
             {
+                //Debug.Log("EvTieTime : "+value);
                 this.value = value;
             }
         }

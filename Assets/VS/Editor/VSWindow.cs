@@ -23,6 +23,10 @@ public class VSWindow : EditorWindow
         if (conf == null)
         {
             conf = Memory.LoadConfig();
+            if (conf == null)
+            {
+                Memory.SaveConfig(new VSPConfig());
+            }
             if (conf.VSPath != null)
             {
                 VSPath = conf.VSPath;
@@ -33,7 +37,6 @@ public class VSWindow : EditorWindow
                 }
             }
         }
-
 
         GUILayout.Label("Vagrant Story Path", EditorStyles.boldLabel);
         GUILayoutOption[] options = { GUILayout.Width(300), GUILayout.MaxWidth(400) };
@@ -304,7 +307,7 @@ public class VSWindow : EditorWindow
 
             string[] files = Directory.GetFiles(VSPath + "MUSIC/", "*.DAT");
             float fileToParse = files.Length;
-            
+            /*
             float fileParsed = 0;
             foreach (string file in files)
             {
@@ -320,16 +323,16 @@ public class VSWindow : EditorWindow
                 }
                 fileParsed++;
             }
-
-            /*
+            */
+            
             AKAO parser = new AKAO();
             //parser.UseDebug = true;
-            parser.Parse(VSPath + "MUSIC/MUSIC001.DAT", AKAO.MUSIC);
+            parser.Parse(VSPath + "MUSIC/MUSIC000.DAT", AKAO.MUSIC);
             if (parser.FileSize > 4)
             {
                 parser.composer.OutputMidiFile();
             }
-            */
+            
             EditorUtility.ClearProgressBar();
         }
     }
