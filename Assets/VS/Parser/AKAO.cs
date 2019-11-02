@@ -213,6 +213,7 @@ namespace VS.Parser
                 case AKAOType.SOUND:
                     // Samples Collection
                     // header datas
+                    // https://www.midi.org/specifications/category/dls-specifications
                     header = buffer.ReadBytes(4);// AKAO
                     ushort sampleId = buffer.ReadUInt16();
                     buffer.ReadBytes(10); // padding
@@ -1045,7 +1046,7 @@ namespace VS.Parser
                                     }
                                     timeDebug = 0;
                                     delta = 0;
-                                    Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
+                                    //Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
                                     break;
                                 case 0x07: // End Track
                                     b = buffer.ReadBytes(2);
@@ -1057,7 +1058,7 @@ namespace VS.Parser
                                     }
                                     timeDebug = 0;
                                     delta = 0;
-                                    Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
+                                    //Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
                                     break;
                                 case 0x09: // Repeat Break
                                     b = buffer.ReadBytes(3);
@@ -1270,7 +1271,7 @@ namespace VS.Parser
                 midiStatusByte = 0xFF;
                 midiArg1 = 0x58;
                 midiArg2 = 0x04;
-                tail = new byte[] { (byte)num, (byte)denom, clocks, quart };
+                tail = new byte[] { (byte)num, (byte)(denom / 0.69314718055994530941723212145818), clocks, quart };
 
             }
         }
