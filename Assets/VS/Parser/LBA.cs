@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using VS.Core;
 
 namespace VS.Parser
 {
@@ -102,7 +101,8 @@ namespace VS.Parser
             string slt = null;
             foreach (string s in sls)
             {
-                if (File.Exists(path + s)) {
+                if (File.Exists(path + s))
+                {
                     slt = s;
                     break;
                 }

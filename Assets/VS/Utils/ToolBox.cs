@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using UnityEngine;
-using System.Collections;
 
 namespace VS.Utils
 {

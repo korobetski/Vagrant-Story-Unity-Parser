@@ -18,7 +18,10 @@ namespace VS.Core
             FileStream file = File.Create(Application.persistentDataPath + "/VSP.conf");
             bf.Serialize(file, save);
             file.Close();
-            if (UseDebug) Debug.Log("VSP.conf Saved");
+            if (UseDebug)
+            {
+                Debug.Log("VSP.conf Saved");
+            }
         }
         public static VSPConfig LoadConfig()
         {

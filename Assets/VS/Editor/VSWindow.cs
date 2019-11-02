@@ -20,7 +20,8 @@ public class VSWindow : EditorWindow
 
     void OnGUI()
     {
-        if (conf == null) {
+        if (conf == null)
+        {
             conf = Memory.LoadConfig();
             if (conf.VSPath != null)
             {
@@ -55,7 +56,7 @@ public class VSWindow : EditorWindow
             Memory.SaveConfig(conf);
         }
 
-        GUILayout.Label("Vagrant Story Version : "+ conf.VS_Version);
+        GUILayout.Label("Vagrant Story Version : " + conf.VS_Version);
         GUILayout.Label("Batch imports", EditorStyles.boldLabel);
         bool LoadSYDTrigger = GUILayout.Button(new GUIContent("Load MENU DataBase.SYD"));
         if (LoadSYDTrigger && VSPath != "")
@@ -276,33 +277,34 @@ public class VSWindow : EditorWindow
             }
             EditorUtility.ClearProgressBar();
         }
-/*
-        bool LoadAKAOTrigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE*.DAT"));
-        if (LoadAKAOTrigger && VSPath != "")
-        {
+        /*
+                bool LoadAKAOTrigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE*.DAT"));
+                if (LoadAKAOTrigger && VSPath != "")
+                {
 
-            string[] files = Directory.GetFiles(VSPath + "SOUND/", "*.DAT");
-            float fileToParse = files.Length;
-            float fileParsed = 0;
-            foreach (string file in files)
-            {
-                string[] h = file.Split("/"[0]);
-                string filename = h[h.Length - 1];
-                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                AKAO parser = new AKAO();
-                parser.UseDebug = true;
-                parser.Parse(file, AKAO.SOUND);
-                fileParsed++;
-            }
-            EditorUtility.ClearProgressBar();
-        }
-*/
+                    string[] files = Directory.GetFiles(VSPath + "SOUND/", "*.DAT");
+                    float fileToParse = files.Length;
+                    float fileParsed = 0;
+                    foreach (string file in files)
+                    {
+                        string[] h = file.Split("/"[0]);
+                        string filename = h[h.Length - 1];
+                        EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                        AKAO parser = new AKAO();
+                        parser.UseDebug = true;
+                        parser.Parse(file, AKAO.SOUND);
+                        fileParsed++;
+                    }
+                    EditorUtility.ClearProgressBar();
+                }
+        */
         bool LoadAKAO2Trigger = GUILayout.Button(new GUIContent("Load Akao MUSIC/MUSIC*.DAT"));
         if (LoadAKAO2Trigger && VSPath != "")
         {
 
             string[] files = Directory.GetFiles(VSPath + "MUSIC/", "*.DAT");
             float fileToParse = files.Length;
+            
             float fileParsed = 0;
             foreach (string file in files)
             {
@@ -314,12 +316,20 @@ public class VSWindow : EditorWindow
                 parser.Parse(file, AKAO.MUSIC);
                 if (parser.FileSize > 4)
                 {
-                    //parser.composer.Compose(AKAOComposer.ComposerMode.MIDI);
-                    //parser.composer.BuildAudioClip();
                     parser.composer.OutputMidiFile();
                 }
                 fileParsed++;
             }
+
+            /*
+            AKAO parser = new AKAO();
+            //parser.UseDebug = true;
+            parser.Parse(VSPath + "MUSIC/MUSIC001.DAT", AKAO.MUSIC);
+            if (parser.FileSize > 4)
+            {
+                parser.composer.OutputMidiFile();
+            }
+            */
             EditorUtility.ClearProgressBar();
         }
     }
@@ -330,10 +340,10 @@ public class VSWindow : EditorWindow
         string[] files = Directory.GetFiles(VSPath + "MENU/", "*.SYD");
         foreach (string file in files)
         {
-                Debug.Log(file);
-                SYD parser = new SYD();
-                //parser.UseDebug = true;
-                parser.Parse(file);
+            Debug.Log(file);
+            SYD parser = new SYD();
+            //parser.UseDebug = true;
+            parser.Parse(file);
         }
         Memory.SaveDB();
     }

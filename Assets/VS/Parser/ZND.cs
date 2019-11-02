@@ -185,7 +185,7 @@ namespace VS.Parser
             PrefabUtility.SaveAsPrefabAsset(zoneGO, "Assets/Resources/Prefabs/Zones/Datas/" + FileName + ".prefab");
             AssetDatabase.SaveAssets();
             GameObject.DestroyImmediate(zoneGO);
-            
+
         }
 
 

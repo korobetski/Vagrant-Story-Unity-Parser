@@ -461,10 +461,16 @@ namespace VS.Parser
             ToolBox.DirExNorCreate(zoneFolder);
             string zoneFilename = zoneFolder + FileName + ".prefab";
 
-            if (erase) AssetDatabase.DeleteAsset(zoneFilename);
+            if (erase)
+            {
+                AssetDatabase.DeleteAsset(zoneFilename);
+            }
 
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(zoneFilename);
-            if (prefab == null) Build(true);
+            if (prefab == null)
+            {
+                Build(true);
+            }
         }
 
         public void Build(bool buildPrefab = false)
@@ -495,7 +501,8 @@ namespace VS.Parser
                 ToolBox.DirExNorCreate("Assets/Resources/Prefabs/Zones/");
                 ToolBox.DirExNorCreate("Assets/Resources/Prefabs/Zones/" + zn + "/");
 #endif
-            } else
+            }
+            else
             {
             }
 
@@ -592,9 +599,16 @@ namespace VS.Parser
 #if UNITY_EDITOR
 
                         AssetDatabase.AddObjectToAsset(mesh, zoneFilename);
-                        if (!AssetDatabase.Contains(mr.sharedMaterial)) AssetDatabase.AddObjectToAsset(mr.sharedMaterial, zoneFilename);
-                        if (!AssetDatabase.Contains(mr.sharedMaterial.mainTexture)) AssetDatabase.AddObjectToAsset(mr.sharedMaterial.mainTexture, zoneFilename);
-                        
+                        if (!AssetDatabase.Contains(mr.sharedMaterial))
+                        {
+                            AssetDatabase.AddObjectToAsset(mr.sharedMaterial, zoneFilename);
+                        }
+
+                        if (!AssetDatabase.Contains(mr.sharedMaterial.mainTexture))
+                        {
+                            AssetDatabase.AddObjectToAsset(mr.sharedMaterial.mainTexture, zoneFilename);
+                        }
+
 #endif
                     }
                 }
@@ -621,8 +635,15 @@ namespace VS.Parser
                 AssetDatabase.SaveAssets();
 
 
-                if (mapGO) GameObject.DestroyImmediate(mapGO);
-                if (mapGO) GameObject.Destroy(mapGO);
+                if (mapGO)
+                {
+                    GameObject.DestroyImmediate(mapGO);
+                }
+
+                if (mapGO)
+                {
+                    GameObject.Destroy(mapGO);
+                }
 #endif
             }
             else
