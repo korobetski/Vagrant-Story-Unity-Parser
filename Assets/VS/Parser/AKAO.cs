@@ -225,7 +225,7 @@ namespace VS.Parser
 
                     composer = new AKAOComposer(buffer, basePtr, ptr1, instruments, drum, sampleParser.articulations, sampleParser.samples, numTrack, FileName);
 
-                    //Synthetize(this, sampleParser);
+                    Synthetize(this, sampleParser);
 
 
 
@@ -470,8 +470,8 @@ namespace VS.Parser
 
         internal void ComputeADSR()
         {
-
-            ToolBox.PSXConvADSR(this, articulation.adr1, articulation.adr2);
+            //Need to fix this
+            //ToolBox.PSXConvADSR(this, articulation.adr1, articulation.adr2);
 
         }
 
