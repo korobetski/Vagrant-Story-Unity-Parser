@@ -579,7 +579,7 @@ namespace VS.Parser
             List<long> repeaterEndPositions = new List<long>();
 
 
-            Debug.Log("## TRACK : " + cTrackId+"   -----------------------------------------------------------------------");
+            Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
             while (buffer.BaseStream.Position < end)
             {
                 AKAOTrack curTrack;
@@ -1005,7 +1005,7 @@ namespace VS.Parser
                                 delta = 0;
                                 playingNote = false;
                             }
-                            delta += (ushort) duration;
+                            delta += (ushort)duration;
                             curTrack.AddEvent(new EvRest(duration));
                             break;
                         case 0xFE: // Meta Event
@@ -1131,7 +1131,7 @@ namespace VS.Parser
                 {
                     events = new List<AKAOEvent>();
                 }
-                //Debug.Log(timeDebug+"     AddEvent : " +ev);
+                Debug.Log("     AddEvent : " +ev);
                 events.Add(ev);
             }
             public void AddTime(uint t)
@@ -1249,18 +1249,6 @@ namespace VS.Parser
             private uint denom;
             private byte clocks = 0x24;
             private byte quart = 0x08;
-            /*
-             * uint32_t TimeSigEvent::WriteEvent(vector<uint8_t> &buf, uint32_t time) {
-  //denom is expressed in power of 2... so if we have 6/8 time.  it's 6 = 2^x  ==  ln6 / ln2
-  uint8_t data[4] = {
-      numer,
-      (uint8_t) (log((double) denom) / 0.69314718055994530941723212145818),
-      ticksPerQuarter,
-      8
-  };
-  return WriteMetaEvent(buf, time, 0x58, data, 4);
-}
-*/
 
             public EvTimeSign(uint num, uint denom)
             {
@@ -1373,7 +1361,7 @@ namespace VS.Parser
                 midiArg1 = (byte)0x51;
                 midiArg2 = (byte)0x03;
                 tail = new byte[] { (byte)((microSecs & 0xFF0000) >> 16), (byte)((microSecs & 0x00FF00) >> 8), (byte)(microSecs & 0x0000FF) };
-                
+
             }
         }
         private class EvExpr : AKAOEvent

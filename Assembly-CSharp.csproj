@@ -8,7 +8,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <ProjectGuid>{9CE08B41-AF5E-DD00-2666-5E475BD4855D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -87,6 +88,7 @@
     <Compile Include="Assets\VS\Parser\BIN.cs" />
     <Compile Include="Assets\VS\Parser\DAT.cs" />
     <Compile Include="Assets\VS\Parser\DIS.cs" />
+    <Compile Include="Assets\VS\Parser\DLS.cs" />
     <Compile Include="Assets\VS\Parser\EFFECT.cs" />
     <Compile Include="Assets\VS\Parser\ESQ.cs" />
     <Compile Include="Assets\VS\Parser\ETM.cs" />

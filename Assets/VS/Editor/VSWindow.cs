@@ -26,6 +26,7 @@ public class VSWindow : EditorWindow
             if (conf == null)
             {
                 Memory.SaveConfig(new VSPConfig());
+                conf = Memory.LoadConfig();
             }
             if (conf.VSPath != null)
             {
@@ -307,7 +308,7 @@ public class VSWindow : EditorWindow
 
             string[] files = Directory.GetFiles(VSPath + "MUSIC/", "*.DAT");
             float fileToParse = files.Length;
-            
+
             float fileParsed = 0;
             foreach (string file in files)
             {
@@ -323,7 +324,7 @@ public class VSWindow : EditorWindow
                 }
                 fileParsed++;
             }
-            
+
             /*
             AKAO parser = new AKAO();
             //parser.UseDebug = true;
