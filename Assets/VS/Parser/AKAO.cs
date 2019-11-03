@@ -1232,6 +1232,7 @@ namespace VS.Parser
          * EvPan
          * EvProgramChange
          * EvReverbOn
+         * EvReverbOff
          * EvReverbLevel
          * EvTempo
          * EvExpr
@@ -1241,6 +1242,24 @@ namespace VS.Parser
          * EvRepeatEnd
          * EvTie
          * EvEndTrack
+         * EvPitchBend
+         * EvLFOPanpotDepth
+         * EvLFOPanpotRange
+         * EvPortamento
+         * EvRelease
+         * EvDrumKitOn
+         * EvAttack
+         * EvSustainRelease
+         * EvDecay
+         * EvLFOPitchDepth
+         * EvSlurOn
+         * EvLFOExprOff
+         * EvFMOn
+         * EvLFOExprRange
+         * EvDecay
+         * EvSustain
+         * EvNoiseOn
+         * EvTransposeMove
         */
 
         private class EvTimeSign : AKAOEvent
