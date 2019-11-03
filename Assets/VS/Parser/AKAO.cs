@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Kermalis.SoundFont2;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using VS.Utils;
-using Kermalis.SoundFont2;
 
 //Minoru Akao
 //https://github.com/vgmtrans/vgmtrans/blob/master/src/main/formats/AkaoSeq.cpp
@@ -95,6 +95,7 @@ namespace VS.Parser
                     BinaryReader stream = new BinaryReader(memDat);
                     */
 
+                    int instrCount = 0;
                     // Instruments
                     if (ptr1 > 0x30)
                     {
@@ -115,12 +116,21 @@ namespace VS.Parser
                             }
                         }
 
-                        if (UseDebug)
+                        instrCount = instrPtrs.Count;
+                        if (ptr2 > 0x34)
                         {
-                            Debug.Log("Instruments number : " + instrPtrs.Count);
+                            instrCount++;
                         }
 
-                        instruments = new AKAOInstrument[instrPtrs.Count];
+
+
+                        if (UseDebug)
+                        {
+                            Debug.Log("Instruments number : " + instrCount);
+                        }
+
+                        instruments = new AKAOInstrument[instrCount];
+
                         for (int i = 0; i < instrPtrs.Count; i++)
                         {
                             AKAOInstrument instrument = new AKAOInstrument();
@@ -166,7 +176,7 @@ namespace VS.Parser
                         }
 
                         drum = new AKAODrum();
-                        drum.hasDrum = true;
+                        drum.isDrum = true;
                         int drumRegLoop = (int)(byteLen - ptr2) / 0x08;
 
                         List<AKAODrumRegion> dr = new List<AKAODrumRegion>();
@@ -179,11 +189,14 @@ namespace VS.Parser
                             }
                             if (b[0] > 0 && b[1] > 0 && b[6] > 0 && b[7] > 0)
                             {
-                                dr.Add(new AKAODrumRegion(b));
+                                AKAODrumRegion dregion = new AKAODrumRegion(b, j);
+                                dr.Add(dregion);
                             }
                         }
 
                         drum.regions = dr.ToArray();
+
+                        instruments[instrCount - 1] = drum;
                     }
 
                     // So we seek for the appropriate WAVE*.DAT in the SOUND folder
@@ -300,9 +313,9 @@ namespace VS.Parser
         private void Synthetize(AKAO sequencer, AKAO sampler)
         {
             SF2 SoundFont = new SF2();
-            if (instruments != null)
+            if (sequencer.instruments != null)
             {
-                foreach (AKAOInstrument instrument in instruments)
+                foreach (AKAOInstrument instrument in sequencer.instruments)
                 {
                     if (instrument.regions.Length > 0)
                     {
@@ -311,14 +324,14 @@ namespace VS.Parser
                             AKAOArticulation articulation;
                             if (!((region.articulationId - sampler.startingArticulationId) >= 0 && region.articulationId - sampler.startingArticulationId < 200))
                             {
-                                Debug.LogWarning("Articulation #"+ region.articulationId+" does not exist in the samp collection.");
+                                Debug.LogWarning("Articulation #" + region.articulationId + " does not exist in the samp collection.");
                                 articulation = sampler.articulations[0];
                             }
 
                             if (region.articulationId - sampler.startingArticulationId >= sampler.articulations.Length)
                             {
-                                Debug.LogWarning("Articulation #"+region.articulationId + " referenced but not loaded");
-                                articulation = sampler.articulations[sampler.articulations.Length-1];
+                                Debug.LogWarning("Articulation #" + region.articulationId + " referenced but not loaded");
+                                articulation = sampler.articulations[sampler.articulations.Length - 1];
                             }
                             else
                             {
@@ -329,7 +342,36 @@ namespace VS.Parser
                             region.sampleNum = articulation.sampleNum;
 
                             if (articulation.loopPt != 0)
+                            {
                                 region.SetLoopInfo(1, articulation.loopPt, sampler.samples[region.sampleNum].size - articulation.loopPt);
+                            }
+
+                            region.ComputeADSR();
+
+                            if (instrument.isDrum)
+                            {
+                                AKAODrumRegion region1 = region as AKAODrumRegion;
+                                region1.unityKey = (uint)articulation.unityKey + region1.lowRange - region1.relativeKey;
+                            }
+                            else
+                            {
+                                region.unityKey = articulation.unityKey;
+                            }
+
+
+                            short ft = articulation.fineTune;
+                            if (ft < 0)
+                            {
+                                ft += short.MaxValue;
+                            }
+                                
+                            // this gives us the pitch multiplier value ex. 1.05946
+                            double freq_multiplier = (double)(((ft * 32) + 0x100000) / (double)0x100000);
+                            double cents = log(freq_multiplier) / log((double)2) * 1200;
+                            if (art->fineTune < 0)
+                                cents -= 1200;
+                            rgn->fineTune = (short)cents;
+
                         }
                     }
 
@@ -338,6 +380,9 @@ namespace VS.Parser
 
                     SoundFont.AddInstrument(instrument.name);
                 }
+
+
+
             }
 
             SoundFont.AddInstrument("Drum Kit");
@@ -363,6 +408,7 @@ namespace VS.Parser
     public class AKAOInstrument
     {
         public string name = "";
+        public bool isDrum = false;
         public AKAOInstrumentRegion[] regions;
 
         public AKAOInstrument()
@@ -388,6 +434,16 @@ namespace VS.Parser
         public uint loopStart;
         public long loopLength;
 
+        internal double attack_time;
+        internal double decay_time;
+        internal double sustain_time;
+        internal int sustain_level;
+        internal double release_time;
+        internal uint unityKey;
+
+        public AKAOInstrumentRegion()
+        {
+        }
         public AKAOInstrumentRegion(byte[] b)
         {
             articulationId = b[0];
@@ -411,6 +467,13 @@ namespace VS.Parser
             volume = buffer.ReadByte();
         }
 
+        internal void ComputeADSR()
+        {
+
+            ToolBox.PSXConvADSR(this, articulation.adr1, articulation.adr2);
+
+        }
+
         internal void SetLoopInfo(int theLoopStatus, uint theLoopStart, long theLoopLength)
         {
             loopStatus = theLoopStatus;
@@ -419,28 +482,24 @@ namespace VS.Parser
         }
 
     }
-    public class AKAODrum
+    public class AKAODrum : AKAOInstrument
     {
+        public new bool isDrum = true;
         public bool hasDrum = false;
-        public AKAODrumRegion[] regions;
+        public new AKAODrumRegion[] regions;
 
         public AKAODrum()
         {
 
         }
     }
-    public class AKAODrumRegion
+    public class AKAODrumRegion : AKAOInstrumentRegion
     {
-        public byte articulationId;
-        public byte relativeKey;
-        public byte unk1;
-        public byte unk2;
-        public byte unk3;
-        public byte unk4;
+        public ushort relativeKey;
         public byte attenuation;
         public byte pan;
 
-        public AKAODrumRegion(byte[] b)
+        public AKAODrumRegion(byte[] b, int key)
         {
             articulationId = b[0];
             relativeKey = b[1];
@@ -450,6 +509,11 @@ namespace VS.Parser
             unk4 = b[5];
             attenuation = b[6];
             pan = b[7];
+
+            lowRange = (byte)key;
+            hiRange = lowRange;
+
+            volume = (byte)(attenuation / 127);
         }
         public AKAODrumRegion(BinaryReader buffer)
         {
@@ -467,12 +531,10 @@ namespace VS.Parser
     {
         public uint sampleOff;
         public uint loopPt;
-        public ushort fineTune;
+        public short fineTune;
         public ushort unityKey;
         public ushort adr1;
         public ushort adr2;
-
-        public ConnectionBlock[] blocks;
         internal uint sampleNum;
 
         // DLS DOC page 48/77
@@ -482,7 +544,7 @@ namespace VS.Parser
 
             sampleOff = buffer.ReadUInt32();
             loopPt = buffer.ReadUInt32();
-            fineTune = buffer.ReadUInt16();
+            fineTune = buffer.ReadInt16();
             unityKey = buffer.ReadUInt16();
             adr1 = buffer.ReadUInt16();
             adr2 = buffer.ReadUInt16();
@@ -490,32 +552,6 @@ namespace VS.Parser
             //blocks = new ConnectionBlock[0];
         }
 
-    }
-
-    public class ConnectionBlock
-    {
-        public ushort source;
-        public ushort control;
-        public ushort destination;
-        public ushort transform;
-        public long scale;
-        /*
-The list of connection blocks defines both the architecture and settings for an instrument or instrument
-region. For the DLS Level 1 synthesizer architecture, there are 29 connection blocks in the connection
-graph, 10 of which are implicit and have no attached values, and 19 that define the articulation for a DLS
-Level 1 sound. Although this could be defined as a simple structure of values, the connection graph model
-allows for future chunk types which will have a much greater possible number of connections, making the
-use of a structure unwieldy.
-*/
-        public ConnectionBlock()
-        {
-
-        }
-
-        public uint GetSize()
-        {
-            return 12;
-        }
     }
 
 
@@ -657,9 +693,9 @@ use of a structure unwieldy.
 
             AssetDatabase.CreateAsset(audio, "Assets/Resources/Sounds/"+name+".mid");
             */
-    }
+        }
 
-    public void OutputMidiFile()
+        public void OutputMidiFile()
         {
             List<byte> midiByte = new List<byte>();
             midiByte.AddRange(new byte[] { 0x4D, 0x54, 0x68, 0x64 }); // MThd Header
