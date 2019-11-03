@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using VS.Utils;
+using Kermalis.SoundFont2;
 
 //Minoru Akao
 //https://github.com/vgmtrans/vgmtrans/blob/master/src/main/formats/AkaoSeq.cpp
@@ -26,6 +27,8 @@ namespace VS.Parser
         public AKAOArticulation[] articulations;
         public AKAOSample[] samples;
         public AKAOComposer composer;
+
+        public uint startingArticulationId;
 
         public void Parse(string filePath, AKAOType type)
         {
@@ -121,6 +124,7 @@ namespace VS.Parser
                         for (int i = 0; i < instrPtrs.Count; i++)
                         {
                             AKAOInstrument instrument = new AKAOInstrument();
+                            instrument.name = "Instrument " + i;
                             long instrStart = ptr1 + 0x20 + instrPtrs[i];
                             long instrEnd;
                             if (i < instrPtrs.Count - 1)
@@ -208,6 +212,9 @@ namespace VS.Parser
 
                     composer = new AKAOComposer(buffer, basePtr, ptr1, instruments, drum, sampleParser.articulations, sampleParser.samples, numTrack, FileName);
 
+                    Synthetize(this, sampleParser);
+
+
 
                     break;
                 case AKAOType.SOUND:
@@ -221,7 +228,7 @@ namespace VS.Parser
                     reverb = buffer.ReadUInt16(); // 0x0031 - 0x0051
                     buffer.ReadBytes(2); // padding
                     var sampleSize = buffer.ReadUInt32();
-                    var stArtId = buffer.ReadUInt32();
+                    startingArticulationId = buffer.ReadUInt32();
                     var numArts = buffer.ReadUInt32();
 
                     buffer.ReadBytes(32); // padding
@@ -229,7 +236,7 @@ namespace VS.Parser
                     if (UseDebug)
                     {
                         Debug.Log("AKAO from : " + FileName + " len = " + FileSize);
-                        Debug.Log("ID : " + sampleId + " reverb : " + reverb + " sampleSize : " + sampleSize + " stArtId : " + stArtId + " numArts : " + numArts);
+                        Debug.Log("ID : " + sampleId + " reverb : " + reverb + " sampleSize : " + sampleSize + " stArtId : " + startingArticulationId + " numArts : " + numArts);
                     }
 
                     // Articulations section here
@@ -240,7 +247,6 @@ namespace VS.Parser
                         articulations[i] = arti;
                         //Debug.Log("ID : " + i + " unityKey : " + arti.unityKey + " fineTune : " + arti.fineTune + " adr1 : " + arti.adr1 + " adr2 : " + arti.adr2);
                     }
-
                     // Samples section here
                     long samStart = buffer.BaseStream.Position;
                     // First we need to determine the start and the end of the samples, 16 null bytes indicate a new sample, so lets find them.
@@ -264,18 +270,99 @@ namespace VS.Parser
                     for (int i = 0; i < numSam; i++)
                     {
                         buffer.BaseStream.Position = samPtr[i];
-                        AKAOSample sam = new AKAOSample(((int)samEPtr[i] - (int)samPtr[i] - 2), buffer);
+                        AKAOSample sam = new AKAOSample(FileName + "_s" + i, ((int)samEPtr[i] - (int)samPtr[i] - 2), buffer, samPtr[i]);
                         samples[i] = sam;
+                    }
+
+
+                    // now to verify and associate each articulation with a sample index value
+                    // for every sample of every instrument, we add sample_section offset, because those values
+                    //  are relative to the beginning of the sample section
+                    for (uint i = 0; i < articulations.Length; i++)
+                    {
+                        for (uint l = 0; l < samples.Length; l++)
+                        {
+                            if (articulations[i].sampleOff + samStart == samples[l].offset)
+                            {
+                                articulations[i].sampleNum = l;
+                                break;
+                            }
+                        }
                     }
                     break;
             }
 
         }
+
+
+
+
+        private void Synthetize(AKAO sequencer, AKAO sampler)
+        {
+            SF2 SoundFont = new SF2();
+            if (instruments != null)
+            {
+                foreach (AKAOInstrument instrument in instruments)
+                {
+                    if (instrument.regions.Length > 0)
+                    {
+                        foreach (AKAOInstrumentRegion region in instrument.regions)
+                        {
+                            AKAOArticulation articulation;
+                            if (!((region.articulationId - sampler.startingArticulationId) >= 0 && region.articulationId - sampler.startingArticulationId < 200))
+                            {
+                                Debug.LogWarning("Articulation #"+ region.articulationId+" does not exist in the samp collection.");
+                                articulation = sampler.articulations[0];
+                            }
+
+                            if (region.articulationId - sampler.startingArticulationId >= sampler.articulations.Length)
+                            {
+                                Debug.LogWarning("Articulation #"+region.articulationId + " referenced but not loaded");
+                                articulation = sampler.articulations[sampler.articulations.Length-1];
+                            }
+                            else
+                            {
+                                articulation = sampler.articulations[region.articulationId - sampler.startingArticulationId];
+                            }
+
+                            region.articulation = articulation;
+                            region.sampleNum = articulation.sampleNum;
+
+                            if (articulation.loopPt != 0)
+                                region.SetLoopInfo(1, articulation.loopPt, sampler.samples[region.sampleNum].size - articulation.loopPt);
+                        }
+                    }
+
+
+
+
+                    SoundFont.AddInstrument(instrument.name);
+                }
+            }
+
+            SoundFont.AddInstrument("Drum Kit");
+            if (samples != null)
+            {
+                foreach (AKAOSample sample in samples)
+                {
+                    sample.decompressData(0f, 0f);
+                    short[] pcm = new short[sample.wave.Length];
+                    for (uint i = 0; i < sample.wave.Length; i++)
+                    {
+                        pcm[i] = (short)sample.wave[i];
+                    }
+                    SoundFont.AddSample(pcm, sample.name, (sample.looping > 0), (uint)sample.loop, (uint)sample.range, 0x40, 0x00);
+                }
+            }
+            ToolBox.DirExNorCreate("Assets/Resources/Sounds/SF/");
+            SoundFont.Save("Assets/Resources/Sounds/SF/" + FileName + ".sf2");
+        }
     }
 
-    // VGMTrans schema
+
     public class AKAOInstrument
     {
+        public string name = "";
         public AKAOInstrumentRegion[] regions;
 
         public AKAOInstrument()
@@ -293,6 +380,13 @@ namespace VS.Parser
         public byte unk3;
         public byte unk4;
         public byte volume;
+
+        public AKAOArticulation articulation;
+        public AKAOSample sample;
+        public uint sampleNum;
+        public int loopStatus;
+        public uint loopStart;
+        public long loopLength;
 
         public AKAOInstrumentRegion(byte[] b)
         {
@@ -316,6 +410,14 @@ namespace VS.Parser
             unk4 = buffer.ReadByte();
             volume = buffer.ReadByte();
         }
+
+        internal void SetLoopInfo(int theLoopStatus, uint theLoopStart, long theLoopLength)
+        {
+            loopStatus = theLoopStatus;
+            loopStart = theLoopStart;
+            loopLength = theLoopLength;
+        }
+
     }
     public class AKAODrum
     {
@@ -370,6 +472,10 @@ namespace VS.Parser
         public ushort adr1;
         public ushort adr2;
 
+        public ConnectionBlock[] blocks;
+        internal uint sampleNum;
+
+        // DLS DOC page 48/77
 
         public AKAOArticulation(BinaryReader buffer)
         {
@@ -380,8 +486,39 @@ namespace VS.Parser
             unityKey = buffer.ReadUInt16();
             adr1 = buffer.ReadUInt16();
             adr2 = buffer.ReadUInt16();
+
+            //blocks = new ConnectionBlock[0];
+        }
+
+    }
+
+    public class ConnectionBlock
+    {
+        public ushort source;
+        public ushort control;
+        public ushort destination;
+        public ushort transform;
+        public long scale;
+        /*
+The list of connection blocks defines both the architecture and settings for an instrument or instrument
+region. For the DLS Level 1 synthesizer architecture, there are 29 connection blocks in the connection
+graph, 10 of which are implicit and have no attached values, and 19 that define the articulation for a DLS
+Level 1 sound. Although this could be defined as a simple structure of values, the connection graph model
+allows for future chunk types which will have a much greater possible number of connections, making the
+use of a structure unwieldy.
+*/
+        public ConnectionBlock()
+        {
+
+        }
+
+        public uint GetSize()
+        {
+            return 12;
         }
     }
+
+
     public class AKAOSample
     {
         public static float[,] coeff = {
@@ -392,6 +529,7 @@ namespace VS.Parser
             { 122.0f / 64.0f, 60.0f / 64.0f }
         };
 
+        public string name = "";
         public int range;
         public int filter;
         public int end;
@@ -399,12 +537,16 @@ namespace VS.Parser
         public int loop;
         public float[] data;
         public float[] wave;
+        public int size;
+        public long offset;
 
-        public AKAOSample(int size, BinaryReader buffer)
+        public AKAOSample(string n, int size, BinaryReader buffer, long offset)
         {
+            this.size = size;
+            this.offset = offset;
             byte a = buffer.ReadByte();
             byte b = buffer.ReadByte();
-
+            name = n;
             range = a & 0xF;
             filter = (a & 0xF0) >> 4;
             end = b & 0x1;
@@ -501,7 +643,6 @@ namespace VS.Parser
             SetTracks();
         }
 
-
         public void BuildAudioClip()
         {
             /*
@@ -516,9 +657,9 @@ namespace VS.Parser
 
             AssetDatabase.CreateAsset(audio, "Assets/Resources/Sounds/"+name+".mid");
             */
-        }
+    }
 
-        public void OutputMidiFile()
+    public void OutputMidiFile()
         {
             List<byte> midiByte = new List<byte>();
             midiByte.AddRange(new byte[] { 0x4D, 0x54, 0x68, 0x64 }); // MThd Header
@@ -579,7 +720,7 @@ namespace VS.Parser
             List<long> repeaterEndPositions = new List<long>();
 
 
-            Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
+            //Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
             while (buffer.BaseStream.Position < end)
             {
                 AKAOTrack curTrack;
@@ -1131,7 +1272,7 @@ namespace VS.Parser
                 {
                     events = new List<AKAOEvent>();
                 }
-                Debug.Log("     AddEvent : " +ev);
+                //Debug.Log("     AddEvent : " +ev);
                 events.Add(ev);
             }
             public void AddTime(uint t)

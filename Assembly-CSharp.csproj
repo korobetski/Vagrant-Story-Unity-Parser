@@ -63,6 +63,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\SoundFont2\SoundFont2\SF2.cs" />
+    <Compile Include="Assets\SoundFont2\SoundFont2\SF2Chunks.cs" />
+    <Compile Include="Assets\SoundFont2\SoundFont2\SF2Types.cs" />
+    <Compile Include="Assets\SoundFont2\SoundFont2\SF2Utils.cs" />
     <Compile Include="Assets\VS\Core\Core.cs" />
     <Compile Include="Assets\VS\Core\Memory.cs" />
     <Compile Include="Assets\VS\Core\Opcode.cs" />
@@ -108,6 +112,7 @@
     <Compile Include="Assets\VS\Parser\STR.cs" />
     <Compile Include="Assets\VS\Parser\SYD.cs" />
     <Compile Include="Assets\VS\Parser\TIM.cs" />
+    <Compile Include="Assets\VS\Parser\WAV.cs" />
     <Compile Include="Assets\VS\Parser\WEP.cs" />
     <Compile Include="Assets\VS\Parser\XA.cs" />
     <Compile Include="Assets\VS\Parser\ZND.cs" />
