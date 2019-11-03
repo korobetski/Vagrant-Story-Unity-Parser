@@ -308,7 +308,7 @@ public class VSWindow : EditorWindow
 
             string[] files = Directory.GetFiles(VSPath + "MUSIC/", "*.DAT");
             float fileToParse = files.Length;
-
+            /*
             float fileParsed = 0;
             foreach (string file in files)
             {
@@ -324,8 +324,8 @@ public class VSWindow : EditorWindow
                 }
                 fileParsed++;
             }
-
-            /*
+            */
+            
             AKAO parser = new AKAO();
             //parser.UseDebug = true;
             parser.Parse(VSPath + "MUSIC/MUSIC000.DAT", AKAO.MUSIC);
@@ -333,7 +333,7 @@ public class VSWindow : EditorWindow
             {
                 parser.composer.OutputMidiFile();
             }
-            */
+            
             EditorUtility.ClearProgressBar();
         }
     }

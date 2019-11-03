@@ -225,7 +225,7 @@ namespace VS.Parser
 
                     composer = new AKAOComposer(buffer, basePtr, ptr1, instruments, drum, sampleParser.articulations, sampleParser.samples, numTrack, FileName);
 
-                    Synthetize(this, sampleParser);
+                    //Synthetize(this, sampleParser);
 
 
 
@@ -366,11 +366,11 @@ namespace VS.Parser
                             }
                                 
                             // this gives us the pitch multiplier value ex. 1.05946
-                            double freq_multiplier = (double)(((ft * 32) + 0x100000) / (double)0x100000);
-                            double cents = log(freq_multiplier) / log((double)2) * 1200;
-                            if (art->fineTune < 0)
+                            double freq_multiplier = ((ft * 32) + 0x100000) / (double)0x100000;
+                            double cents = Mathf.Log((float)freq_multiplier) / Mathf.Log(2) * 1200;
+                            if (articulation.fineTune < 0)
                                 cents -= 1200;
-                            rgn->fineTune = (short)cents;
+                            region.fineTune = (short)cents;
 
                         }
                     }
@@ -440,6 +440,7 @@ namespace VS.Parser
         internal int sustain_level;
         internal double release_time;
         internal uint unityKey;
+        internal short fineTune;
 
         public AKAOInstrumentRegion()
         {
