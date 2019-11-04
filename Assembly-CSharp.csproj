@@ -63,6 +63,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\Forge.cs" />
+    <Compile Include="Assets\Scripts\MainMenu.cs" />
+    <Compile Include="Assets\Scripts\MiniMapsViewver.cs" />
+    <Compile Include="Assets\Scripts\SceneSwitcher.cs" />
     <Compile Include="Assets\SoundFont2\SoundFont2\SF2.cs" />
     <Compile Include="Assets\SoundFont2\SoundFont2\SF2Chunks.cs" />
     <Compile Include="Assets\SoundFont2\SoundFont2\SF2Types.cs" />
@@ -73,6 +77,9 @@
     <Compile Include="Assets\VS\Data\Armor.cs" />
     <Compile Include="Assets\VS\Data\Blade.cs" />
     <Compile Include="Assets\VS\Data\ClassAffinityType.cs" />
+    <Compile Include="Assets\VS\Data\Gem.cs" />
+    <Compile Include="Assets\VS\Data\GemEffect.cs" />
+    <Compile Include="Assets\VS\Data\Grip.cs" />
     <Compile Include="Assets\VS\Data\Shield.cs" />
     <Compile Include="Assets\VS\Data\SmithMaterial.cs" />
     <Compile Include="Assets\VS\Entity\ARMRoom.cs" />

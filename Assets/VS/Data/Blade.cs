@@ -7,6 +7,17 @@ namespace VS.Data
     [System.Serializable]
     public class Blade : MonoBehaviour
     {
+        public static readonly string[] DaggerBlades = new string[] { "01", "02", "03", "04", "05", "06", "07", "08", "09", "0A", "0B", "0C" };
+        public static readonly string[] SwordBlades = new string[] { "0D", "0E", "0F", "10", "11", "12", "13", "14", "15", "16", "17", "18" };
+        public static readonly string[] GreatSwordBlades = new string[] { "19", "1A", "1B", "1C", "1D", "1E", "1F", "20", "21", "22" };
+        public static readonly string[] AxeBlades = new string[] { "23", "24", "25", "26", "27", "28", "29", "2A" };
+        public static readonly string[] MaceBlades = new string[] { "2B", "2C", "2D", "2E", "2F", "30", "31", "32" };
+        public static readonly string[] GreatAxeBlades = new string[] { "33", "34", "35", "36", "37", "38" };
+        public static readonly string[] StaffBlades = new string[] { "39", "3A", "3B", "3C", "3D", "3E" };
+        public static readonly string[] HeavyMaceBlades = new string[] { "3F", "40", "41", "42", "43", "44", "45", "46" };
+        public static readonly string[] PolearmBlades = new string[] { "47", "48", "49", "4A", "4B", "4C", "4D", "4E", "4F", "50", "51", "52" };
+        public static readonly string[] CrossbowBlades = new string[] { "53", "54", "55", "56", "57", "58", "59", "5A" };
+
         public static List<Blade> list = new List<Blade>();
         public static string JSONlist()
         {

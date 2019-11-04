@@ -1,7 +1,12 @@
-﻿namespace VS.Utils
+﻿using System.Collections.Generic;
+
+namespace VS.Utils
 {
     public class L10n
     {
+        internal static List<string> itemNames = new List<string>();
+        internal static List<string> itemDescs = new List<string>();
+        internal static List<string> menu = new List<string>();
 
         public static string Charset(int num)
         {

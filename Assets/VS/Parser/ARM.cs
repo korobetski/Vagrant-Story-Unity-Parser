@@ -256,7 +256,7 @@ namespace VS.Parser
 
                     MeshFilter mf = meshGo.AddComponent<MeshFilter>();
                     mf.mesh = roomMesh;
-                    //MeshCollider mc = meshGo.AddComponent<MeshCollider>();
+                    MeshCollider mc = meshGo.AddComponent<MeshCollider>();
                     MeshRenderer mr = meshGo.AddComponent<MeshRenderer>();
                     mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                     mr.receiveShadows = false;

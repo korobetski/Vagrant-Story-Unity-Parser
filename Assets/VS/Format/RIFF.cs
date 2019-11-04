@@ -1,17 +1,14 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Collections.Generic;
-using VS.Utils;
-using UnityEngine;
 
 namespace VS.Format
 {
 
-    public class RIFF:ListTypeChunk
+    public class RIFF : ListTypeChunk
     {
 
 
-        public RIFF(string form):base("RIFF", form)
+        public RIFF(string form) : base("RIFF", form)
         {
         }
 
@@ -20,7 +17,9 @@ namespace VS.Format
         {
             name += (char)0x00;
             if (name.Length % 2 > 0)     // if the size of the name string is odd
+            {
                 name += (char)0x00;  // add another null byte
+            }
         }
 
         public bool WriteFile(string path, List<byte> buffer)

@@ -321,10 +321,11 @@ namespace VS.Parser
 
 
             DLS dls = new DLS();
-            dls.SetName(FileName+".dls");
+            dls.SetName(FileName + ".dls");
 
 
-            Debug.Log(dls.id[0]+ dls.id[1] + dls.id[2] + dls.id[3] + " -- "+ dls.type[0] + dls.type[1] + dls.type[2] + dls.type[3]);
+
+            Debug.Log(dls.id[0] + dls.id[1] + dls.id[2] + dls.id[3] + " -- " + dls.type[0] + dls.type[1] + dls.type[2] + dls.type[3]);
 
             if (sequencer.instruments != null)
             {
@@ -382,10 +383,15 @@ namespace VS.Parser
                             double freq_multiplier = ((ft * 32) + 0x100000) / (double)0x100000;
                             double cents = Mathf.Log((float)freq_multiplier) / Mathf.Log(2) * 1200;
                             if (articulation.fineTune < 0)
+                            {
                                 cents -= 1200;
+                            }
+
                             region.fineTune = (short)cents;
                         }
                     }
+
+                    //dls.AddInstrument(instrument.);
                 }
             }
 

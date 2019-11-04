@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using VS.Parser;
-using VS.Utils;
 
 namespace VS.Format
 {
-    public class DLS:RIFF
+    public class DLS : RIFF
     {
 
         /*
@@ -74,7 +72,7 @@ namespace VS.Format
         private List<WAV> waves;
         private List<DLSInstrument> instruments;
 
-        public DLS():base("DLS ")
+        public DLS() : base("DLS ")
         {
             waves = new List<WAV>();
             instruments = new List<DLSInstrument>();
@@ -110,7 +108,7 @@ namespace VS.Format
             AddChunk(colh);
 
             LISTChunk lins = new LISTChunk("lins");
-            foreach(DLSInstrument inst in instruments)
+            foreach (DLSInstrument inst in instruments)
             {
                 LISTChunk ins = new LISTChunk("ins ");
                 List<byte> inshb = new List<byte>();
@@ -179,7 +177,7 @@ namespace VS.Format
         {
             _bank = bank;
             _instrumentId = instrumentId;
-            _name = "Instrument "+ instrumentId;
+            _name = "Instrument " + instrumentId;
             _regions = new List<DLSRegion>();
 
             RIFF.AlignName(_name);
@@ -407,10 +405,10 @@ namespace VS.Format
 
         public void AddADSR(int attack, int decay, int sustain, int release, ushort attackTrans, ushort releaseTrans)
         {
-            _connections.Add( new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_ATTACKTIME, attackTrans, attack));
-            _connections.Add( new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_DECAYTIME, DLS.CONN_TRN_NONE, decay));
-            _connections.Add( new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_SUSTAINLEVEL, DLS.CONN_TRN_NONE, sustain));
-            _connections.Add( new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_RELEASETIME, releaseTrans, release));
+            _connections.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_ATTACKTIME, attackTrans, attack));
+            _connections.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_DECAYTIME, DLS.CONN_TRN_NONE, decay));
+            _connections.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_SUSTAINLEVEL, DLS.CONN_TRN_NONE, sustain));
+            _connections.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_RELEASETIME, releaseTrans, release));
         }
         public void AddPan(long pan)
         {

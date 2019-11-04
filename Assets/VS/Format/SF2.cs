@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace VS.Format
+﻿namespace VS.Format
 {
     public class SF2 : RIFF
     {

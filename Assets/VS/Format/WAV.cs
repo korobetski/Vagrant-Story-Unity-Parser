@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using VS.Utils;
 
 namespace VS.Format
 {
     //http://soundfile.sapp.org/doc/WaveFormat/
-    public class WAV: RIFF
+    public class WAV : RIFF
     {
         public ushort AudioFormat;
         public ushort NumChannels;
