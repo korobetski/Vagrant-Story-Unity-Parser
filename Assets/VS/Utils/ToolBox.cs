@@ -340,7 +340,10 @@ namespace VS.Utils
                                 L10n.itemNames.Add(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "ITEMHELP.BIN":
@@ -356,7 +359,10 @@ namespace VS.Utils
                                 L10n.itemDescs.Add(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MCMAN.BIN":
@@ -369,7 +375,10 @@ namespace VS.Utils
                                 L10n.menu.Add(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENU0.PRG":
@@ -384,7 +393,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENU1.PRG":
@@ -399,7 +411,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENU2.PRG":
@@ -414,7 +429,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENU3.PRG":
@@ -429,7 +447,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENU4.PRG":
@@ -444,7 +465,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENU5.PRG":
@@ -459,7 +483,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENU7.PRG":
@@ -474,7 +501,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "VMENU8.PRG":
@@ -489,7 +519,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENU9.PRG":
@@ -504,7 +537,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENUB.PRG":
@@ -519,7 +555,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENUC.PRG":
@@ -534,7 +573,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENUD.PRG":
@@ -549,7 +591,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENUE.PRG":
@@ -565,7 +610,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENUF.PRG":
@@ -581,7 +629,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENU12.BIN":
@@ -597,7 +648,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                     case "MENUBG.BIN":
@@ -660,7 +714,10 @@ namespace VS.Utils
                                 //Debug.Log(sname);
                                 sname = "";
                             }
-                            else sname = sname + L10n.Charset(b);
+                            else
+                            {
+                                sname = sname + L10n.Charset(b);
+                            }
                         }
                         break;
                 }

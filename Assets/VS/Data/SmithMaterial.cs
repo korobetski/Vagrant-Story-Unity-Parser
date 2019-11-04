@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-/*
+﻿/*
  * 
 01 - Wood
 02 - Leather
@@ -26,7 +24,7 @@ namespace VS.Data
     }
     public class SmithMaterial : ClassAffinityType
     {
-        
+
         public static readonly SmithMaterial Wood = new SmithMaterial("Wood", 0, 0, 0, 0, 0, 0, 4, -6, 8, 8, -6, -4, -4, 5, 8, 0);
         public static readonly SmithMaterial Leather = new SmithMaterial("Leather", 0, 0, 0, 0, 0, 0, 2, 5, 5, -1, -1, -5, -5, 1, 6, 0);
         public static readonly SmithMaterial Bronze = new SmithMaterial("Bronze", -1, -1, 2, -1, -1, -5, 8, -5, -5, 3, 3, -2, -2, 3, 2, -2);

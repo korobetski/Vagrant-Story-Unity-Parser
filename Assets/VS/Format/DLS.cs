@@ -12,13 +12,13 @@ namespace VS.Format
         */
 
         /* Generic Sources */
-        public static readonly ushort CONN_SRC_NONE = 0x0000;
-        private static readonly int CONN_SRC_LFO = 0x0001;
-        private static readonly int CONN_SRC_KEYONVELOCITY = 0x0002;
-        private static readonly int CONN_SRC_KEYNUMBER = 0x0003;
-        private static readonly int CONN_SRC_EG1 = 0x0004;
-        private static readonly int CONN_SRC_EG2 = 0x0005;
-        private static readonly int CONN_SRC_PITCHWHEEL = 0x0006;
+        public static readonly ushort CONN_SRC_NONE = 0x0000;           // No Source
+        private static readonly int CONN_SRC_LFO = 0x0001;              // Low Frequency Oscillator
+        private static readonly int CONN_SRC_KEYONVELOCITY = 0x0002;    // Key on Velocity
+        private static readonly int CONN_SRC_KEYNUMBER = 0x0003;        // Key Number
+        private static readonly int CONN_SRC_EG1 = 0x0004;              // Envelope Generator 1
+        private static readonly int CONN_SRC_EG2 = 0x0005;              // Envelope Generator 2
+        private static readonly int CONN_SRC_PITCHWHEEL = 0x0006;       // Pitch Wheel
 
         /* Midi Controllers 0-127 */
         private static readonly int CONN_SRC_CC1 = 0x0081;
@@ -151,6 +151,11 @@ namespace VS.Format
                 offset += wave.GetPaddedSize();
 
                 wvpl.AddChunk(wave);
+
+
+
+                CKwsmp wsmp = new CKwsmp();
+                wvpl.AddChunk(wsmp);
             }
             Chunk ptbl = new Chunk("ptbl", ptblb);
             AddChunk(ptbl);
@@ -274,7 +279,7 @@ namespace VS.Format
         private uint _channel;
         private uint _index;
 
-        private DLSWaveSample _sample;
+        private CKwsmp _sample;
         private DLSArticulation _articulation;
 
 
@@ -309,7 +314,7 @@ namespace VS.Format
 
         public void AddSample()
         {
-            _sample = new DLSWaveSample();
+            _sample = new CKwsmp();
         }
 
         public void SetRange(ushort keyLow = 0x00, ushort keyHigh = 0x7F, ushort velocityLow = 0x00, ushort velocityHigh = 0x7F)
@@ -330,64 +335,7 @@ namespace VS.Format
 
     }
 
-    public class DLSWaveSample
-    {
-        private ushort _unityNote;
-        private short _fineTune;
-        private long _attenuation;
-        private char _sampleLoops;
-        private uint _loopType;
-        private uint _loopStart;
-        private uint _loopLength;
 
-        public DLSWaveSample()
-        {
-
-        }
-
-        public DLSWaveSample(ushort unityNote, short fineTune, int attenuation, char sampleLoops, uint loopType, uint loopStart, uint loopLength)
-        {
-            _unityNote = unityNote;
-            _fineTune = fineTune;
-            _attenuation = attenuation;
-            _sampleLoops = sampleLoops;
-            _loopType = loopType;
-            _loopStart = loopStart;
-            _loopLength = loopLength;
-        }
-
-        public void SetPitchInfo(ushort unityNote, short fineTune, long attenuation)
-        {
-            _unityNote = unityNote;
-            _fineTune = fineTune;
-            _attenuation = attenuation;
-        }
-        public void SetLoopInfo(uint loopType, uint loopStart, uint loopLength, int loopStatus, AKAOSample samp)
-        {
-            /*
-            const int origFormatBytesPerSamp = samp->bps / 8;
-            double compressionRatio = samp->GetCompressionRatio();
-
-            // If the sample loops, but the loop length is 0, then assume the length should
-            // extend to the end of the sample.
-            if (loopStatus == 0 && loopLength == 0)
-                loopLength = samp->dataLength - loopStart;
-
-            _sampleLoops = (char)loopStatus;
-            _loopType = loopType;
-            // In DLS, the value is in number of samples
-            // if the val is a raw offset of the original format, multiply it by the compression ratio
-            _loopStart = (loop.loopStartMeasure == DLS.LM_BYTES)
-                              ? (uint)((loop.loopStart * compressionRatio) / origFormatBytesPerSamp)
-                              : loop.loopStart;
-
-            _loopStart = (loop.loopLengthMeasure == DLS.LM_BYTES)
-                               ? (uint)((loop.loopLength * compressionRatio) / origFormatBytesPerSamp)
-                               : loopLength;
-           */
-        }
-
-    }
 
     public class DLSArticulation
     {
@@ -437,4 +385,153 @@ namespace VS.Format
             _scale = scale;
         }
     }
+
+
+
+
+
+    public class CKwlnk:Chunk // Wave Link Chunk
+    {
+        public ushort options;
+        /*
+        Specifies a group number for samples which are phase locked. All waves in a set of
+        wave links with the same group are phase locked and follow the wave in the group with
+        the F_WAVELINK_PHASE_MASTER flag set. If a wave is not a member of a phase
+        locked group, this value should be set to 0.
+        */
+        public ushort phaseGroup;
+        /*
+        Specifies the channel placement of the file. This is used to place mono sounds within a
+        stereo pair or for multi-track placement. Each bit position within the ulChannel field
+        specifies a channel placement with bit 0 specifying a mono file or the left channel of a
+        stereo file. Bit 1 specifies the right channel of a stereo file.
+        */
+        public ulong channel;
+        // Specifies the 0 based index of the cue entry in the wave pool table.
+        public ulong tableIndex;
+
+
+        public CKwlnk():base("wlnk")
+        {
+
+        }
+    }
+
+    public class CKwsmp : Chunk
+    {
+        public ushort unityNote;
+        public short fineTune;
+        public long attenuation;
+        public ulong options;
+        public ulong sampleLoops = 0;
+        public List<CKloop> loops;
+
+        public CKwsmp() : base("wsmp")
+        {
+            loops = new List<CKloop>();
+        }
+
+        public CKwsmp(ushort UN, short FT, long AT, ulong OP) : base("wsmp")
+        {
+            unityNote = UN;
+            fineTune = FT;
+            attenuation = AT;
+            options = OP;
+            loops = new List<CKloop>();
+        }
+
+        public void SetPitchInfo(ushort UN, short FT, long AT, ulong OP)
+        {
+            unityNote = UN;
+            fineTune = FT;
+            attenuation = AT;
+            options = OP;
+            loops = new List<CKloop>();
+        }
+        public void AddLoop(CKloop LP)
+        {
+            loops.Add(LP);
+            sampleLoops = (ulong)loops.Count;
+        }
+
+        public void AddLoops(List<CKloop> LPs)
+        {
+            loops.AddRange(LPs);
+            sampleLoops = (ulong)loops.Count;
+        }
+    }
+
+    public class CKloop : Chunk
+    {
+        public ulong loopType; // Specifies the loop type : WLOOP_TYPE_FORWARD Forward Loop
+        public ulong loopStart; // Specifies the start point of the loop in samples as an absolute offset from the beginning of the data in the<data-ck> subchunk of the<wave-list> wave file chunk.
+        public ulong loopLength; // Specifies the length of the loop in samples.
+
+        public CKloop() : base("loop")
+        {
+
+        }
+    }
+
+    public class CKptbl:Chunk // Pool Table Chunk
+    {
+        public ulong cues; // Specifies the number (count) of <poolcue> records that are contained in the <ptbl-ck>
+        // chunk.The<poolcue> records are stored immediately following the cCues data field.
+        public List<ulong> poolcues;
+
+        public CKptbl():base("ptbl")
+        {
+            poolcues = new List<ulong>();
+        }
+
+        public void AddCue(ulong offset)
+        {
+            poolcues.Add(offset);
+            cues = (ulong)poolcues.Count;
+        }
+        public void AddCues(List<ulong> offsets)
+        {
+            poolcues.AddRange(offsets);
+            cues = (ulong)poolcues.Count;
+        }
+    }
+
+    public class CKvers:Chunk
+    {
+        public ulong versionMS;
+        public ulong versionLS;
+
+
+        public CKvers():base("vers")
+        {
+
+        }
+    }
+
+    public class LCInfo:LISTChunk
+    {
+        public Chunk IARL;
+        public Chunk IART;
+        public Chunk ICMS;
+        public Chunk ICMT;
+        public Chunk ICOP;
+        public Chunk ICRD;
+        public Chunk IENG;
+        public Chunk IGNR;
+        public Chunk IKEY;
+        public Chunk IMED;
+        public Chunk INAM;
+        public Chunk IPRD;
+        public Chunk ISBJ;
+        public Chunk ISFT;
+        public Chunk ISRC;
+        public Chunk ISRF;
+        public Chunk ITCH;
+
+        public LCInfo():base("INFO")
+        {
+
+        }
+    }
+
 }
