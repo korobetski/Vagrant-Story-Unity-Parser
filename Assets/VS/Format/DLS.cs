@@ -6,38 +6,6 @@ using VS.Utils;
 
 namespace VS.Format
 {
-    /*
-    <DLS-form> → RIFF( ‘DLS ’ // Collection
-    [<vers-ck>]
-    [<dlid-ck>]
-    <colh-ck>
-    <lins-list>
-    <ptbl-ck>
-    <wvpl-list>
-    [<INFO-list>] )
-    <wvpl-list> → LIST( ‘wvpl’ <wave-list>...) // Wave Pool
-    <wave-list> → LIST( ‘wave’ // Wave File
-    [<dlid-ck>]
-    <fmt-ck>
-    <data-ck>
-    [<wsmp-ck>]
-    [<INFO-list>] )
-    <lins-list> → LIST( ‘lins’ <ins-list>... ) // List of Instruments
-    <ins-list> → LIST( ‘ins ‘ // Instrument
-    [<dlid-ck>]
-    <insh-ck>
-    <lrgn-list>
-    [<lart-list>]
-    [<INFO-list>] )
-    <lrgn-list> → LIST( ‘lrgn’ <rgn-list>... ) // List of Regions
-    <rgn-list> → LIST( ‘rgn ’ // Region
-    <rgnh-ck>
-    [<wsmp-ck>]
-    <wlnk-ck>
-    [<lart-list>] )
-    <lart-list> → LIST( ‘lart’ <art1-ck>… ) // List of Articulators
-    <INFO-list> → LIST( ‘INFO’ <info_text-ck>...)
-    */
     public class DLS:RIFF
     {
 
@@ -103,17 +71,13 @@ namespace VS.Format
 
 
         private string _name;
-        private List<DLSWave> waves;
+        private List<WAV> waves;
         private List<DLSInstrument> instruments;
-        private List<DLSRegion> regions;
-        private List<DLSArticulation> articulations;
 
         public DLS():base("DLS ")
         {
-            waves = new List<DLSWave>();
+            waves = new List<WAV>();
             instruments = new List<DLSInstrument>();
-            regions = new List<DLSRegion>();
-            articulations = new List<DLSArticulation>();
         }
 
         public void SetName(string name)
@@ -122,25 +86,21 @@ namespace VS.Format
         }
 
 
-        public DLSInstrument AddInstrument(uint bank, uint instrumentId)
+        public void AddInstrument(uint bank, uint instrumentId)
         {
             DLSInstrument instrument = new DLSInstrument(bank, instrumentId, "Instrument " + instrumentId);
             instruments.Add(instrument);
-            return instrument;
         }
 
-        public DLSInstrument AddInstrument(uint bank, uint instrumentId, string name)
+        public void AddInstrument(uint bank, uint instrumentId, string name)
         {
             DLSInstrument instrument = new DLSInstrument(bank, instrumentId, name);
             instruments.Add(instrument);
-            return instrument;
         }
 
-        public DLSWave AddWave(ushort formatTag, ushort channels, int samplesPerSec, int aveBytesPerSec, ushort blockAlign, ushort bitsPerSample, uint waveDataSize, char[] waveData, string name)
+        public void AddWave(WAV wave)
         {
-            DLSWave wave = new DLSWave(formatTag, channels, samplesPerSec, aveBytesPerSec, blockAlign, bitsPerSample, waveDataSize, waveData, name);
             waves.Add(wave);
-            return wave;
         }
 
         public void Define()
@@ -148,6 +108,7 @@ namespace VS.Format
             List<byte> colhb = new List<byte>(BitConverter.GetBytes((ulong)instruments.Count));
             Chunk colh = new Chunk("colh", colhb);
             AddChunk(colh);
+
             LISTChunk lins = new LISTChunk("lins");
             foreach(DLSInstrument inst in instruments)
             {
@@ -180,6 +141,25 @@ namespace VS.Format
                 lins.AddChunk(ins);
             }
             AddChunk(lins);
+
+            LISTChunk wvpl = new LISTChunk("wvpl");
+            List<byte> ptblb = new List<byte>();
+            ptblb.AddRange(BitConverter.GetBytes((ulong)8));
+            ptblb.AddRange(BitConverter.GetBytes((ulong)waves.Count));
+            ulong offset = 0;
+            foreach (WAV wave in waves)
+            {
+                ptblb.AddRange(BitConverter.GetBytes((ulong)offset));
+                offset += wave.GetPaddedSize();
+
+                wvpl.AddChunk(wave);
+            }
+            Chunk ptbl = new Chunk("ptbl", ptblb);
+            AddChunk(ptbl);
+
+
+            AddChunk(wvpl);
+
         }
 
     }
@@ -242,7 +222,7 @@ namespace VS.Format
             _regions = regions;
         }
     }
-
+    /*
     public class DLSWave
     {
         private ushort _formatTag;
@@ -277,8 +257,13 @@ namespace VS.Format
             DLS.AlignName(_name);
         }
 
-    }
+        public ulong size
+        {
+            get => _waveDataSize;
+        }
 
+    }
+    */
     public class DLSRegion
     {
         private ushort _keyLow;
@@ -286,8 +271,8 @@ namespace VS.Format
         private ushort _velocityLow;
         private ushort _velocityHigh;
 
-        private ushort _options;
-        private ushort _phaseGroup;
+        private ushort _options = 1;
+        private ushort _phaseGroup = 0;
         private uint _channel;
         private uint _index;
 

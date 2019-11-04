@@ -1,5 +1,4 @@
-﻿using Kermalis.SoundFont2;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -313,6 +312,14 @@ namespace VS.Parser
 
         private void Synthetize(AKAO sequencer, AKAO sampler)
         {
+            // Lots of things todo here !
+            // To make a good readable audio file we need many things.
+            // 1 : SMF (Standard Midi file) as a sequencer, we already have it (not perfect but it works)
+            // 2 : DLS or SF2 as a Samples Collection both follow the RIFF standard
+            // 3 : WAV as Sample format inside the sample collection, if follow the RIFF standard too
+            // 4 : XMF or RMID to combine sequencer and synthetizer (SMF + DLS + WAV)
+
+
             DLS dls = new DLS();
             dls.SetName(FileName+".dls");
 
