@@ -2,173 +2,121 @@
 using System.IO;
 using System.Collections.Generic;
 using VS.Utils;
+using UnityEngine;
 
 namespace VS.Format
 {
-    /// <summary>
-    /// Class representing a generic RIFF-Like file
-    /// </summary>
-    public class RIFF
+
+    public class RIFF:ListTypeChunk
     {
-        public char[] fileIdentifier;
 
-        public char[] format;
 
-        Dictionary<char[], Chunk> chunks = new Dictionary<char[], Chunk>(new ByteArrayValueComparer());
-
-        /// <summary>
-        /// Initializes a new instance of the Riff class.
-        /// </summary>
-        /// <param name="fileName">File name.</param>
-        public RIFF(string fileName)
+        public RIFF(string form):base("RIFF", form)
         {
-            byte[] raw = File.ReadAllBytes(fileName);
-
-            fileIdentifier = new char[4];
-
-            Array.Copy(raw, fileIdentifier, 4);
-
-            //Debug. Print identifier
-            char[] testArray = new char[4];
-            Array.Copy(raw, 8, testArray, 0, 4);
-            Console.WriteLine(testArray);
         }
 
-        public RIFF(string fileName, bool forceRIFF)
+
+        public static void AlignName(string name)
         {
-            byte[] raw = File.ReadAllBytes(fileName);
+            name += (char)0x00;
+            if (name.Length % 2 > 0)     // if the size of the name string is odd
+                name += (char)0x00;  // add another null byte
+        }
 
-            fileIdentifier = new char[4];
-
-            Array.Copy(raw, fileIdentifier, 4);
-
-            //Load
-            Chunk c = new Chunk();
-            List<Chunk> ch = c.Initialize(Util.Slice(raw, 8, raw.Length));
-
-            Dictionary<char[], int> chunkTypeCount = new Dictionary<char[], int>();
-
-            foreach (Chunk chunk in ch)
+        public bool WriteFile(string path, List<byte> buffer)
+        {
+            using (FileStream fs = File.Create(path))
             {
-                int chunkCount = 0;
-                chunkTypeCount.TryGetValue(chunk.identifier, out chunkCount);
-                Console.WriteLine(chunkCount);
-
-                char[] numeral = chunkCount.ToString().ToCharArray();
-                char[] key = new char[4 + numeral.Length];
-                key[0] = chunk.identifier[0];
-                key[1] = chunk.identifier[1];
-                key[2] = chunk.identifier[2];
-                key[3] = chunk.identifier[3];
-
-                Array.Copy(numeral, 0, key, 4, numeral.Length);
-
-
-                Console.WriteLine(key);
-                chunks.Add(key, chunk);
-
-                chunkTypeCount[chunk.identifier] = ++chunkCount;
+                for (int i = 0; i < buffer.Count; i++)
+                {
+                    fs.WriteByte(buffer[i]);
+                }
+                fs.Close();
             }
-        }
 
-        public Chunk GetChunk(string identifier)
-        {
-            return GetChunk(identifier.ToCharArray());
-        }
 
-        public Chunk GetChunk(string identifier, int number)
-        {
-            return GetChunk(identifier.ToCharArray(), number);
-        }
 
-        /// <summary>
-        /// Get a chunk.
-        /// </summary>
-        /// <returns>The zeroth chunk with given identifier.</returns>
-        /// <param name="identifier">Chunk type identifier.</param>
-        public Chunk GetChunk(char[] identifier)
-        {
-            return GetChunk(identifier, 0);
-        }
-
-        /// <summary>
-        /// Get a chunk
-        /// </summary>
-        /// <returns>The nth chunk with given identifier.</returns>
-        /// <param name="identifier">Chunk type identifier.</param>
-        /// <param name="number">Which chunk of given type.</param>
-        public Chunk GetChunk(char[] identifier, int number)
-        {
-            return chunks[new char[] { identifier[0], identifier[1], identifier[2], identifier[3], '0' }];
+            return true;
         }
     }
 
-    /// <summary>
-    /// Represents a loaded chunk
-    /// </summary>
+
+    public class ListTypeChunk : Chunk
+    {
+        public char[] type = new char[4];
+        public List<Chunk> chunks;
+
+        public ListTypeChunk(string sId, string sType) : base(sId)
+        {
+            size = 12; // id + size + type
+            type = sType.ToCharArray();
+            chunks = new List<Chunk>();
+        }
+
+        public ListTypeChunk(string sId, string sType, List<Chunk> lchunks) : base(sId)
+        {
+            type = sType.ToCharArray();
+            chunks = lchunks;
+            size = 12; // id + size + type
+            foreach (Chunk c in chunks)
+            {
+                size += c.size;
+            }
+        }
+
+        public void AddChunk(Chunk chunk)
+        {
+            chunks.Add(chunk);
+            size += chunk.GetPaddedSize();
+        }
+
+    };
+
+
+    public class LISTChunk : ListTypeChunk
+    {
+        public LISTChunk(string sType) : base("LIST", sType)
+        {
+        }
+
+        public LISTChunk(string sType, List<Chunk> lchunks) : base("LIST", sType, lchunks)
+        {
+        }
+
+    };
     public class Chunk
     {
-        public char[] identifier;
-        public uint contentLength;
-        public uint childrenLength;
+        public char[] id = new char[4]; //  A chunk ID identifies the type of data within the chunk.
+        public uint size = 0; //  The size of the chunk data in bytes, excluding any pad byte.
+        public List<byte> data; //  The actual data not including a possible pad byte to word align
 
-        public byte[] contents;
-
-        public Chunk parent;
-        public List<Chunk> children;
-
-        public List<Chunk> Initialize(byte[] data, Chunk parent)
+        public Chunk(string sId)
         {
-            this.parent = parent;
-            return Initialize(data);
+            id = sId.ToCharArray();
         }
 
-        public List<Chunk> Initialize(byte[] data)
+        public Chunk(string sId, List<byte> bData)
         {
-            identifier = new char[4];
-
-            Array.Copy(data, identifier, 4);
-            Console.WriteLine(identifier);
-
-            contentLength = BitConverter.ToUInt32(data, 4);
-            childrenLength = BitConverter.ToUInt32(data, 8);
-
-            contents = new byte[contentLength];
-            Array.Copy(data, 12, contents, 0, contentLength);
-
-            //Create children
-            uint startPointer = 12 + contentLength;
-
-            children = new List<Chunk>();
-
-            while (startPointer < childrenLength)
-            {
-                Chunk c = new Chunk();
-                List<Chunk> ch = c.Initialize(Util.Slice(data, startPointer, (uint)data.Length), this);
-
-                children.AddRange(ch);
-
-                startPointer += ch[0].contentLength + ch[0].childrenLength + 12;
-            }
-
-            List<Chunk> output = new List<Chunk>();
-            output.Add(this);
-            output.AddRange(children);
-
-
-            return output;
+            id = sId.ToCharArray();
+            data = bData;
+            size = (uint)data.Count;
         }
 
-        public byte[] GetContents()
+        public void SetData(List<byte> bData)
         {
-            return contents;
+            data = bData;
+            size = (uint)data.Count;
         }
 
-        public override string ToString()
+        public uint GetPaddedSize()
         {
-            return identifier.ToString();
+            return size + size % 2;
         }
 
+        public void Write(List<byte> buffer)
+        {
+
+        }
 
     }
 }

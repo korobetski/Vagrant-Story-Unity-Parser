@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using VS.Format;
 using VS.Utils;
 
 //Minoru Akao
@@ -312,13 +313,19 @@ namespace VS.Parser
 
         private void Synthetize(AKAO sequencer, AKAO sampler)
         {
-            SF2 SoundFont = new SF2();
+            DLS dls = new DLS();
+            dls.SetName(FileName+".dls");
+
+
+            Debug.Log(dls.id[0]+ dls.id[1] + dls.id[2] + dls.id[3] + " -- "+ dls.type[0] + dls.type[1] + dls.type[2] + dls.type[3]);
+
             if (sequencer.instruments != null)
             {
                 foreach (AKAOInstrument instrument in sequencer.instruments)
                 {
                     if (instrument.regions.Length > 0)
                     {
+
                         foreach (AKAOInstrumentRegion region in instrument.regions)
                         {
                             AKAOArticulation articulation;
@@ -358,49 +365,24 @@ namespace VS.Parser
                                 region.unityKey = articulation.unityKey;
                             }
 
-
                             short ft = articulation.fineTune;
                             if (ft < 0)
                             {
                                 ft += short.MaxValue;
                             }
-                                
+
                             // this gives us the pitch multiplier value ex. 1.05946
                             double freq_multiplier = ((ft * 32) + 0x100000) / (double)0x100000;
                             double cents = Mathf.Log((float)freq_multiplier) / Mathf.Log(2) * 1200;
                             if (articulation.fineTune < 0)
                                 cents -= 1200;
                             region.fineTune = (short)cents;
-
                         }
                     }
-
-
-
-
-                    SoundFont.AddInstrument(instrument.name);
-                }
-
-
-
-            }
-
-            SoundFont.AddInstrument("Drum Kit");
-            if (samples != null)
-            {
-                foreach (AKAOSample sample in samples)
-                {
-                    sample.decompressData(0f, 0f);
-                    short[] pcm = new short[sample.wave.Length];
-                    for (uint i = 0; i < sample.wave.Length; i++)
-                    {
-                        pcm[i] = (short)sample.wave[i];
-                    }
-                    SoundFont.AddSample(pcm, sample.name, (sample.looping > 0), (uint)sample.loop, (uint)sample.range, 0x40, 0x00);
                 }
             }
-            ToolBox.DirExNorCreate("Assets/Resources/Sounds/SF/");
-            SoundFont.Save("Assets/Resources/Sounds/SF/" + FileName + ".sf2");
+
+
         }
     }
 
