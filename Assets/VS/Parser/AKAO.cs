@@ -95,7 +95,7 @@ namespace VS.Parser
                     BinaryReader stream = new BinaryReader(memDat);
                     */
 
-                    int instrCount = 0;
+                    uint instrCount = 0;
                     // Instruments
                     if (ptr1 > 0x30)
                     {
@@ -116,7 +116,7 @@ namespace VS.Parser
                             }
                         }
 
-                        instrCount = instrPtrs.Count;
+                        instrCount = (uint)instrPtrs.Count;
                         if (ptr2 > 0x34)
                         {
                             instrCount++;
@@ -223,7 +223,7 @@ namespace VS.Parser
                     //sampleParser.UseDebug = true;
                     sampleParser.Parse(samplePath, AKAO.SOUND);
 
-                    composer = new AKAOComposer(buffer, basePtr, ptr1, instruments, drum, sampleParser.articulations, sampleParser.samples, numTrack, FileName);
+                    composer = new AKAOComposer(buffer, basePtr, ptr1, instrCount, numTrack, FileName);
 
                     Synthetize(this, sampleParser);
 
@@ -323,17 +323,14 @@ namespace VS.Parser
             DLS dls = new DLS();
             dls.SetName(FileName + ".dls");
 
-
-
-            Debug.Log(dls.id[0] + dls.id[1] + dls.id[2] + dls.id[3] + " -- " + dls.type[0] + dls.type[1] + dls.type[2] + dls.type[3]);
-
             if (sequencer.instruments != null)
             {
+                uint i = 0;
                 foreach (AKAOInstrument instrument in sequencer.instruments)
                 {
                     if (instrument.regions.Length > 0)
                     {
-
+                        CKinsh DSLInstrument = new CKinsh(0, (uint)(sequencer.instruments.Length+ sequencer.startingArticulationId+i), instrument.name);
                         foreach (AKAOInstrumentRegion region in instrument.regions)
                         {
                             AKAOArticulation articulation;
@@ -353,20 +350,17 @@ namespace VS.Parser
                                 articulation = sampler.articulations[region.articulationId - sampler.startingArticulationId];
                             }
 
+
+
                             region.articulation = articulation;
                             region.sampleNum = articulation.sampleNum;
 
-                            if (articulation.loopPt != 0)
-                            {
-                                region.SetLoopInfo(1, articulation.loopPt, sampler.samples[region.sampleNum].size - articulation.loopPt);
-                            }
 
                             region.ComputeADSR();
 
                             if (instrument.isDrum)
                             {
-                                AKAODrumRegion region1 = region as AKAODrumRegion;
-                                region1.unityKey = (uint)articulation.unityKey + region1.lowRange - region1.relativeKey;
+                                region.unityKey = (uint)articulation.unityKey + region.lowRange - region.relativeKey;
                             }
                             else
                             {
@@ -388,14 +382,57 @@ namespace VS.Parser
                             }
 
                             region.fineTune = (short)cents;
+
+
+
+
+                            CKrgnh reg = new CKrgnh(region.lowRange, region.hiRange, 0x00, 0x7F);
+                            CKwsmp smp = new CKwsmp((ushort)region.unityKey, region.fineTune, region.attenuation, 1);
+                            if (articulation.loopPt != 0)
+                            {
+                                //region.SetLoopInfo(1, articulation.loopPt, sampler.samples[region.sampleNum].size - articulation.loopPt);
+                                smp.AddLoop(new CKloop(1, articulation.loopPt, (ulong)(sampler.samples[region.sampleNum].size - articulation.loopPt)));
+                            }
+                            reg.SetSample(smp);
+                            if (instrument.isDrum)
+                            {
+                                CKart1 dart = new CKart1();
+                                dart.AddPan(0x40);
+                                reg.AddArticulation(dart);
+                            } else
+                            {
+                                if (articulation != null)
+                                {
+                                    CKart1 iart = new CKart1();
+                                    iart.AddPan(0x40);
+                                    reg.AddArticulation(iart);
+                                }
+                            }
+                            DSLInstrument.AddRegion(reg);
+
                         }
+
+
+                        dls.AddInstrument(DSLInstrument);
                     }
 
-                    //dls.AddInstrument(instrument.);
+                    i++;
                 }
             }
 
+            if (sampler.samples != null)
+            {
+                foreach(AKAOSample AKAOsmp in sampler.samples)
+                {
+                    List<byte> waveDatas = AKAOsmp.ToWAV();
 
+                    WAV nw = new WAV(waveDatas);
+                    dls.AddWave(nw);
+                }
+            }
+
+            ToolBox.DirExNorCreate("Assets/Resources/Sounds/DLS/");
+            dls.WriteFile("Assets/Resources/Sounds/DLS/"+FileName + ".dls");
         }
     }
 
@@ -421,13 +458,13 @@ namespace VS.Parser
         public byte unk3;
         public byte unk4;
         public byte volume;
+        public byte attenuation = 0xF7;  // default to no attenuation
+        public ushort relativeKey;
+        public byte pan = 0x40;  // default to center pan
 
         public AKAOArticulation articulation;
         public AKAOSample sample;
         public uint sampleNum;
-        public int loopStatus;
-        public uint loopStart;
-        public long loopLength;
 
         internal double attack_time;
         internal double decay_time;
@@ -470,13 +507,6 @@ namespace VS.Parser
 
         }
 
-        internal void SetLoopInfo(int theLoopStatus, uint theLoopStart, long theLoopLength)
-        {
-            loopStatus = theLoopStatus;
-            loopStart = theLoopStart;
-            loopLength = theLoopLength;
-        }
-
     }
     public class AKAODrum : AKAOInstrument
     {
@@ -491,9 +521,6 @@ namespace VS.Parser
     }
     public class AKAODrumRegion : AKAOInstrumentRegion
     {
-        public ushort relativeKey;
-        public byte attenuation;
-        public byte pan;
 
         public AKAODrumRegion(byte[] b, int key)
         {
@@ -567,15 +594,14 @@ namespace VS.Parser
         public int end;
         public int looping;
         public int loop;
-        public float[] data;
-        public float[] wave;
+        public byte[] data;
         public int size;
         public long offset;
 
-        public AKAOSample(string n, int size, BinaryReader buffer, long offset)
+        public AKAOSample(string n, int SIZ, BinaryReader buffer, long OFF)
         {
-            this.size = size;
-            this.offset = offset;
+            size = SIZ;
+            offset = OFF;
             byte a = buffer.ReadByte();
             byte b = buffer.ReadByte();
             name = n;
@@ -584,72 +610,128 @@ namespace VS.Parser
             end = b & 0x1;
             looping = b & 0x2;
             loop = b & 0x4;
-            data = new float[size];
+            data = new byte[size];
             for (int i = 0; i < size; i++)
             {
                 data[i] = buffer.ReadByte();
             }
         }
 
-        public float[] decompressData(float prev1, float prev2)
+        public void decompressData(List<byte> pSmp, int a, VAGBlk pVBlk, float prev1, float prev2)
         {
             int i;
             float t;
             float f1, f2;
             float p1, p2;
             var shift = range + 16;
-            wave = new float[29];
+
+
+            shift = pVBlk.range + 16;
 
             for (i = 0; i < 14; i++)
             {
-                wave[i * 2] = ((int)data[i] << 28) >> shift;
-                wave[i * 2 + 1] = (((int)data[i] & 0xF0) << 24) >> shift;
+                pSmp[a+i * 2] = (byte)(((int)pVBlk.brr[i] << 28) >> shift);
+                pSmp[a + i * 2 + 1] = (byte)(((int)(pVBlk.brr[i] & 0xF0) << 24) >> shift);
             }
 
-            i = filter;
-            if (i > 0)
+            // Apply ADPCM decompression ----------------
+            i = pVBlk.filter;
+
+            if (i== 1)
             {
-                f1 = AKAOSample.coeff[i, 0];
-                f2 = AKAOSample.coeff[i, 1];
+                f1 = coeff[i,0];
+                f2 = coeff[i,1];
                 p1 = prev1;
                 p2 = prev2;
+
                 for (i = 0; i < 28; i++)
                 {
-                    t = wave[i] + (p1 * f1) - (p2 * f2);
-                    wave[i] = t;
+                    t = pSmp[a + i] + (p1 * f1) - (p2 * f2);
+                    pSmp[a + i] = (byte)t;
                     p2 = p1;
                     p1 = t;
                 }
+
                 prev1 = p1;
                 prev2 = p2;
             }
             else
             {
-                prev1 = wave[26];
-                prev2 = wave[27];
+                prev2 = pSmp[a + 26];
+                prev1 = pSmp[a + 27];
+            }
+        }
+
+        internal List<byte> ToWAV()
+        {
+            List<byte> wav = new List<byte>();
+            VAGBlk theBlock = new VAGBlk();
+            float prev1 = 0;
+            float prev2 = 0;
+            /*
+            bool bSetLoopOnConversion = false;
+            bool addrOutOfVirtFile = false;
+            */
+
+            for (uint k = 0; k < data.Length; k += 0x10)
+            {
+                theBlock.range = (byte)(data[k] & 0xF);
+                theBlock.filter = (byte)((data[k] & 0xF0) >> 4);
+                theBlock.flagEnd = (byte)(data[k+1] & 1);
+                theBlock.flagLooping = (byte)(((data[k + 1] & 1) > 0) ? 1 : 0);
+                theBlock.flagLoop = (byte)(((data[k + 1] & 4) > 0) ? 1 : 0);
+                /*
+                if (bSetLoopOnConversion)
+                {
+                    if (theBlock.flagLoop > 0)
+                    {
+                        SetLoopOffset(k);
+                        SetLoopLength(data.Length - k);
+                    }
+                    if (theBlock.flagEnd > 0 && theBlock.flagLooping > 0)
+                    {
+                        SetLoopStatus(1);
+                    }
+                }
+                */
+                for (uint l = 0; l < 14; l++)
+                {
+                    theBlock.brr[l] = data[k + l];
+                }
+
+
+
+                // each decompressed pcm block is 52 bytes   EDIT: (wait, isn't it 56 bytes? or is it 28?)
+                wav.AddRange(new byte[28]);
+                decompressData(wav, (int)(k/16*28), theBlock, prev1, prev2);
             }
 
-            float[] ret = { prev1 / 0x80000000, prev2 / 0x80000000 };
-            return ret;
+
+            return wav;
+        }
+
+        public class VAGBlk
+        {
+            public byte range = 4;
+            public byte filter = 4;
+            public byte flagEnd = 1;
+            public byte flagLooping = 1;
+            public byte flagLoop = 1;
+            public byte[] brr = new byte[14];
         }
     }
+
+
     public class AKAOComposer
     {
         public static readonly ushort[] delta_time_table = { 0xC0, 0x60, 0x30, 0x18, 0x0C, 0x6, 0x3, 0x20, 0x10, 0x8, 0x4, 0x0, 0xA0A0, 0xA0A0 };
-
-        public enum ComposerMode { MIDI, SAMPLED }
-
-        public AKAOInstrument[] instruments;
-        public AKAODrum drum;
-        public AKAOArticulation[] articulations;
-        public AKAOSample[] samples;
-        public ComposerMode MODE = ComposerMode.MIDI;
 
         private BinaryReader buffer;
         private string name;
         private long start;
         private long end;
         private uint numTrack;
+        private uint numInstr;
         private AKAOTrack[] tracks;
 
 
@@ -658,14 +740,12 @@ namespace VS.Parser
 
         public static uint timeDebug = 0;
 
-        public AKAOComposer(BinaryReader buffer, long start, long end, AKAOInstrument[] instruments, AKAODrum drum, AKAOArticulation[] articulations, AKAOSample[] samples, uint numTrack, string name)
+        public AKAOComposer(BinaryReader buffer, long start, long end, uint NI, uint NT, string name)
         {
             this.buffer = buffer;
-            this.instruments = instruments;
-            this.drum = drum;
-            this.articulations = articulations;
-            this.samples = samples;
-            this.numTrack = numTrack;
+
+            numTrack = NT;
+            numInstr = NI;
             this.name = name;
 
             this.start = start;
@@ -673,22 +753,6 @@ namespace VS.Parser
 
             buffer.BaseStream.Position = start;
             SetTracks();
-        }
-
-        public void BuildAudioClip()
-        {
-            /*
-            int channel = 1;
-            int sampleRate = 44100;
-            int bufferSize = 1024;
-
-            float[] datas = new float[256];
-
-            AudioClip audio = AudioClip.Create(name, datas.Length, 1, 44100, false);
-            audio.SetData(datas, 0);
-
-            AssetDatabase.CreateAsset(audio, "Assets/Resources/Sounds/"+name+".mid");
-            */
         }
 
         public void OutputMidiFile()
@@ -866,7 +930,7 @@ namespace VS.Parser
                         case 0xA1:// Program Change
                             //articulations[articulationId]
                             timeDebug += delta;
-                            curTrack.AddEvent(new EvProgramChange(channel, (byte)(buffer.ReadByte() + instruments.Length), delta));
+                            curTrack.AddEvent(new EvProgramChange(channel, (byte)(buffer.ReadByte() + numInstr), delta));
                             delta = 0;
                             break;
                         case 0xA2: // Unknown
