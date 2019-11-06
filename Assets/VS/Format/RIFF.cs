@@ -118,17 +118,7 @@ Notation Description
             }
             return buffer;
         }
-        /*
-        public uint Resize()
-        {
-            size = 0;
-            if (data != null && data.Count > 0)
-            {
-                size += (uint)data.Count;
-            }
-            return size;
-        }
-        */
+
         public override string ToString()
         {
             return "Chunk #" + id[0] + id[1] + id[2] + id[3];
@@ -153,18 +143,19 @@ Notation Description
         {
             type = sType.ToCharArray();
             chunks = lchunks;
-            size = 0;
-            foreach (IChunk ck in chunks)
-            {
-                size += ck.GetHeaderSize() + ck.GetSize();
-            }
+            GetSize();
         }
 
         public IChunk AddChunk(IChunk chunk)
         {
             chunks.Add(chunk);
-            size += chunk.GetHeaderSize() + chunk.GetSize();
+            GetSize();
             return chunk;
+        }
+
+        public new uint GetHeaderSize()
+        {
+            return headerSize;
         }
 
         public new uint GetSize()

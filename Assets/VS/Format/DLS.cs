@@ -104,23 +104,31 @@ namespace VS.Format
         {
             Lins instrument = new Lins(bank, instrumentId, "Instrument " + instrumentId);
             linsl.AddChunk(instrument);
+            colh.Instruments = (uint)linsl.chunks.Count;
+            GetSize();
         }
 
         public void AddInstrument(uint bank, uint instrumentId, string name)
         {
             Lins instrument = new Lins(bank, instrumentId, name);
             linsl.AddChunk(instrument);
+            colh.Instruments = (uint)linsl.chunks.Count;
+            GetSize();
         }
 
         public void AddInstrument(Lins dSLInstrument)
         {
             linsl.AddChunk(dSLInstrument);
+            colh.Instruments = (uint)linsl.chunks.Count;
+            GetSize();
         }
 
         public void AddWave(WAV wave)
         {
             wave.Riff = false;
             wvpl.AddChunk(wave);
+            ptbl.Cues = (uint)wvpl.chunks.Count;
+            GetSize();
         }
 
         internal bool WriteFile(string v)
@@ -283,10 +291,10 @@ namespace VS.Format
         private Lart _lart;  // Optionnal
 
 
-        public Lrgn(ushort keyLow, ushort keyHigh, ushort velocityLow, ushort velocityHigh) : base("rgn ")
+        public Lrgn(ushort keyLow, ushort keyHigh, ushort velocityLow, ushort velocityHigh) : base("rgn2")
         {
             _rgnh = AddChunk(new CKrgnh(keyLow, keyHigh, velocityLow, velocityHigh)) as CKrgnh;
-            //_lart = AddChunk(new Lart()) as Lart;
+            _wlnk = AddChunk(new CKwlnk()) as CKwlnk;
         }
 
         public void AddArticulation(CKart1 art)
@@ -310,39 +318,14 @@ namespace VS.Format
             _rgnh.velocityLow = velocityLow;
             _rgnh.velocityHigh = velocityHigh;
         }
-
-        public void SetWaveLink(CKwlnk wlk)
-        {
-            _wlnk = AddChunk(wlk) as CKwlnk;
-        }
-
         public void SetWaveLinkInfo(ushort options, ushort phaseGroup, uint channel, uint index)
         {
-            _wlnk = AddChunk(new CKwlnk(options, phaseGroup, channel, index)) as CKwlnk;
+            _wlnk.options = options;
+            _wlnk.phaseGroup = phaseGroup;
+            _wlnk.channel = channel;
+            _wlnk.tableIndex = index;
+
         }
-        /*
-        public new List<byte> Write()
-        {
-            data = new List<byte>();
-            data.AddRange(BitConverter.GetBytes((UInt16)_rgnh.keyLow));
-            data.AddRange(BitConverter.GetBytes((UInt16)_rgnh.keyHigh));
-            data.AddRange(BitConverter.GetBytes((UInt16)_rgnh.velocityLow));
-            data.AddRange(BitConverter.GetBytes((UInt16)_rgnh.velocityHigh));
-
-            if (_wsmp != null)
-            {
-                AddChunk(_wsmp);
-            }
-
-            if (_wlnk != null)
-            {
-                AddChunk(_wlnk);
-            }
-
-            List<byte> buffer = base.Write();
-            return buffer;
-        }
-        */
     }
 
     public class CKrgnh:Chunk, IChunk
@@ -365,10 +348,11 @@ namespace VS.Format
         1-15 Key groups 1 to 15.
         All Others Reserved
         */
+        private ushort _layer = 0;
 
         public CKrgnh(ushort keyLow, ushort keyHigh, ushort velocityLow, ushort velocityHigh) : base("rgnh")
         {
-            SetDataCapacity(12);
+            SetDataCapacity(14);
             _keyLow = keyLow;
             _keyHigh = keyHigh;
             _velocityLow = velocityLow;
@@ -378,7 +362,7 @@ namespace VS.Format
 
         public void SetRange(ushort keyLow = 0x00, ushort keyHigh = 0x7F, ushort velocityLow = 0x00, ushort velocityHigh = 0x7F)
         {
-            SetDataCapacity(12);
+            SetDataCapacity(14);
             _keyLow = keyLow;
             _keyHigh = keyHigh;
             _velocityLow = velocityLow;
@@ -400,6 +384,7 @@ namespace VS.Format
             AddDatas(BitConverter.GetBytes((ushort)_velocityHigh));
             AddDatas(BitConverter.GetBytes((ushort)_options));
             AddDatas(BitConverter.GetBytes((ushort)_keyGroup));
+            AddDatas(BitConverter.GetBytes((ushort)_layer));
 
             List<byte> buffer = base.Write();
             return buffer;
@@ -411,7 +396,7 @@ namespace VS.Format
     /// </summary>
     public class Lart : LISTChunk, IChunk
     {
-        public Lart() : base("lart")
+        public Lart() : base("lar2")
         {
 
         }
@@ -423,12 +408,12 @@ namespace VS.Format
         public uint cConnectionBlocks;
         public List<ConnectionBlock> ConnectionBlocks;
 
-        public CKart1() : base("art1")
+        public CKart1() : base("art2")
         {
             SetDataCapacity(8);
             ConnectionBlocks = new List<ConnectionBlock>();
         }
-        public CKart1(List<ConnectionBlock> connections) : base("art1")
+        public CKart1(List<ConnectionBlock> connections) : base("art2")
         {
             SetDataCapacity(8);
             ConnectionBlocks = connections;
@@ -547,23 +532,23 @@ Connections inferred by DLS1 Architecture
 
     public class CKwlnk : Chunk, IChunk // Wave Link Chunk
     {
-        public ushort options;
+        public ushort options = 0;
         /*
         Specifies a group number for samples which are phase locked. All waves in a set of
         wave links with the same group are phase locked and follow the wave in the group with
         the F_WAVELINK_PHASE_MASTER flag set. If a wave is not a member of a phase
         locked group, this value should be set to 0.
         */
-    public ushort phaseGroup;
+    public ushort phaseGroup = 0;
         /*
         Specifies the channel placement of the file. This is used to place mono sounds within a
         stereo pair or for multi-track placement. Each bit position within the ulChannel field
         specifies a channel placement with bit 0 specifying a mono file or the left channel of a
         stereo file. Bit 1 specifies the right channel of a stereo file.
         */
-        public uint channel;
+        public uint channel = 2;
         // Specifies the 0 based index of the cue entry in the wave pool table.
-        public uint tableIndex;
+        public uint tableIndex = 0;
 
 
         public CKwlnk() : base("wlnk")

@@ -331,6 +331,7 @@ namespace VS.Parser
                     if (instrument.regions.Length > 0)
                     {
                         Lins DSLInstrument = new Lins(0, (uint)(sequencer.instruments.Length+ sequencer.startingArticulationId+i), instrument.name);
+
                         foreach (AKAOInstrumentRegion region in instrument.regions)
                         {
                             AKAOArticulation articulation;
@@ -398,16 +399,18 @@ namespace VS.Parser
                             {
                                 CKart1 dart = new CKart1();
                                 dart.AddPan(0x40);
-                                //reg.AddArticulation(dart);
+                                reg.AddArticulation(dart);
                             } else
                             {
                                 if (articulation != null)
                                 {
                                     CKart1 iart = new CKart1();
                                     iart.AddPan(0x40);
-                                    //reg.AddArticulation(iart);
+                                    reg.AddArticulation(iart);
                                 }
                             }
+
+                            reg.SetWaveLinkInfo(0, 0, 2, region.sampleNum);
                             DSLInstrument.AddRegion(reg);
 
                         }
@@ -427,7 +430,7 @@ namespace VS.Parser
                     List<byte> waveDatas = AKAOsmp.ToWAV();
 
                     WAV nw = new WAV(waveDatas);
-                    //dls.AddWave(nw);
+                    dls.AddWave(nw);
                 }
             }
 
