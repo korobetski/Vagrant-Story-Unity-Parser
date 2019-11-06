@@ -8,6 +8,7 @@ namespace VS.Format
 
     //http://www.vgmpf.com/Wiki/index.php?title=DLS
     //https://www.midi.org/specifications-old/item/dls-technology-overview
+    // https://www.recordingblogs.com/wiki/downloadable-sounds-dls-format
 
     public class DLS : RIFF
     {
@@ -74,13 +75,24 @@ namespace VS.Format
 
 
         private string _name;
-        private List<WAV> waves;
-        private List<CKinsh> instruments;
+
+        private CKvers vers;
+        private CKdlid dlid;
+        private CKcolh colh;
+        private Linsl linsl;
+        private CKptbl ptbl;
+        private Lwvpl wvpl;
+        private LCInfo INFO;
+
 
         public DLS() : base("DLS ")
         {
-            waves = new List<WAV>();
-            instruments = new List<CKinsh>();
+            size = 4; // The size of the DLS file(number of bytes) less 8(less the size of "RIFF" and the "size")
+            // Non optionnal
+            colh = AddChunk(new CKcolh()) as CKcolh;
+            linsl = AddChunk(new Linsl()) as Linsl;
+            ptbl = AddChunk(new CKptbl()) as CKptbl;
+            wvpl = AddChunk(new Lwvpl()) as Lwvpl;
         }
 
         public void SetName(string name)
@@ -91,213 +103,290 @@ namespace VS.Format
 
         public void AddInstrument(uint bank, uint instrumentId)
         {
-            CKinsh instrument = new CKinsh(bank, instrumentId, "Instrument " + instrumentId);
-            instruments.Add(instrument);
+            Lins instrument = new Lins(bank, instrumentId, "Instrument " + instrumentId);
+            linsl.AddChunk(instrument);
         }
 
         public void AddInstrument(uint bank, uint instrumentId, string name)
         {
-            CKinsh instrument = new CKinsh(bank, instrumentId, name);
-            instruments.Add(instrument);
+            Lins instrument = new Lins(bank, instrumentId, name);
+            linsl.AddChunk(instrument);
         }
 
-        public void AddInstrument(CKinsh dSLInstrument)
+        public void AddInstrument(Lins dSLInstrument)
         {
-            instruments.Add(dSLInstrument);
+            linsl.AddChunk(dSLInstrument);
         }
 
         public void AddWave(WAV wave)
         {
             wave.Riff = false;
-            waves.Add(wave);
+            wvpl.AddChunk(wave);
         }
 
         internal bool WriteFile(string v)
         {
-            List<byte> colhb = new List<byte>(BitConverter.GetBytes((UInt32)instruments.Count));
-            Chunk colh = new Chunk("colh", colhb);
-            AddChunk(colh);
-
-            LISTChunk lins = new LISTChunk("lins");
-            foreach (CKinsh inst in instruments)
-            {
-                LISTChunk ins = new LISTChunk("ins ");
-                ins.AddChunk(inst);
-                if (inst.regions.Count > 0)
-                {
-                    LISTChunk lrgn = new LISTChunk("lrgn");
-                    foreach (CKrgnh reg in inst.regions)
-                    {
-                        LISTChunk rgn = new LISTChunk("rgn ");
-                        rgn.AddChunk(reg);
-                        lrgn.AddChunk(rgn);
-                    }
-                    ins.AddChunk(lrgn);
-                }
-                lins.AddChunk(ins);
-            }
-            AddChunk(lins);
+            colh.Instruments = (uint)linsl.chunks.Count;
+            ptbl.Cues = (uint)wvpl.chunks.Count;
 
             // Wave Pool
-            LISTChunk wvpl = new LISTChunk("wvpl");
-            List<byte> ptblb = new List<byte>();
-            ptblb.AddRange(BitConverter.GetBytes((UInt32)8));
-            ptblb.AddRange(BitConverter.GetBytes((UInt32)waves.Count));
-            ulong offset = 0;
-            foreach (WAV wave in waves)
+            uint offset = 0;
+            foreach (WAV wave in wvpl.chunks)
             {
-                ptblb.AddRange(BitConverter.GetBytes((UInt32)offset));
+                ptbl.AddCue(offset);
                 offset += wave.GetPaddedSize();
-                wave.Riff = false;
-                wvpl.AddChunk(wave);
-                CKwsmp wsmp = new CKwsmp();
-                wvpl.AddChunk(wsmp);
             }
-            Chunk ptbl = new Chunk("ptbl", ptblb);
-            AddChunk(ptbl);
-            AddChunk(wvpl);
+
             Resize();
             return base.WriteFile(v, this.Write());
         }
+
     }
 
 
 
-
-
-
-    public class CKinsh : Chunk, IChunk
+    /// <summary>
+    /// Instruments
+    /// </summary>
+    public class CKcolh : Chunk, IChunk
     {
-        public new uint headerSize = 20;
-        private uint _bank;
-        private uint _instrumentId;
-        private string _name;
-        private List<CKrgnh> _regions;
-        private List<CKart1> lart;
-
-        public CKinsh() : base("insh")
+        private uint _cInstruments = 0;
+        public CKcolh() : base("colh")
         {
-            _regions = new List<CKrgnh>();
-        }
-        public CKinsh(uint bank, uint instrumentId) : base("insh")
-        {
-            _bank = bank;
-            _instrumentId = instrumentId;
-            _name = "Instrument " + instrumentId;
-            _regions = new List<CKrgnh>();
-            lart = new List<CKart1>();
-
-            RIFF.AlignName(_name);
-        }
-        public CKinsh(uint bank, uint instrumentId, string name) : base("insh")
-        {
-            _bank = bank;
-            _instrumentId = instrumentId;
-            _name = name;
-            _regions = new List<CKrgnh>();
-            lart = new List<CKart1>();
-
-            RIFF.AlignName(_name);
-        }
-        public CKinsh(uint bank, uint instrumentId, string name, List<CKrgnh> regions) : base("insh")
-        {
-            _bank = bank;
-            _instrumentId = instrumentId;
-            _name = name;
-            _regions = regions;
-            lart = new List<CKart1>();
-
-            RIFF.AlignName(_name);
+            headerSize = 12;
         }
 
-        public List<CKrgnh> regions { get => _regions; }
-        public ulong bank { get => _bank; }
-        public ulong instrumentId { get => _instrumentId; }
+        public uint Instruments { get => _cInstruments; set => _cInstruments = value; }
 
-        public void AddRegion(CKrgnh region)
-        {
-            _regions.Add(region);
-        }
-
-        public void AddRegions(List<CKrgnh> regions)
-        {
-            _regions.AddRange(regions);
-        }
-
-        public void SetRegions(List<CKrgnh> regions)
-        {
-            _regions = regions;
-        }
-        public void AddArt(CKart1 art)
-        {
-            lart.Add(art);
-        }
         public new List<byte> Write()
         {
-            data = new List<byte>();
-            data.AddRange(BitConverter.GetBytes((UInt32)_regions.Count));
-            data.AddRange(BitConverter.GetBytes((UInt32)_bank));
-            data.AddRange(BitConverter.GetBytes((UInt32)_instrumentId));
-            List<byte> buffer = new List<byte>();
-            buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
-            if (SkipSize == false)
-            {
-                buffer.AddRange(BitConverter.GetBytes((UInt32)size));
-            }
+            SetData(BitConverter.GetBytes((uint)_cInstruments));
 
-            if (data != null)
-            {
-                buffer.AddRange(data);
-            }
-            foreach (IChunk ck in chunks)
-            {
-                buffer.AddRange(ck.Write());
-            }
+            List<byte> buffer = base.Write();
             return buffer;
         }
     }
 
-    public class CKrgnh : Chunk, IChunk
+    public class Linsl : LISTChunk, IChunk
     {
-        public new uint headerSize = 22;
-        private ushort _keyLow;
-        private ushort _keyHigh;
-        private ushort _velocityLow;
-        private ushort _velocityHigh;
-
-        private CKwlnk _wlnk;
-        private CKwsmp _sample;
-        private List<CKart1> _lart;
-
-
-        public CKrgnh(ushort keyLow, ushort keyHigh, ushort velocityLow, ushort velocityHigh) : base("rgnh")
+        public Linsl() : base("lins")
         {
-            _keyLow = keyLow;
-            _keyHigh = keyHigh;
-            _velocityLow = velocityLow;
-            _velocityHigh = velocityHigh;
-            _lart = new List<CKart1>();
-
 
         }
+    }
+
+    public class Lins : LISTChunk, IChunk
+    {
+        private string _name;
+        private CKinsh _insh;
+        private Lrgnl _lrgnl;
+        private Lart _lart;
+
+        public Lins() : base("insh")
+        {
+            _insh = AddChunk(new CKinsh()) as CKinsh;
+            _lrgnl = AddChunk(new Lrgnl()) as Lrgnl;
+        }
+
+        public Lins(uint bank, uint instrumentId) : base("ins ")
+        {
+
+            _insh = AddChunk(new CKinsh(bank, instrumentId)) as CKinsh;
+            _lrgnl = AddChunk(new Lrgnl()) as Lrgnl;
+
+            _name = "Instrument " + instrumentId;
+            RIFF.AlignName(_name);
+        }
+        public Lins(uint bank, uint instrumentId, string name) : base("ins ")
+        {
+            _insh = AddChunk(new CKinsh(bank, instrumentId)) as CKinsh;
+            _lrgnl = AddChunk(new Lrgnl()) as Lrgnl;
+
+            _name = name;
+            RIFF.AlignName(_name);
+        }
+        public Lins(uint bank, uint instrumentId, string name, Lrgnl regions) : base("ins ")
+        {
+            _insh = AddChunk(new CKinsh(bank, instrumentId)) as CKinsh;
+            _lrgnl = AddChunk(regions) as Lrgnl;
+
+            _name = name;
+            RIFF.AlignName(_name);
+        }
+
+        public Lrgnl regions { get => _lrgnl; }
+        public ulong bank { get => _insh.bank; }
+        public ulong instrumentId { get => _insh.instrumentId; }
+
+        public void AddRegion(Lrgn region)
+        {
+            _lrgnl.AddChunk(region);
+            _insh.regions = (uint)_lrgnl.chunks.Count;
+        }
+        /*
+        public new List<byte> Write()
+        {
+            data = new List<byte>();
+            data.AddRange(BitConverter.GetBytes((UInt32)_lrgnl.chunks.Count));
+            data.AddRange(BitConverter.GetBytes((UInt32)_insh.bank));
+            data.AddRange(BitConverter.GetBytes((UInt32)_insh.instrumentId));
+            List<byte> buffer = base.Write();
+            return buffer;
+        }
+        */
+    }
+
+    public class CKinsh : Chunk, IChunk
+    {
+        private uint cRegions = 0;      // Specifies the count of regions for this instrument.
+        private uint ulBank = 0;        // Specifies the MIDI locale(Bank) for this instrument.
+        private uint ulInstrument = 0;  // Specifies the MIDI locale(Program Change) for this instrument.
+
+        public CKinsh() : base("insh")
+        {
+            headerSize = 12;
+        }
+
+        public CKinsh(uint BA, uint INS) : base("insh")
+        {
+            headerSize = 12;
+            ulBank = BA;
+            ulInstrument = INS;
+        }
+
+        public void SetMIDILoc(uint BA, uint INS)
+        {
+            ulBank = BA;
+            ulInstrument = INS;
+        }
+
+        public uint bank { get => ulBank; }
+        public uint instrumentId { get => ulInstrument; }
+        public uint regions { get => cRegions; set => cRegions = value; }
+        public new List<byte> Write()
+        {
+            AddDatas(BitConverter.GetBytes((uint)cRegions));
+            AddDatas(BitConverter.GetBytes((uint)ulBank));
+            AddDatas(BitConverter.GetBytes((uint)ulInstrument));
+
+            List<byte> buffer = base.Write();
+            return buffer;
+        }
+    }
 
 
-        public ushort keyLow { get => _keyLow; }
-        public ushort keyHigh { get => _keyHigh; }
-        public ushort velocityLow { get => _velocityLow; }
-        public ushort velocityHigh { get => _velocityHigh; }
-        public ushort option { get => _wlnk.options; }
-        public ushort keyGroup { get => _wlnk.phaseGroup; }
+    /// <summary>
+    /// Regions
+    /// </summary>
+    public class Lrgnl : LISTChunk, IChunk
+    {
+        public Lrgnl():base("lrgn")
+        {
+
+        }
+    }
+
+    public class Lrgn : LISTChunk, IChunk
+    {
+
+        private CKrgnh _rgnh;
+        private CKwlnk _wlnk;
+        private CKwsmp _wsmp;
+        private Lart _lart;  // Optionnal
+
+
+        public Lrgn(ushort keyLow, ushort keyHigh, ushort velocityLow, ushort velocityHigh) : base("rgn ")
+        {
+            _rgnh = AddChunk(new CKrgnh(keyLow, keyHigh, velocityLow, velocityHigh)) as CKrgnh;
+            //_lart = AddChunk(new Lart()) as Lart;
+        }
 
         public void AddArticulation(CKart1 art)
         {
-            _lart.Add(art);
+            if (_lart == null)
+            {
+                _lart = AddChunk(new Lart()) as Lart;
+            }
+            _lart.AddChunk(art);
         }
 
         public void SetSample(CKwsmp smp)
         {
-            _sample = smp;
+            _wsmp = AddChunk(smp) as CKwsmp;
         }
+
+        public void SetRange(ushort keyLow = 0x00, ushort keyHigh = 0x7F, ushort velocityLow = 0x00, ushort velocityHigh = 0x7F)
+        {
+            _rgnh.keyLow = keyLow;
+            _rgnh.keyHigh = keyHigh;
+            _rgnh.velocityLow = velocityLow;
+            _rgnh.velocityHigh = velocityHigh;
+        }
+
+        public void SetWaveLink(CKwlnk wlk)
+        {
+            _wlnk = AddChunk(wlk) as CKwlnk;
+        }
+
+        public void SetWaveLinkInfo(ushort options, ushort phaseGroup, uint channel, uint index)
+        {
+            _wlnk = AddChunk(new CKwlnk(options, phaseGroup, channel, index)) as CKwlnk;
+        }
+        /*
+        public new List<byte> Write()
+        {
+            data = new List<byte>();
+            data.AddRange(BitConverter.GetBytes((UInt16)_rgnh.keyLow));
+            data.AddRange(BitConverter.GetBytes((UInt16)_rgnh.keyHigh));
+            data.AddRange(BitConverter.GetBytes((UInt16)_rgnh.velocityLow));
+            data.AddRange(BitConverter.GetBytes((UInt16)_rgnh.velocityHigh));
+
+            if (_wsmp != null)
+            {
+                AddChunk(_wsmp);
+            }
+
+            if (_wlnk != null)
+            {
+                AddChunk(_wlnk);
+            }
+
+            List<byte> buffer = base.Write();
+            return buffer;
+        }
+        */
+    }
+
+    public class CKrgnh:Chunk, IChunk
+    {
+        private ushort _keyLow;         // Specifies the key range for this region.
+        private ushort _keyHigh;        // Specifies the key range for this region.
+        private ushort _velocityLow;    // Specifies the velocity range for this region.
+        private ushort _velocityHigh;   // Specifies the velocity range for this region.
+        private ushort _options;        // Specifies flag options for the synthesis of this region.
+        // The only flag defined at this time is the Self Non Exclusive flag.See Note Exclusivity section for more detail.
+        private ushort _keyGroup;
+        /*
+        Specifies the key group for a drum instrument. Key group values allow multiple
+        regions within a drum instrument to belong to the same “key group.”
+        If a synthesis engine is instructed to play a note with a key group setting and any
+        other notes are currently playing with this same key group, the synthesis engine
+        should turn off all notes with the same key group value as soon as possible.
+        Valid values are:
+        0 No Key group
+        1-15 Key groups 1 to 15.
+        All Others Reserved
+        */
+
+        public CKrgnh(ushort keyLow, ushort keyHigh, ushort velocityLow, ushort velocityHigh) : base("rgnh")
+        {
+            headerSize = 12;
+            _keyLow = keyLow;
+            _keyHigh = keyHigh;
+            _velocityLow = velocityLow;
+            _velocityHigh = velocityHigh;
+        }
+
 
         public void SetRange(ushort keyLow = 0x00, ushort keyHigh = 0x7F, ushort velocityLow = 0x00, ushort velocityHigh = 0x7F)
         {
@@ -307,76 +396,54 @@ namespace VS.Format
             _velocityHigh = velocityHigh;
         }
 
-        public void SetWaveLink(CKwlnk wlk)
-        {
-            _wlnk = wlk;
-        }
-
-        public void SetWaveLinkInfo(ushort options, ushort phaseGroup, uint channel, uint index)
-        {
-            _wlnk = new CKwlnk(options, phaseGroup, channel, index);
-        }
+        public ushort keyLow { get => _keyLow; set =>_keyLow = value; }
+        public ushort keyHigh { get => _keyHigh; set => _keyHigh = value; }
+        public ushort velocityLow { get => _velocityLow; set => _velocityLow = value; }
+        public ushort velocityHigh { get => _velocityHigh; set => _velocityHigh = value; }
+        public ushort option { get => _options; set => _options = value; }
+        public ushort keyGroup { get => _keyGroup; set => _keyGroup = value; }
 
         public new List<byte> Write()
         {
-            data = new List<byte>();
-            data.AddRange(BitConverter.GetBytes((UInt16)_keyLow));
-            data.AddRange(BitConverter.GetBytes((UInt16)_keyHigh));
-            data.AddRange(BitConverter.GetBytes((UInt16)_velocityLow));
-            data.AddRange(BitConverter.GetBytes((UInt16)_velocityHigh));
-            List<byte> buffer = new List<byte>();
-            buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
-            if (SkipSize == false)
-            {
-                buffer.AddRange(BitConverter.GetBytes((UInt32)size));
-            }
+            AddDatas(BitConverter.GetBytes((ushort)_keyLow));
+            AddDatas(BitConverter.GetBytes((ushort)_keyHigh));
+            AddDatas(BitConverter.GetBytes((ushort)_velocityLow));
+            AddDatas(BitConverter.GetBytes((ushort)_velocityHigh));
+            AddDatas(BitConverter.GetBytes((ushort)_options));
+            AddDatas(BitConverter.GetBytes((ushort)_keyGroup));
 
-            if (data != null)
-            {
-                buffer.AddRange(data);
-            }
-
-            if (_sample != null)
-            {
-                AddChunk(_sample);
-            }
-
-            if (_wlnk != null)
-            {
-                AddChunk(_wlnk);
-            }
-
-            if (_lart != null && _lart.Count > 0)
-            {
-                List<IChunk> conv = new List<IChunk>(_lart);
-                AddChunk(new LISTChunk("lart", conv));
-            }
-            foreach (IChunk ck in chunks)
-            {
-                buffer.AddRange(ck.Write());
-            }
+            List<byte> buffer = base.Write();
             return buffer;
         }
     }
 
+    /// <summary>
+    /// Articulations
+    /// </summary>
+    public class Lart : LISTChunk, IChunk
+    {
+        public Lart() : base("lart")
+        {
 
+        }
+    }
 
     public class CKart1 : Chunk, IChunk
     {
-        public new uint headerSize = 16;
-        public ulong cbSize = 8;
-        public ulong cConnectionBlocks;
-
+        public uint cbSize = 8;
+        public uint cConnectionBlocks;
         public List<ConnectionBlock> ConnectionBlocks;
-
 
         public CKart1() : base("art1")
         {
+            headerSize = 8;
             ConnectionBlocks = new List<ConnectionBlock>();
         }
         public CKart1(List<ConnectionBlock> connections) : base("art1")
         {
+            headerSize = 8;
             ConnectionBlocks = connections;
+            size += (uint)connections.Count * 12;
         }
 
         public void AddADSR(int attack, int decay, int sustain, int release, ushort attackTrans, ushort releaseTrans)
@@ -391,54 +458,68 @@ namespace VS.Format
             ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_PAN, DLS.CONN_TRN_NONE, pan));
         }
 
-
-
         public new List<byte> Write()
         {
-            data = new List<byte>();
-            data.AddRange(BitConverter.GetBytes((UInt32)cbSize));
-            data.AddRange(BitConverter.GetBytes((UInt32)cConnectionBlocks));
+            AddDatas(BitConverter.GetBytes((uint)cbSize));
+            AddDatas(BitConverter.GetBytes((uint)cConnectionBlocks));
             foreach(ConnectionBlock cb in ConnectionBlocks)
             {
-                data.AddRange(BitConverter.GetBytes((UInt16)cb.usSource));
-                data.AddRange(BitConverter.GetBytes((UInt16)cb.usControl));
-                data.AddRange(BitConverter.GetBytes((UInt16)cb.usDestination));
-                data.AddRange(BitConverter.GetBytes((UInt16)cb.usTransform));
-                data.AddRange(BitConverter.GetBytes((UInt32)cb.lScale));
+                AddDatas(BitConverter.GetBytes((ushort)cb.usSource));
+                AddDatas(BitConverter.GetBytes((ushort)cb.usControl));
+                AddDatas(BitConverter.GetBytes((ushort)cb.usDestination));
+                AddDatas(BitConverter.GetBytes((ushort)cb.usTransform));
+                AddDatas(BitConverter.GetBytes((int)cb.lScale));
             }
-            List<byte> buffer = new List<byte>();
-            buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
-            if (SkipSize == false)
-            {
-                buffer.AddRange(BitConverter.GetBytes((UInt32)size));
-            }
-
-            if (data != null)
-            {
-                buffer.AddRange(data);
-            }
-            foreach (IChunk ck in chunks)
-            {
-                buffer.AddRange(ck.Write());
-            }
+            List<byte> buffer = base.Write();
             return buffer;
         }
     }
 
 
-
     public class ConnectionBlock
     {
+        /*
+Cid#        Articulator Name        usSource        usControl       usDestination       usTransform
+LFO Section
+1*          LFO Frequency           SRC_NONE        SRC_NONE        DST_LFO_FREQ        TRN_NONE
+2*          LFO Start Delay         SRC_NONE        SRC_NONE        DST_LFO_DELAY       TRN_NONE
+3*          LFO Attenuation Scale   SRC_LFO         SRC_NONE        DST_ATTENUATION     TRN_NONE
+4           LFO Pitch Scale         SRC_LFO         SRC_NONE        DST_PITCH           TRN_NONE
+5           LFO Modw to Attenuation SRC_LFO         SRC_CC1         DST_ATTENUATION     TRN_NONE
+6           LFO Modw to Pitch       SRC_LFO         SRC_CC1         DST_PITCH           TRN_NONE
+EG1 Section
+7* EG1 Attack Time SRC_NONE SRC_NONE DST_EG1_ATTACKTIME TRN_NONE
+8* EG1 Decay Time SRC_NONE SRC_NONE DST_EG1_DECAYTIME TRN_NONE
+9* EG1 Sustain Level SRC_NONE SRC_NONE DST_EG1_SUSTAINLEVEL TRN_NONE
+10* EG1 Release Time SRC_NONE SRC_NONE DST_EG1_RELEASETIME TRN_NONE
+11 EG1 Velocity to Attack SRC_KEYONVELOCITY SRC_NONE DST_EG1_ATTACKTIME TRN_NONE
+12 EG1 Key to Decay SRC_KEYNUMBER SRC_NONE DST_EG1_DECAYTIME TRN_NONE
+EG2 Section
+13* EG2 Attack Time SRC_NONE SRC_NONE DST_EG2_ATTACKTIME TRN_NONE
+14* EG2 Decay Time SRC_NONE SRC_NONE DST_EG2_DECAYTIME TRN_NONE
+15* EG2 Sustain Level SRC_NONE SRC_NONE DST_EG2_SUSTAINLEVEL TRN_NONE
+16* EG2 Release Time SRC_NONE SRC_NONE DST_EG2_RELEASETIME TRN_NONE
+17 EG2 Velocity to Attack SRC_KEYONVELOCITY SRC_NONE DST_EG2_ATTACKTIME TRN_NONE
+18 EG2 Key to Decay SRC_KEYNUMBER SRC_NONE DST_EG2_DECAYTIME TRN_NONE
+Miscellaneous Section
+19* Initial Pan SRC_NONE SRC_NONE DST_PAN TRN_NONE
+Connections inferred by DLS1 Architecture
+20 EG1 To Attenuation SRC_EG1 SRC_NONE DST_ATTENUATION TRN_NONE
+21 EG2 To Pitch SRC_EG2 SRC_NONE DST_PITCH TRN_NONE
+22 Key On Velocity to Attenuation SRC_KEYONVELOCITY SRC_NONE DST_ATTENUATION TRN_CONCAVE
+23 Pitch Wheel to Pitch SRC_PITCHWHEEL SRC_RPN0 DST_PITCH TRN_NONE
+24 Key Number to Pitch SRC_KEYNUMBER SRC_NONE DST_PITCH TRN_NONE
+25 MIDI Controller 7 to Atten. SRC_CC7 SRC_NONE DST_ATTENUATION TRN_CONCAVE
+26 MIDI Controller 10 to Pan SRC_CC10 SRC_NONE DST_PAN TRN_NONE
+27 MIDI Controller 11 to Atten. SRC_CC11 SRC_NONE DST_ATTENUATION TRN_CONCAVE
+28 RPN1 to Pitch SRC_RPN1 SRC_NONE DST_PITCH TRN_NONE
+29 RPN2 to Pitch SRC_RPN2 SRC_NONE DST_PITCH TRN_NONE
+*/
         public ushort usSource;
         public ushort usControl;
         public ushort usDestination;
         public ushort usTransform;
-        public long lScale;
-
-        public ConnectionBlock()
-        {
-
-        }
+        public int lScale;
 
         public ConnectionBlock(ushort source, ushort control, ushort destination, ushort transform, int scale)
         {
@@ -448,13 +529,31 @@ namespace VS.Format
             usTransform = transform;
             lScale = scale;
         }
-
-
     }
 
+    /// <summary>
+    /// Samples
+    /// </summary>
+    public class Lwvpl : LISTChunk, IChunk
+    {
+        public Lwvpl() : base("wvpl")
+        {
 
+        }
 
-
+        public List<WAV> Waves
+        {
+            get
+            {
+                List<WAV> ws = new List<WAV>();
+                foreach (IChunk ck in chunks)
+                {
+                    ws.Add(ck as WAV);
+                }
+                return ws;
+            }
+        }
+    }
 
     public class CKwlnk : Chunk, IChunk // Wave Link Chunk
     {
@@ -465,7 +564,7 @@ namespace VS.Format
         the F_WAVELINK_PHASE_MASTER flag set. If a wave is not a member of a phase
         locked group, this value should be set to 0.
         */
-        public ushort phaseGroup;
+    public ushort phaseGroup;
         /*
         Specifies the channel placement of the file. This is used to place mono sounds within a
         stereo pair or for multi-track placement. Each bit position within the ulChannel field
@@ -479,10 +578,11 @@ namespace VS.Format
 
         public CKwlnk() : base("wlnk")
         {
-
+            headerSize = 12;
         }
         public CKwlnk(ushort OP, ushort PG, uint CHA, uint TBI) : base("wlnk")
         {
+            headerSize = 12;
             options = OP;
             phaseGroup = PG;
             channel = CHA;
@@ -491,122 +591,83 @@ namespace VS.Format
 
         public new List<byte> Write()
         {
-            data.AddRange(BitConverter.GetBytes((ushort)options));
-            data.AddRange(BitConverter.GetBytes((ushort)phaseGroup));
-            data.AddRange(BitConverter.GetBytes((uint)channel));
-            data.AddRange(BitConverter.GetBytes((uint)tableIndex));
+            AddDatas(BitConverter.GetBytes((ushort)options));
+            AddDatas(BitConverter.GetBytes((ushort)phaseGroup));
+            AddDatas(BitConverter.GetBytes((uint)channel));
+            AddDatas(BitConverter.GetBytes((uint)tableIndex));
 
-
-            List<byte> buffer = new List<byte>();
-            buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
-            if (SkipSize == false)
-            {
-                buffer.AddRange(BitConverter.GetBytes((UInt32)size));
-            }
-
-            if (data != null)
-            {
-                buffer.AddRange(data);
-            }
-            foreach (IChunk ck in chunks)
-            {
-                buffer.AddRange(ck.Write());
-            }
+            List<byte> buffer = base.Write();
             return buffer;
         }
     }
 
     public class CKwsmp : Chunk, IChunk // Wave Sample Chunk
     {
-        public ulong cbSize = 24;
+        public uint cbSize = 20;
         public ushort unityNote;
         public short fineTune;
-        public long attenuation;
-        public ulong options;
-        public ulong sampleLoops = 0;
-        public List<CKloop> loops;
+        public int attenuation;
+        public uint options;
+        public uint sampleLoops = 0;
+        public Loop loop;
 
         public CKwsmp() : base("wsmp")
         {
-            loops = new List<CKloop>();
+            headerSize = 20;
         }
 
-        public CKwsmp(ushort UN, short FT, long AT, ulong OP) : base("wsmp")
+        public CKwsmp(ushort UN, short FT, int AT, uint OP) : base("wsmp")
+        {
+            headerSize = 20;
+            unityNote = UN;
+            fineTune = FT;
+            attenuation = AT;
+            options = OP;
+        }
+
+        public void SetPitchInfo(ushort UN, short FT, int AT, uint OP)
         {
             unityNote = UN;
             fineTune = FT;
             attenuation = AT;
             options = OP;
-            loops = new List<CKloop>();
+        }
+        public void AddLoop(Loop LP)
+        {
+            loop = LP;
+            sampleLoops = 1;
+            headerSize = 20 + 16;
         }
 
-        public void SetPitchInfo(ushort UN, short FT, long AT, ulong OP)
-        {
-            unityNote = UN;
-            fineTune = FT;
-            attenuation = AT;
-            options = OP;
-            loops = new List<CKloop>();
-        }
-        public void AddLoop(CKloop LP)
-        {
-            loops.Add(LP);
-            sampleLoops = (ulong)loops.Count;
-        }
-
-        public void AddLoops(List<CKloop> LPs)
-        {
-            loops.AddRange(LPs);
-            sampleLoops = (ulong)loops.Count;
-        }
 
         public new List<byte> Write()
         {
-            data = new List<byte>();
-            data.AddRange(BitConverter.GetBytes((UInt32)cbSize));
-            data.AddRange(BitConverter.GetBytes((UInt16)unityNote));
-            data.AddRange(BitConverter.GetBytes((UInt16)fineTune));
-            data.AddRange(BitConverter.GetBytes((UInt32)attenuation));
-            data.AddRange(BitConverter.GetBytes((UInt32)options));
-            data.AddRange(BitConverter.GetBytes((UInt32)sampleLoops));
-            foreach (CKloop l in loops)
+            AddDatas(BitConverter.GetBytes((uint)cbSize));
+            AddDatas(BitConverter.GetBytes((ushort)unityNote));
+            AddDatas(BitConverter.GetBytes((short)fineTune));
+            AddDatas(BitConverter.GetBytes((int)attenuation));
+            AddDatas(BitConverter.GetBytes((uint)options));
+            AddDatas(BitConverter.GetBytes((uint)sampleLoops));
+            if (loop != null)
             {
-                data.AddRange(BitConverter.GetBytes((UInt32)l.cbSize));
-                data.AddRange(BitConverter.GetBytes((UInt32)l.loopType));
-                data.AddRange(BitConverter.GetBytes((UInt32)l.loopStart));
-                data.AddRange(BitConverter.GetBytes((UInt32)l.loopLength));
+                AddDatas(BitConverter.GetBytes((uint)loop.cbSize));
+                AddDatas(BitConverter.GetBytes((uint)loop.loopType));
+                AddDatas(BitConverter.GetBytes((uint)loop.loopStart));
+                AddDatas(BitConverter.GetBytes((uint)loop.loopLength));
             }
-            List<byte> buffer = new List<byte>();
-            buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
-            if (SkipSize == false)
-            {
-                buffer.AddRange(BitConverter.GetBytes((UInt32)size));
-            }
-
-            if (data != null)
-            {
-                buffer.AddRange(data);
-            }
-            foreach (IChunk ck in chunks)
-            {
-                buffer.AddRange(ck.Write());
-            }
+            List<byte> buffer = base.Write();
             return buffer;
         }
     }
 
-    public class CKloop : Chunk, IChunk
+    public class Loop
     {
-        public ulong cbSize = 12;
-        public ulong loopType; // Specifies the loop type : WLOOP_TYPE_FORWARD Forward Loop
-        public ulong loopStart; // Specifies the start point of the loop in samples as an absolute offset from the beginning of the data in the<data-ck> subchunk of the<wave-list> wave file chunk.
-        public ulong loopLength; // Specifies the length of the loop in samples.
+        public uint cbSize = 12;
+        public uint loopType; // Specifies the loop type : WLOOP_TYPE_FORWARD Forward Loop
+        public uint loopStart; // Specifies the start point of the loop in samples as an absolute offset from the beginning of the data in the<data-ck> subchunk of the<wave-list> wave file chunk.
+        public uint loopLength; // Specifies the length of the loop in samples.
 
-        public CKloop() : base("loop")
-        {
-
-        }
-        public CKloop(ulong LT, ulong LS, ulong LL) : base("loop")
+        public Loop(uint LT = 0, uint LS = 0, uint LL = 0)
         {
             loopType = LT;
             loopStart = LS;
@@ -616,66 +677,72 @@ namespace VS.Format
 
     public class CKptbl : Chunk, IChunk // Pool Table Chunk
     {
-        public ulong cbSize = 8;
-        public ulong cues; // Specifies the number (count) of <poolcue> records that are contained in the <ptbl-ck>
+        public uint cbSize = 8;
+        public uint _cCues; // Specifies the number (count) of <poolcue> records that are contained in the <ptbl-ck>
         // chunk.The<poolcue> records are stored immediately following the cCues data field.
-        public List<ulong> poolcues;
+        public List<uint> poolcues;
 
         public CKptbl() : base("ptbl")
         {
-            poolcues = new List<ulong>();
+            headerSize = 28;
+            poolcues = new List<uint>();
         }
 
-        public void AddCue(ulong offset)
+        public uint Cues { get => _cCues; internal set => _cCues = value; }
+
+        public void AddCue(uint offset)
         {
             poolcues.Add(offset);
-            cues = (ulong)poolcues.Count;
+            _cCues = (uint)poolcues.Count;
         }
-        public void AddCues(List<ulong> offsets)
+        public void AddCues(List<uint> offsets)
         {
             poolcues.AddRange(offsets);
-            cues = (ulong)poolcues.Count;
+            _cCues = (uint)poolcues.Count;
         }
 
         public new List<byte> Write()
         {
-            data.AddRange(BitConverter.GetBytes((UInt32)cbSize));
-            data.AddRange(BitConverter.GetBytes((UInt32)cues));
-            foreach (ulong l in poolcues)
+            AddDatas(BitConverter.GetBytes((uint)cbSize));
+            AddDatas(BitConverter.GetBytes((uint)_cCues));
+            foreach (uint l in poolcues)
             {
-                data.AddRange(BitConverter.GetBytes((UInt32)l));
-            }
-            List<byte> buffer = new List<byte>();
-            buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
-            if (SkipSize == false)
-            {
-                buffer.AddRange(BitConverter.GetBytes((UInt32)size));
+                AddDatas(BitConverter.GetBytes((uint)l));
             }
 
-            if (data != null)
-            {
-                buffer.AddRange(data);
-            }
-            foreach (IChunk ck in chunks)
-            {
-                buffer.AddRange(ck.Write());
-            }
+            List<byte> buffer = base.Write();
             return buffer;
+        }
+    }
+
+    /// <summary>
+    /// Misc
+    /// </summary>
+    public class CKdlid : Chunk, IChunk
+    {
+        public CKdlid() : base("dlid")
+        {
+
         }
     }
 
     public class CKvers : Chunk, IChunk
     {
-        public ulong versionMS;
-        public ulong versionLS;
+        public uint versionMS;
+        public uint versionLS;
 
-
-        public CKvers() : base("vers")
+        public CKvers(uint maj, uint min) : base("vers")
         {
-
+            versionMS = maj;
+            versionLS = min;
+            AddDatas(BitConverter.GetBytes((uint)versionMS));
+            AddDatas(BitConverter.GetBytes((uint)versionLS));
         }
     }
 
+    /// <summary>
+    /// See Page 23 / 97 RIFF doc
+    /// </summary>
     public class LCInfo : LISTChunk, IChunk
     {
         public Chunk IARL;
@@ -700,6 +767,6 @@ namespace VS.Format
         {
 
         }
-    }
+    } //TODO
 
 }

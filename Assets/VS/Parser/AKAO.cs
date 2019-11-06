@@ -330,7 +330,7 @@ namespace VS.Parser
                 {
                     if (instrument.regions.Length > 0)
                     {
-                        CKinsh DSLInstrument = new CKinsh(0, (uint)(sequencer.instruments.Length+ sequencer.startingArticulationId+i), instrument.name);
+                        Lins DSLInstrument = new Lins(0, (uint)(sequencer.instruments.Length+ sequencer.startingArticulationId+i), instrument.name);
                         foreach (AKAOInstrumentRegion region in instrument.regions)
                         {
                             AKAOArticulation articulation;
@@ -386,12 +386,12 @@ namespace VS.Parser
 
 
 
-                            CKrgnh reg = new CKrgnh(region.lowRange, region.hiRange, 0x00, 0x7F);
+                            Lrgn reg = new Lrgn(region.lowRange, region.hiRange, 0x00, 0x7F);
                             CKwsmp smp = new CKwsmp((ushort)region.unityKey, region.fineTune, region.attenuation, 1);
                             if (articulation.loopPt != 0)
                             {
                                 //region.SetLoopInfo(1, articulation.loopPt, sampler.samples[region.sampleNum].size - articulation.loopPt);
-                                smp.AddLoop(new CKloop(1, articulation.loopPt, (ulong)(sampler.samples[region.sampleNum].size - articulation.loopPt)));
+                                smp.AddLoop(new Loop(1, articulation.loopPt, (uint)(sampler.samples[region.sampleNum].size - articulation.loopPt)));
                             }
                             reg.SetSample(smp);
                             if (instrument.isDrum)

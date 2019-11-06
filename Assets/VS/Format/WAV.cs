@@ -8,13 +8,13 @@ namespace VS.Format
     {
         public ushort AudioFormat;
         public ushort NumChannels;
-        public ulong SampleRate;
-        public ulong ByteRate;
+        public uint SampleRate;
+        public uint ByteRate;
         public ushort BlockAlign;
         public ushort BitsPerSample;
         public bool Riff = true;
 
-        public WAV(List<byte> datas, ushort AF = 1, ushort NC = 1, ulong SR = 44100, ushort BPS = 16) : base("WAVE")
+        public WAV(List<byte> datas, ushort AF = 1, ushort NC = 1, uint SR = 44100, ushort BPS = 16) : base("WAVE")
         {
             AudioFormat = AF;
             NumChannels = NC;
@@ -25,17 +25,18 @@ namespace VS.Format
 
             Chunk fmt = new Chunk("fmt ");
             List<byte> fmtb = new List<byte>();
-            fmtb.AddRange(BitConverter.GetBytes((ushort)AudioFormat)); // Audio Format
-            fmtb.AddRange(BitConverter.GetBytes((ushort)NumChannels)); // Num Channels
-            fmtb.AddRange(BitConverter.GetBytes((UInt32)SampleRate)); // Sample Rate
-            fmtb.AddRange(BitConverter.GetBytes((UInt32)ByteRate)); // Byte Rate
-            fmtb.AddRange(BitConverter.GetBytes((ushort)BlockAlign)); // BlockAlign
-            fmtb.AddRange(BitConverter.GetBytes((ushort)BitsPerSample)); // Bits Per Sample
-            fmt.data = fmtb;
+            fmtb.AddRange(BitConverter.GetBytes((ushort)AudioFormat));      // Audio Format
+            fmtb.AddRange(BitConverter.GetBytes((ushort)NumChannels));      // Num Channels
+            fmtb.AddRange(BitConverter.GetBytes((uint)SampleRate));         // Sample Rate
+            fmtb.AddRange(BitConverter.GetBytes((uint)ByteRate));           // Byte Rate
+            fmtb.AddRange(BitConverter.GetBytes((ushort)BlockAlign));       // BlockAlign
+            fmtb.AddRange(BitConverter.GetBytes((ushort)BitsPerSample));    // Bits Per Sample
+
+            fmt.SetData(fmtb);
             AddChunk(fmt);
 
             Chunk data = new Chunk("data");
-            fmt.data = datas;
+            data.SetData(datas);
             AddChunk(data);
         }
 
@@ -46,7 +47,7 @@ namespace VS.Format
             if (Riff == true)
             {
                 buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
-                buffer.AddRange(BitConverter.GetBytes((UInt32)size));
+                buffer.AddRange(BitConverter.GetBytes((uint)size));
             }
 
             buffer.AddRange(new byte[] { (byte)type[0], (byte)type[1], (byte)type[2], (byte)type[3] });
