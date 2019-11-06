@@ -276,7 +276,7 @@ public class VSWindow : EditorWindow
                 MPD parser = new MPD();
                 //parser.UseDebug = true;
                 parser.Parse(file);
-                parser.BuildPrefab(true);
+                parser.BuildPrefab();
                 fileParsed++;
             }
             EditorUtility.ClearProgressBar();

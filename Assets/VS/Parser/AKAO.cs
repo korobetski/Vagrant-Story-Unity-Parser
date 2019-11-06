@@ -398,14 +398,14 @@ namespace VS.Parser
                             {
                                 CKart1 dart = new CKart1();
                                 dart.AddPan(0x40);
-                                reg.AddArticulation(dart);
+                                //reg.AddArticulation(dart);
                             } else
                             {
                                 if (articulation != null)
                                 {
                                     CKart1 iart = new CKart1();
                                     iart.AddPan(0x40);
-                                    reg.AddArticulation(iart);
+                                    //reg.AddArticulation(iart);
                                 }
                             }
                             DSLInstrument.AddRegion(reg);
@@ -427,7 +427,7 @@ namespace VS.Parser
                     List<byte> waveDatas = AKAOsmp.ToWAV();
 
                     WAV nw = new WAV(waveDatas);
-                    dls.AddWave(nw);
+                    //dls.AddWave(nw);
                 }
             }
 

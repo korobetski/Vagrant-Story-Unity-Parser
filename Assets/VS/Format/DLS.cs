@@ -87,7 +87,6 @@ namespace VS.Format
 
         public DLS() : base("DLS ")
         {
-            size = 4; // The size of the DLS file(number of bytes) less 8(less the size of "RIFF" and the "size")
             // Non optionnal
             colh = AddChunk(new CKcolh()) as CKcolh;
             linsl = AddChunk(new Linsl()) as Linsl;
@@ -134,10 +133,10 @@ namespace VS.Format
             foreach (WAV wave in wvpl.chunks)
             {
                 ptbl.AddCue(offset);
-                offset += wave.GetPaddedSize();
+                offset += wave.GetSize();
             }
 
-            Resize();
+            GetSize();
             return base.WriteFile(v, this.Write());
         }
 
@@ -153,7 +152,7 @@ namespace VS.Format
         private uint _cInstruments = 0;
         public CKcolh() : base("colh")
         {
-            headerSize = 12;
+            SetDataCapacity(4);
         }
 
         public uint Instruments { get => _cInstruments; set => _cInstruments = value; }
@@ -223,17 +222,6 @@ namespace VS.Format
             _lrgnl.AddChunk(region);
             _insh.regions = (uint)_lrgnl.chunks.Count;
         }
-        /*
-        public new List<byte> Write()
-        {
-            data = new List<byte>();
-            data.AddRange(BitConverter.GetBytes((UInt32)_lrgnl.chunks.Count));
-            data.AddRange(BitConverter.GetBytes((UInt32)_insh.bank));
-            data.AddRange(BitConverter.GetBytes((UInt32)_insh.instrumentId));
-            List<byte> buffer = base.Write();
-            return buffer;
-        }
-        */
     }
 
     public class CKinsh : Chunk, IChunk
@@ -244,12 +232,12 @@ namespace VS.Format
 
         public CKinsh() : base("insh")
         {
-            headerSize = 12;
+            SetDataCapacity(12);
         }
 
         public CKinsh(uint BA, uint INS) : base("insh")
         {
-            headerSize = 12;
+            SetDataCapacity(12);
             ulBank = BA;
             ulInstrument = INS;
         }
@@ -380,7 +368,7 @@ namespace VS.Format
 
         public CKrgnh(ushort keyLow, ushort keyHigh, ushort velocityLow, ushort velocityHigh) : base("rgnh")
         {
-            headerSize = 12;
+            SetDataCapacity(12);
             _keyLow = keyLow;
             _keyHigh = keyHigh;
             _velocityLow = velocityLow;
@@ -390,6 +378,7 @@ namespace VS.Format
 
         public void SetRange(ushort keyLow = 0x00, ushort keyHigh = 0x7F, ushort velocityLow = 0x00, ushort velocityHigh = 0x7F)
         {
+            SetDataCapacity(12);
             _keyLow = keyLow;
             _keyHigh = keyHigh;
             _velocityLow = velocityLow;
@@ -436,14 +425,13 @@ namespace VS.Format
 
         public CKart1() : base("art1")
         {
-            headerSize = 8;
+            SetDataCapacity(8);
             ConnectionBlocks = new List<ConnectionBlock>();
         }
         public CKart1(List<ConnectionBlock> connections) : base("art1")
         {
-            headerSize = 8;
+            SetDataCapacity(8);
             ConnectionBlocks = connections;
-            size += (uint)connections.Count * 12;
         }
 
         public void AddADSR(int attack, int decay, int sustain, int release, ushort attackTrans, ushort releaseTrans)
@@ -452,10 +440,12 @@ namespace VS.Format
             ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_DECAYTIME, DLS.CONN_TRN_NONE, decay));
             ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_SUSTAINLEVEL, DLS.CONN_TRN_NONE, sustain));
             ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_RELEASETIME, releaseTrans, release));
+            SetDataCapacity(8 + ConnectionBlocks.Count * 12);
         }
         public void AddPan(int pan)
         {
             ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_PAN, DLS.CONN_TRN_NONE, pan));
+            SetDataCapacity(8 + ConnectionBlocks.Count * 12);
         }
 
         public new List<byte> Write()
@@ -578,11 +568,11 @@ Connections inferred by DLS1 Architecture
 
         public CKwlnk() : base("wlnk")
         {
-            headerSize = 12;
+            SetDataCapacity(12);
         }
         public CKwlnk(ushort OP, ushort PG, uint CHA, uint TBI) : base("wlnk")
         {
-            headerSize = 12;
+            SetDataCapacity(12);
             options = OP;
             phaseGroup = PG;
             channel = CHA;
@@ -613,12 +603,12 @@ Connections inferred by DLS1 Architecture
 
         public CKwsmp() : base("wsmp")
         {
-            headerSize = 20;
+            SetDataCapacity(20);
         }
 
         public CKwsmp(ushort UN, short FT, int AT, uint OP) : base("wsmp")
         {
-            headerSize = 20;
+            SetDataCapacity(20);
             unityNote = UN;
             fineTune = FT;
             attenuation = AT;
@@ -636,7 +626,7 @@ Connections inferred by DLS1 Architecture
         {
             loop = LP;
             sampleLoops = 1;
-            headerSize = 20 + 16;
+            SetDataCapacity(20+16);
         }
 
 
@@ -684,7 +674,7 @@ Connections inferred by DLS1 Architecture
 
         public CKptbl() : base("ptbl")
         {
-            headerSize = 28;
+            SetDataCapacity(8);
             poolcues = new List<uint>();
         }
 
@@ -694,11 +684,15 @@ Connections inferred by DLS1 Architecture
         {
             poolcues.Add(offset);
             _cCues = (uint)poolcues.Count;
+
+            SetDataCapacity(8 + poolcues.Count * 4);
         }
         public void AddCues(List<uint> offsets)
         {
             poolcues.AddRange(offsets);
             _cCues = (uint)poolcues.Count;
+
+            SetDataCapacity(8 + poolcues.Count * 4);
         }
 
         public new List<byte> Write()
@@ -733,6 +727,7 @@ Connections inferred by DLS1 Architecture
 
         public CKvers(uint maj, uint min) : base("vers")
         {
+            SetDataCapacity(8);
             versionMS = maj;
             versionLS = min;
             AddDatas(BitConverter.GetBytes((uint)versionMS));

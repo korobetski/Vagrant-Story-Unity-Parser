@@ -17,12 +17,9 @@ Notation Description
 
     public class RIFF : ListTypeChunk
     {
-
-
         public RIFF(string form) : base("RIFF", form)
         {
         }
-
 
         public static void AlignName(string name)
         {
@@ -50,94 +47,9 @@ Notation Description
     public interface IChunk
     {
         List<byte> Write();
-        uint GetPaddedSize();
-        uint Resize();
         uint GetHeaderSize();
         uint GetSize();
     }
-
-
-    public class ListTypeChunk : Chunk, IChunk
-    {
-        public new uint headerSize = 12;
-        public char[] type = new char[4];
-        public List<IChunk> chunks;
-
-        public ListTypeChunk(string sId, string sType) : base(sId)
-        {
-            size = 0;
-            type = sType.ToCharArray();
-            chunks = new List<IChunk>();
-        }
-
-        public ListTypeChunk(string sId, string sType, List<IChunk> lchunks) : base(sId)
-        {
-            type = sType.ToCharArray();
-            chunks = lchunks;
-            size = 0;
-            foreach (IChunk ck in chunks)
-            {
-                size += ck.GetHeaderSize() + ck.GetSize();
-                chunks = new List<IChunk>();
-            }
-        }
-
-
-        public IChunk AddChunk(IChunk chunk)
-        {
-            chunks.Add(chunk);
-            size += chunk.GetHeaderSize()+chunk.GetSize();
-            return chunk;
-        }
-
-
-        public new uint Resize()
-        {
-            size = 0;
-            if (chunks != null && chunks.Count > 0)
-            {
-                foreach (IChunk ck in chunks)
-                {
-                    size += ck.GetHeaderSize() + ck.Resize();
-                }
-            }
-
-            return size;
-        }
-
-        public new List<byte> Write()
-        {
-            Resize();
-            List<byte> buffer = new List<byte>();
-            buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
-            buffer.AddRange(BitConverter.GetBytes((uint)size));
-            buffer.AddRange(new byte[] { (byte)type[0], (byte)type[1], (byte)type[2], (byte)type[3] });
-
-            foreach(IChunk ck in chunks)
-            {
-                buffer.AddRange(ck.Write());
-            }
-
-            return buffer;
-        }
-    };
-
-
-    public class LISTChunk : ListTypeChunk, IChunk
-    {
-        public LISTChunk(string sType) : base("LIST", sType)
-        {
-        }
-
-        public LISTChunk(string sType, List<IChunk> lchunks) : base("LIST", sType, lchunks)
-        {
-        }
-
-        public override string ToString()
-        {
-            return "LIST Chunk #" + type[0] + type[1] + type[2] + type[3];
-        }
-    };
 
     public class Chunk : IChunk
     {
@@ -174,6 +86,11 @@ Notation Description
             size = (uint)data.Count;
         }
 
+        public void SetDataCapacity(int l)
+        {
+            data.Capacity = l;
+        }
+
         public uint GetPaddedSize()
         {
             return size + size % 2;
@@ -186,22 +103,22 @@ Notation Description
 
         public uint GetSize()
         {
-            return size;
+            return (uint)data.Capacity;
         }
 
         public List<byte> Write()
         {
-            Resize();
+            //Resize();
             List<byte> buffer = new List<byte>();
-            buffer.AddRange(new byte[]{ (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
+            buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
             buffer.AddRange(BitConverter.GetBytes((uint)size));
-
-            if (data != null) {
+            if (data != null)
+            {
                 buffer.AddRange(data);
             }
             return buffer;
         }
-
+        /*
         public uint Resize()
         {
             size = 0;
@@ -209,15 +126,91 @@ Notation Description
             {
                 size += (uint)data.Count;
             }
-
             return size;
         }
-
+        */
         public override string ToString()
         {
             return "Chunk #" + id[0] + id[1] + id[2] + id[3];
         }
 
     }
+
+    public class ListTypeChunk : Chunk, IChunk
+    {
+        public new uint headerSize = 12;
+        public char[] type = new char[4];
+        public List<IChunk> chunks;
+
+        public ListTypeChunk(string sId, string sType) : base(sId)
+        {
+            size = 0;
+            type = sType.ToCharArray();
+            chunks = new List<IChunk>();
+        }
+
+        public ListTypeChunk(string sId, string sType, List<IChunk> lchunks) : base(sId)
+        {
+            type = sType.ToCharArray();
+            chunks = lchunks;
+            size = 0;
+            foreach (IChunk ck in chunks)
+            {
+                size += ck.GetHeaderSize() + ck.GetSize();
+            }
+        }
+
+        public IChunk AddChunk(IChunk chunk)
+        {
+            chunks.Add(chunk);
+            size += chunk.GetHeaderSize() + chunk.GetSize();
+            return chunk;
+        }
+
+        public new uint GetSize()
+        {
+            size = 0;
+            if (chunks != null && chunks.Count > 0)
+            {
+                foreach (IChunk ck in chunks)
+                {
+                    size += ck.GetHeaderSize() + ck.GetSize();
+                }
+            }
+            return size;
+        }
+
+        public new List<byte> Write()
+        {
+            //Resize();
+            List<byte> buffer = new List<byte>();
+            buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
+            buffer.AddRange(BitConverter.GetBytes((uint)size));
+            buffer.AddRange(new byte[] { (byte)type[0], (byte)type[1], (byte)type[2], (byte)type[3] });
+            foreach (IChunk ck in chunks)
+            {
+                buffer.AddRange(ck.Write());
+            }
+            return buffer;
+        }
+    };
+
+    public class LISTChunk : ListTypeChunk, IChunk
+    {
+        public LISTChunk(string sType) : base("LIST", sType)
+        {
+
+        }
+        public LISTChunk(string sType, List<IChunk> lchunks) : base("LIST", sType, lchunks)
+        {
+
+        }
+        public override string ToString()
+        {
+            return "LIST Chunk #" + type[0] + type[1] + type[2] + type[3];
+        }
+    };
+
+
 }
  
