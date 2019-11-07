@@ -17,6 +17,8 @@ Notation Description
 
     public class RIFF : ListTypeChunk
     {
+        public new uint headerSize = 12;
+
         public RIFF(string form) : base("RIFF", form)
         {
         }
@@ -111,7 +113,8 @@ Notation Description
             //Resize();
             List<byte> buffer = new List<byte>();
             buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
-            buffer.AddRange(BitConverter.GetBytes((uint)size));
+            //buffer.AddRange(BitConverter.GetBytes((uint)size));
+            buffer.AddRange(new byte[] { (byte)(size & 0x000000FF), (byte)((size & 0x0000FF00) >> 8), (byte)((size & 0x00FF0000) >> 16), (byte)((size & 0xFF000000) >> 24) });
             if (data != null)
             {
                 buffer.AddRange(data);
@@ -176,7 +179,8 @@ Notation Description
             //Resize();
             List<byte> buffer = new List<byte>();
             buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
-            buffer.AddRange(BitConverter.GetBytes((uint)size));
+            buffer.AddRange(BitConverter.GetBytes((uint)size + 4));
+            //buffer.AddRange(new byte[] { (byte)(size & 0x000000FF), (byte)((size & 0x0000FF00) >> 8), (byte)((size & 0x00FF0000) >> 16), (byte)((size & 0xFF000000) >> 24) });
             buffer.AddRange(new byte[] { (byte)type[0], (byte)type[1], (byte)type[2], (byte)type[3] });
             foreach (IChunk ck in chunks)
             {
