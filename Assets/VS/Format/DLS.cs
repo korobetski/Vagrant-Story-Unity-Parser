@@ -637,9 +637,11 @@ Connections inferred by DLS1 Architecture
     public class Loop
     {
         public uint cbSize = 12;
+        public uint loopStatus;
         public uint loopType; // Specifies the loop type : WLOOP_TYPE_FORWARD Forward Loop
         public uint loopStart; // Specifies the start point of the loop in samples as an absolute offset from the beginning of the data in the<data-ck> subchunk of the<wave-list> wave file chunk.
         public uint loopLength; // Specifies the length of the loop in samples.
+        internal bool loopAll = false;
 
         public Loop(uint LT = 0, uint LS = 0, uint LL = 0)
         {
