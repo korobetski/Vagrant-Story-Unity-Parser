@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using VS.Format;
-using VS.Utils;
 using VS.Parser.Akao;
+using VS.Utils;
 
 //Minoru Akao
 //https://github.com/vgmtrans/vgmtrans/blob/master/src/main/formats/AkaoSeq.cpp
@@ -415,9 +415,8 @@ namespace VS.Parser
             {
                 foreach (AKAOSample AKAOsmp in sampler.samples)
                 {
-                    List<byte> waveDatas = AKAOsmp.ToWAV();
-
-                    WAV nw = new WAV(waveDatas);
+                    WAV nw = AKAOsmp.ConvertToWAV();
+                    nw.Riff = false;
                     dls.AddWave(nw);
                 }
             }

@@ -635,12 +635,10 @@ namespace VS.Parser.Akao
         private class AKAOTrack
         {
             private List<AKAOEvent> events;
-            private List<uint> times;
 
             public AKAOTrack()
             {
                 events = new List<AKAOEvent>();
-                times = new List<uint>();
             }
 
             public List<AKAOEvent> Events
@@ -656,14 +654,6 @@ namespace VS.Parser.Akao
                 }
                 //Debug.Log("     AddEvent : " +ev);
                 events.Add(ev);
-            }
-            public void AddTime(uint t)
-            {
-                if (times == null)
-                {
-                    times = new List<uint>();
-                }
-                times.Add(t);
             }
         }
 
@@ -706,6 +696,7 @@ namespace VS.Parser.Akao
                     return null;
                 }
             }
+
             private IEnumerable<byte> ToVlqCollection(int integer)
             {
                 List<byte> vlq = new List<byte>();
@@ -787,15 +778,15 @@ namespace VS.Parser.Akao
 
         private class EvTimeSign : AKAOEvent
         {
-            private uint num;
-            private uint denom;
+            private uint _num;
+            private uint _denom;
             private byte clocks = 0x24;
             private byte quart = 0x08;
 
             public EvTimeSign(uint num, uint denom)
             {
-                this.num = num;
-                this.denom = denom;
+                _num = num;
+                _denom = denom;
 
                 deltaTime = 0x00;
                 midiStatusByte = 0xFF;
@@ -908,24 +899,18 @@ namespace VS.Parser.Akao
         }
         private class EvExpr : AKAOEvent
         {
-            private uint expression;
+            private uint _expression;
 
             public EvExpr(uint channel, uint expression, ushort delta = 0x00)
             {
-                this.expression = expression;
-                double val = Math.Round(Math.Sqrt((expression / 127.0f)) * 127.0f);
+                _expression = expression;
+                double val = Math.Round(Math.Sqrt((_expression / 127.0f)) * 127.0f);
 
                 deltaTime = delta;
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x0B;
                 midiArg2 = (byte)val;
             }
-            /*
-            private int roundi(double x)
-            {
-                return (x > 0) ? (int)(x + 0.5) : (int)(x - 0.5);
-            }
-            */
         }
         private class EvNoteOn : AKAOEvent
         {
@@ -971,7 +956,7 @@ namespace VS.Parser.Akao
         {
             public EvRepeatStart()
             {
-                //Debug.Log("RS ------------------------------------------------------------------------------------------------------------");
+
             }
         }
         private class EvRepeatEnd : AKAOEvent
@@ -980,20 +965,19 @@ namespace VS.Parser.Akao
 
             public EvRepeatEnd()
             {
-                //Debug.Log("RE --------------------------------------------------------------------------------");
+
             }
 
             public EvRepeatEnd(int loopId)
             {
                 this.loopId = loopId;
-                //Debug.Log("RE" + loopId + " --------------------------------------------------------------------------------");
+
             }
         }
         private class EvEndTrack : AKAOEvent
         {
             public EvEndTrack()
             {
-                //Debug.Log("EndTrk --------------------------------------------------------------------------------");
 
             }
         }

@@ -9,14 +9,6 @@ namespace VS.Parser.Akao
 {
     public class AKAOSample
     {
-        public static float[,] coeff = {
-            { 0.0f, 0.0f },
-            { 60.0f / 64.0f, 0.0f },
-            { 115.0f / 64.0f, 52.0f / 64.0f },
-            { 98.0f / 64.0f, 55.0f / 64.0f },
-            { 122.0f / 64.0f, 60.0f / 64.0f }
-        };
-
         public string name = "";
         public byte[] data;
         public int size;
@@ -24,6 +16,7 @@ namespace VS.Parser.Akao
         public uint NumBlocks;
 
         private bool _IsDecompressed = false;
+        public float compressionRatio = 3.5f;
         public List<byte> WAVDatas;
 
 
@@ -37,6 +30,7 @@ namespace VS.Parser.Akao
 
         public AKAOSample(string n, int SIZ, BinaryReader buffer, long OFF)
         {
+            name = n;
             size = SIZ;
             offset = OFF;
             data = buffer.ReadBytes(size);
@@ -44,8 +38,60 @@ namespace VS.Parser.Akao
             //Debug.Log(string.Concat("AKAOSample : size ", size, "  AT : ", offset, "  NumBlocks : ", NumBlocks));
         }
 
-        public void decompressData(List<byte> pSmp, int a, VAGBlk pVBlk, float prev1, float prev2)
+
+        public WAV ConvertToWAV()
         {
+            if (!_IsDecompressed)
+            {
+                WAVDatas = DecompressDatas();
+            }
+            WAV wav = new WAV(WAVDatas, 1, 1, 44100, 16);
+            return wav;
+        }
+
+        private List<byte> DecompressDatas()
+        {
+            List<byte> decomp = new List<byte>();
+
+            float prev1 = 0;
+            float prev2 = 0;
+            loopStatus = 0;
+
+            for (uint k = 0; k < NumBlocks; k++)
+            {
+                VAGBlk theBlock = new VAGBlk(data[k * 16], data[k * 16 + 1]);
+
+                if (theBlock.flagLoop)
+                {
+                    loopStart = (k * 16);
+                    loopLength = (ulong)(size - k * 16);
+                }
+                if (theBlock.flagEnd > 0 && theBlock.flagLooping)
+                {
+                    loopStatus = 1;
+                }
+
+                for (uint l = 2; l < 16; l++)
+                {
+                    theBlock.brr[l - 2] = data[k * 16 + l];
+                }
+
+                decomp.AddRange(new byte[28]);
+                DecompressBlock(decomp, (int)(k * 28), theBlock, prev1, prev2);
+            }
+            return decomp;
+        }
+
+        private void DecompressBlock(List<byte> pSmp, int a, VAGBlk pVBlk, float prev1, float prev2)
+        {
+            float[,] coeff = {
+                { 0.0f, 0.0f },
+                { 60.0f / 64.0f, 0.0f },
+                { 115.0f / 64.0f, 52.0f / 64.0f },
+                { 98.0f / 64.0f, 55.0f / 64.0f },
+                { 122.0f / 64.0f, 60.0f / 64.0f }
+            };
+
             int i;
             byte t;
             float f1, f2;
@@ -86,66 +132,19 @@ namespace VS.Parser.Akao
             }
         }
 
-        public WAV ConvertToWAV()
-        {
-            if (!_IsDecompressed)
-            {
-                WAVDatas = DecompressDatas();
-            }
-            WAV wav = new WAV(WAVDatas, 1, 1, 44100, 16);
-            return wav;
-        }
-
-        private List<byte> DecompressDatas()
-        {
-            throw new NotImplementedException();
-        }
-
-        internal List<byte> ToWAV()
-        {
-            List<byte> wav = new List<byte>();
-
-            float prev1 = 0;
-            float prev2 = 0;
-            loopStatus = 0;
-            for (uint k = 0; k < NumBlocks; k++)
-            {
-                VAGBlk theBlock = new VAGBlk(data[k * 16], data[k * 16 + 1]);
-
-                if (theBlock.flagLoop > 0)
-                {
-                    loopStart = (k * 16);
-                    loopLength = (ulong)(data.Length - k * 16);
-                }
-                if (theBlock.flagEnd > 0 && theBlock.flagLooping > 0)
-                {
-                    loopStatus = (1);
-                }
-
-                for (uint l = 2; l < 16; l++)
-                {
-                    theBlock.brr[l - 2] = data[k * 16 + l];
-                }
-
-                wav.AddRange(new byte[28]);
-                decompressData(wav, (int)(k * 28), theBlock, prev1, prev2);
-            }
-            return wav;
-        }
-
         private void SetLoopStatus(int statut)
         {
-            throw new NotImplementedException();
+            loopStatus = statut;
         }
 
-        private void SetLoopLength(long length)
+        private void SetLoopLength(uint length)
         {
-            throw new NotImplementedException();
+            loopLength = length;
         }
 
         private void SetLoopOffset(uint start)
         {
-            throw new NotImplementedException();
+            loopStart = start;
         }
 
         public class VAGBlk
@@ -153,8 +152,8 @@ namespace VS.Parser.Akao
             public int range = 4;
             public int filter = 4;
             public int flagEnd = 1;
-            public int flagLooping = 1;
-            public int flagLoop = 1;
+            public bool flagLooping = false;
+            public bool flagLoop = false;
             public byte[] brr;
 
             public VAGBlk(byte a, byte b)
@@ -162,8 +161,8 @@ namespace VS.Parser.Akao
                 range = a & 0xF;
                 filter = (a & 0xF0) >> 4;
                 flagEnd = b & 0x1;
-                flagLooping = b & 0x2;
-                flagLoop = b & 0x4;
+                flagLooping = (b & 0x2) > 0;
+                flagLoop = (b & 0x4) > 0;
                 brr = new byte[14];
             }
 

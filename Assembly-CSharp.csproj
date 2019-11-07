@@ -8,8 +8,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <RootNamespace>
-    </RootNamespace>
+    <RootNamespace></RootNamespace>
     <ProjectGuid>{9CE08B41-AF5E-DD00-2666-5E475BD4855D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -101,11 +100,11 @@
     <Compile Include="Assets\VS\Format\WAV.cs" />
     <Compile Include="Assets\VS\Format\XMF.cs" />
     <Compile Include="Assets\VS\Parser\AKAO.cs" />
-    <Compile Include="Assets\VS\Parser\AKAOArticulation.cs" />
-    <Compile Include="Assets\VS\Parser\AKAOInstrument.cs" />
-    <Compile Include="Assets\VS\Parser\AKAORegion.cs" />
-    <Compile Include="Assets\VS\Parser\Akao\AKAOSample.cs" />
-    <Compile Include="Assets\VS\Parser\Akao\AKAOComposer.cs" />
+    <Compile Include="Assets\VS\Parser\AKAO\AKAOArticulation.cs" />
+    <Compile Include="Assets\VS\Parser\AKAO\AKAOComposer.cs" />
+    <Compile Include="Assets\VS\Parser\AKAO\AKAOInstrument.cs" />
+    <Compile Include="Assets\VS\Parser\AKAO\AKAORegion.cs" />
+    <Compile Include="Assets\VS\Parser\AKAO\AKAOSample.cs" />
     <Compile Include="Assets\VS\Parser\ARM.cs" />
     <Compile Include="Assets\VS\Parser\BIN.cs" />
     <Compile Include="Assets\VS\Parser\DAT.cs" />
@@ -698,7 +697,6 @@
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.2.11f1/Editor/Data/MonoBleedingEdge/lib/mono/unityscript/Boo.Lang.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
