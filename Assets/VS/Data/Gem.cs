@@ -226,7 +226,6 @@ namespace VS.Data
         }
 
         public uint type = 0; // 0 = standard gem, 1 = attack gem, 2 = protection gem
-        public string name = "";
         public string description = "";
         public GemEffect[] effects = { };
 

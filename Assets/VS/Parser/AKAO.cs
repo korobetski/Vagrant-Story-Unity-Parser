@@ -330,7 +330,7 @@ namespace VS.Parser
                 {
                     if (instrument.regions.Length > 0)
                     {
-                        Lins DSLInstrument = new Lins(0, (uint)(sequencer.instruments.Length+ sequencer.startingArticulationId+i), instrument.name);
+                        Lins DSLInstrument = new Lins(0, (uint)(sequencer.instruments.Length + sequencer.startingArticulationId + i), instrument.name);
 
                         foreach (AKAOInstrumentRegion region in instrument.regions)
                         {
@@ -391,7 +391,6 @@ namespace VS.Parser
                             CKwsmp smp = new CKwsmp((ushort)region.unityKey, region.fineTune, region.attenuation, 1);
                             if (articulation.loopPt != 0)
                             {
-                                //region.SetLoopInfo(1, articulation.loopPt, sampler.samples[region.sampleNum].size - articulation.loopPt);
                                 smp.AddLoop(new Loop(1, articulation.loopPt, (uint)(sampler.samples[region.sampleNum].size - articulation.loopPt)));
                             }
                             reg.SetSample(smp);
@@ -400,7 +399,8 @@ namespace VS.Parser
                                 CKart1 dart = new CKart1();
                                 dart.AddPan(0x40);
                                 reg.AddArticulation(dart);
-                            } else
+                            }
+                            else
                             {
                                 if (articulation != null)
                                 {
@@ -425,7 +425,7 @@ namespace VS.Parser
 
             if (sampler.samples != null)
             {
-                foreach(AKAOSample AKAOsmp in sampler.samples)
+                foreach (AKAOSample AKAOsmp in sampler.samples)
                 {
                     List<byte> waveDatas = AKAOsmp.ToWAV();
 
@@ -435,7 +435,7 @@ namespace VS.Parser
             }
 
             ToolBox.DirExNorCreate("Assets/Resources/Sounds/DLS/");
-            dls.WriteFile("Assets/Resources/Sounds/DLS/"+FileName + ".dls");
+            dls.WriteFile("Assets/Resources/Sounds/DLS/" + FileName + ".dls");
         }
     }
 
@@ -592,65 +592,57 @@ namespace VS.Parser
         };
 
         public string name = "";
-        public int range;
-        public int filter;
-        public int end;
-        public int looping;
-        public int loop;
         public byte[] data;
         public int size;
         public long offset;
+        public uint NumBlocks;
+
+
+        public int loopStatus = -1;
+        public uint loopType;
+        public ushort loopStartMeasure;
+        public ushort loopLengthMeasure;
+        public uint loopStart;
+        public ulong loopLength;
+
 
         public AKAOSample(string n, int SIZ, BinaryReader buffer, long OFF)
         {
             size = SIZ;
             offset = OFF;
-            byte a = buffer.ReadByte();
-            byte b = buffer.ReadByte();
-            name = n;
-            range = a & 0xF;
-            filter = (a & 0xF0) >> 4;
-            end = b & 0x1;
-            looping = b & 0x2;
-            loop = b & 0x4;
-            data = new byte[size];
-            for (int i = 0; i < size; i++)
-            {
-                data[i] = buffer.ReadByte();
-            }
+            data = buffer.ReadBytes(size);
+            NumBlocks = (uint)(size / 0x10);
+            //Debug.Log(string.Concat("AKAOSample : size ", size, "  AT : ", offset, "  NumBlocks : ", NumBlocks));
         }
 
         public void decompressData(List<byte> pSmp, int a, VAGBlk pVBlk, float prev1, float prev2)
         {
             int i;
-            float t;
+            byte t;
             float f1, f2;
             float p1, p2;
-            var shift = range + 16;
-
-
-            shift = pVBlk.range + 16;
+            int shift = pVBlk.range + 16;
 
             for (i = 0; i < 14; i++)
             {
-                pSmp[a+i * 2] = (byte)(((int)pVBlk.brr[i] << 28) >> shift);
+                pSmp[a + i * 2] = (byte)(((int)pVBlk.brr[i] << 28) >> shift);
                 pSmp[a + i * 2 + 1] = (byte)(((int)(pVBlk.brr[i] & 0xF0) << 24) >> shift);
             }
 
             // Apply ADPCM decompression ----------------
             i = pVBlk.filter;
 
-            if (i== 1)
+            if (i > 0)
             {
-                f1 = coeff[i,0];
-                f2 = coeff[i,1];
+                f1 = coeff[i, 0];
+                f2 = coeff[i, 1];
                 p1 = prev1;
                 p2 = prev2;
 
                 for (i = 0; i < 28; i++)
                 {
-                    t = pSmp[a + i] + (p1 * f1) - (p2 * f2);
-                    pSmp[a + i] = (byte)t;
+                    t = (byte)Mathf.RoundToInt(pSmp[a + i] + (p1 * f1) - (p2 * f2));
+                    pSmp[a + i] = t;
                     p2 = p1;
                     p1 = t;
                 }
@@ -665,62 +657,74 @@ namespace VS.Parser
             }
         }
 
+
+
         internal List<byte> ToWAV()
         {
             List<byte> wav = new List<byte>();
-            VAGBlk theBlock = new VAGBlk();
+
             float prev1 = 0;
             float prev2 = 0;
-            /*
-            bool bSetLoopOnConversion = false;
-            bool addrOutOfVirtFile = false;
-            */
-
-            for (uint k = 0; k < data.Length; k += 0x10)
+            loopStatus = 0;
+            for (uint k = 0; k < NumBlocks; k++)
             {
-                theBlock.range = (byte)(data[k] & 0xF);
-                theBlock.filter = (byte)((data[k] & 0xF0) >> 4);
-                theBlock.flagEnd = (byte)(data[k+1] & 1);
-                theBlock.flagLooping = (byte)(((data[k + 1] & 1) > 0) ? 1 : 0);
-                theBlock.flagLoop = (byte)(((data[k + 1] & 4) > 0) ? 1 : 0);
-                /*
-                if (bSetLoopOnConversion)
+                VAGBlk theBlock = new VAGBlk(data[k * 16], data[k * 16 + 1]);
+
+                if (theBlock.flagLoop > 0)
                 {
-                    if (theBlock.flagLoop > 0)
-                    {
-                        SetLoopOffset(k);
-                        SetLoopLength(data.Length - k);
-                    }
-                    if (theBlock.flagEnd > 0 && theBlock.flagLooping > 0)
-                    {
-                        SetLoopStatus(1);
-                    }
+                    loopStart = (k * 16);
+                    loopLength = (ulong)(data.Length - k * 16);
                 }
-                */
-                for (uint l = 0; l < 14; l++)
+                if (theBlock.flagEnd > 0 && theBlock.flagLooping > 0)
                 {
-                    theBlock.brr[l] = data[k + l];
+                    loopStatus = (1);
                 }
 
+                for (uint l = 2; l < 16; l++)
+                {
+                    theBlock.brr[l - 2] = data[k * 16 + l];
+                }
 
-
-                // each decompressed pcm block is 52 bytes   EDIT: (wait, isn't it 56 bytes? or is it 28?)
                 wav.AddRange(new byte[28]);
-                decompressData(wav, (int)(k/16*28), theBlock, prev1, prev2);
+                decompressData(wav, (int)(k * 28), theBlock, prev1, prev2);
             }
-
-
             return wav;
+        }
+
+        private void SetLoopStatus(int statut)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SetLoopLength(long length)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SetLoopOffset(uint start)
+        {
+            throw new NotImplementedException();
         }
 
         public class VAGBlk
         {
-            public byte range = 4;
-            public byte filter = 4;
-            public byte flagEnd = 1;
-            public byte flagLooping = 1;
-            public byte flagLoop = 1;
-            public byte[] brr = new byte[14];
+            public int range = 4;
+            public int filter = 4;
+            public int flagEnd = 1;
+            public int flagLooping = 1;
+            public int flagLoop = 1;
+            public byte[] brr;
+
+            public VAGBlk(byte a, byte b)
+            {
+                range = a & 0xF;
+                filter = (a & 0xF0) >> 4;
+                flagEnd = b & 0x1;
+                flagLooping = b & 0x2;
+                flagLoop = b & 0x4;
+                brr = new byte[14];
+            }
+
         }
     }
 

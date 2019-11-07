@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using UnityEngine;
 
 namespace VS.Format
 {
 
-/*
-Notation Description
-<element label>             RIFF file element with the label “ element label”
-<element label: TYPE>       RIFF file element with data type “ TYPE”
-[<element label>]           Optional RIFF file element
-<element label>...          One or more copies of the specified element
-[<element label>]...        Zero or more copies of the specified element
-*/
+    /*
+    Notation Description
+    <element label>             RIFF file element with the label “ element label”
+    <element label: TYPE>       RIFF file element with data type “ TYPE”
+    [<element label>]           Optional RIFF file element
+    <element label>...          One or more copies of the specified element
+    [<element label>]...        Zero or more copies of the specified element
+    */
 
     public class RIFF : ListTypeChunk
     {
@@ -208,4 +207,3 @@ Notation Description
 
 
 }
- 

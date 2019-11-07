@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace VS.Format
 {
@@ -145,7 +144,7 @@ namespace VS.Format
             }
 
             GetSize();
-            return base.WriteFile(v, this.Write());
+            return base.WriteFile(v, Write());
         }
 
     }
@@ -276,7 +275,7 @@ namespace VS.Format
     /// </summary>
     public class Lrgnl : LISTChunk, IChunk
     {
-        public Lrgnl():base("lrgn")
+        public Lrgnl() : base("lrgn")
         {
 
         }
@@ -328,7 +327,7 @@ namespace VS.Format
         }
     }
 
-    public class CKrgnh:Chunk, IChunk
+    public class CKrgnh : Chunk, IChunk
     {
         private ushort _keyLow;         // Specifies the key range for this region.
         private ushort _keyHigh;        // Specifies the key range for this region.
@@ -369,7 +368,7 @@ namespace VS.Format
             _velocityHigh = velocityHigh;
         }
 
-        public ushort keyLow { get => _keyLow; set =>_keyLow = value; }
+        public ushort keyLow { get => _keyLow; set => _keyLow = value; }
         public ushort keyHigh { get => _keyHigh; set => _keyHigh = value; }
         public ushort velocityLow { get => _velocityLow; set => _velocityLow = value; }
         public ushort velocityHigh { get => _velocityHigh; set => _velocityHigh = value; }
@@ -437,7 +436,7 @@ namespace VS.Format
         {
             AddDatas(BitConverter.GetBytes((uint)cbSize));
             AddDatas(BitConverter.GetBytes((uint)cConnectionBlocks));
-            foreach(ConnectionBlock cb in ConnectionBlocks)
+            foreach (ConnectionBlock cb in ConnectionBlocks)
             {
                 AddDatas(BitConverter.GetBytes((ushort)cb.usSource));
                 AddDatas(BitConverter.GetBytes((ushort)cb.usControl));
@@ -539,7 +538,7 @@ Connections inferred by DLS1 Architecture
         the F_WAVELINK_PHASE_MASTER flag set. If a wave is not a member of a phase
         locked group, this value should be set to 0.
         */
-    public ushort phaseGroup = 0;
+        public ushort phaseGroup = 0;
         /*
         Specifies the channel placement of the file. This is used to place mono sounds within a
         stereo pair or for multi-track placement. Each bit position within the ulChannel field
@@ -611,7 +610,7 @@ Connections inferred by DLS1 Architecture
         {
             loop = LP;
             sampleLoops = 1;
-            SetDataCapacity(20+16);
+            SetDataCapacity(20 + 16);
         }
 
 

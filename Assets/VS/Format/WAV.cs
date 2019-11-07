@@ -48,7 +48,8 @@ namespace VS.Format
             {
                 buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
                 buffer.AddRange(BitConverter.GetBytes((uint)size));
-            } else
+            }
+            else
             {
                 buffer.AddRange(new byte[] { 0x4C, 0x49, 0x53, 0x54 }); // LIST
                 buffer.AddRange(BitConverter.GetBytes((uint)size));
