@@ -6,7 +6,7 @@ namespace VS.Format
     //http://soundfile.sapp.org/doc/WaveFormat/
     public class WAV : RIFF, IChunk
     {
-        public ushort AudioFormat = 1;
+        public ushort AudioFormat = 1; // PCM
         public ushort NumChannels = 1;
         public uint SampleRate = 44100;
         public uint ByteRate = 88200;

@@ -281,7 +281,7 @@ public class VSWindow : EditorWindow
             }
             EditorUtility.ClearProgressBar();
         }
-        /*
+        
                 bool LoadAKAOTrigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE*.DAT"));
                 if (LoadAKAOTrigger && VSPath != "")
                 {
@@ -301,7 +301,7 @@ public class VSWindow : EditorWindow
                     }
                     EditorUtility.ClearProgressBar();
                 }
-        */
+        
         bool LoadAKAO2Trigger = GUILayout.Button(new GUIContent("Load Akao MUSIC/MUSIC*.DAT"));
         if (LoadAKAO2Trigger && VSPath != "")
         {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using VS.Format;
 
@@ -12,7 +11,7 @@ namespace VS.Parser.Akao
         public string name = "";
         public byte[] data;
         public int size;
-        public long offset;
+        public ulong offset;
         public uint NumBlocks;
 
         private bool _IsDecompressed = false;
@@ -27,15 +26,18 @@ namespace VS.Parser.Akao
         public uint loopStart;
         public ulong loopLength;
 
+        public float prev1 = 0;
+        public float prev2 = 0;
 
-        public AKAOSample(string n, int SIZ, BinaryReader buffer, long OFF)
+
+        public AKAOSample(string n, byte[] dt, ulong off)
         {
             name = n;
-            size = SIZ;
-            offset = OFF;
-            data = buffer.ReadBytes(size);
+            data = dt;
+            size = dt.Length;
             NumBlocks = (uint)(size / 0x10);
-            //Debug.Log(string.Concat("AKAOSample : size ", size, "  AT : ", offset, "  NumBlocks : ", NumBlocks));
+            offset = off;
+            Debug.Log(string.Concat(name, "   Size : ", size, "   numBlocks : ", NumBlocks, "   offset : ", offset));
         }
 
 
@@ -51,11 +53,10 @@ namespace VS.Parser.Akao
 
         private List<byte> DecompressDatas()
         {
-            List<byte> decomp = new List<byte>();
-
-            float prev1 = 0;
-            float prev2 = 0;
+            List<short> decomp = new List<short>();
             loopStatus = 0;
+            prev1 = 0;
+            prev2 = 0;
 
             for (uint k = 0; k < NumBlocks; k++)
             {
@@ -76,14 +77,29 @@ namespace VS.Parser.Akao
                     theBlock.brr[l - 2] = data[k * 16 + l];
                 }
 
-                decomp.AddRange(new byte[28]);
-                DecompressBlock(decomp, (int)(k * 28), theBlock, prev1, prev2);
+                decomp.AddRange(new short[28]);
+                DecompressBlock(decomp, (int)(k * 28), theBlock);
             }
+            _IsDecompressed = true;
+            return ConvertTo16bitSigned(decomp);
+        }
+
+        private List<byte> ConvertTo16bitSigned(List<short> w8b)
+        {
+            List<byte> decomp = new List<byte>();
+            for (int i = 0; i < w8b.Count; i++)
+            {
+
+                decomp.AddRange(BitConverter.GetBytes(w8b[i]));
+                //decomp.AddRange(new byte[]{ (byte)(w8b[i] << 8), (byte)(w8b[i]) });
+            }
+
             return decomp;
         }
 
-        private void DecompressBlock(List<byte> pSmp, int a, VAGBlk pVBlk, float prev1, float prev2)
+        private void DecompressBlock(List<short> pSmp, int a, VAGBlk pVBlk)
         {
+            //Debug.Log(string.Concat("DecompressBlock : ", prev1, "  :  ", prev2));
             float[,] coeff = {
                 { 0.0f, 0.0f },
                 { 60.0f / 64.0f, 0.0f },
@@ -93,19 +109,20 @@ namespace VS.Parser.Akao
             };
 
             int i;
-            byte t;
+            short t;
             float f1, f2;
             float p1, p2;
             int shift = pVBlk.range + 16;
 
             for (i = 0; i < 14; i++)
             {
-                pSmp[a + i * 2] = (byte)(((int)pVBlk.brr[i] << 28) >> shift);
-                pSmp[a + i * 2 + 1] = (byte)(((int)(pVBlk.brr[i] & 0xF0) << 24) >> shift);
+                pSmp[a + i * 2] = (short)(((int)pVBlk.brr[i] << 28) >> shift);
+                pSmp[a + i * 2 + 1] = (short)(((int)(pVBlk.brr[i] & 0xF0) << 24) >> shift);
             }
 
             // Apply ADPCM decompression ----------------
             i = pVBlk.filter;
+            //Debug.Log(string.Concat("pVBlk.filter : "+ pVBlk.filter));
 
             if (i > 0)
             {
@@ -116,7 +133,7 @@ namespace VS.Parser.Akao
 
                 for (i = 0; i < 28; i++)
                 {
-                    t = (byte)Mathf.RoundToInt(pSmp[a + i] + (p1 * f1) - (p2 * f2));
+                    t = (short)Math.Round(pSmp[a + i] + (p1 * f1) - (p2 * f2));
                     pSmp[a + i] = t;
                     p2 = p1;
                     p1 = t;

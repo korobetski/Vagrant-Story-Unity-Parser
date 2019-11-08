@@ -216,7 +216,7 @@ namespace VS.Parser
                     }
 
                     AKAO sampleParser = new AKAO();
-                    //sampleParser.UseDebug = true;
+                    sampleParser.UseDebug = true;
                     sampleParser.Parse(samplePath, AKAO.SOUND);
 
                     composer = new AKAOComposer(buffer, basePtr, ptr1, instrCount, numTrack, FileName);
@@ -257,11 +257,11 @@ namespace VS.Parser
                         //Debug.Log("ID : " + i + " unityKey : " + arti.unityKey + " fineTune : " + arti.fineTune + " adr1 : " + arti.adr1 + " adr2 : " + arti.adr2);
                     }
                     // Samples section here
-                    long samStart = buffer.BaseStream.Position;
+                    ulong samStart = (ulong)buffer.BaseStream.Position;
                     // First we need to determine the start and the end of the samples, 16 null bytes indicate a new sample, so lets find them.
                     List<long> samPtr = new List<long>();
                     List<long> samEPtr = new List<long>();
-                    while (buffer.BaseStream.Position < buffer.BaseStream.Length - 0x30)
+                    while (buffer.BaseStream.Position < buffer.BaseStream.Length)
                     {
                         if (buffer.ReadUInt64() + buffer.ReadUInt64() == 0)
                         {
@@ -270,6 +270,10 @@ namespace VS.Parser
                                 samEPtr.Add(buffer.BaseStream.Position - 16);
                             }
                             samPtr.Add(buffer.BaseStream.Position);
+                            if (UseDebug)
+                            {
+                                //Debug.Log(string.Concat("New sample at : ", buffer.BaseStream.Position));
+                            }
                         }
                     }
                     samEPtr.Add(buffer.BaseStream.Length);
@@ -279,7 +283,9 @@ namespace VS.Parser
                     for (int i = 0; i < numSam; i++)
                     {
                         buffer.BaseStream.Position = samPtr[i];
-                        AKAOSample sam = new AKAOSample(FileName + "_s" + i, ((int)samEPtr[i] - (int)samPtr[i] - 2), buffer, samPtr[i]);
+                        int size = (int)(samEPtr[i] - samPtr[i]);
+                        byte[] dt = buffer.ReadBytes(size);
+                        AKAOSample sam = new AKAOSample("Sample " + i, dt, (ulong)samPtr[i]);
                         samples[i] = sam;
                     }
 
