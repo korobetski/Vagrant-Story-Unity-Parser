@@ -97,6 +97,7 @@
     <Compile Include="Assets\VS\Format\RIFF.cs" />
     <Compile Include="Assets\VS\Format\RMID.cs" />
     <Compile Include="Assets\VS\Format\SF2.cs" />
+    <Compile Include="Assets\VS\Format\VLQ.cs" />
     <Compile Include="Assets\VS\Format\WAV.cs" />
     <Compile Include="Assets\VS\Format\XMF.cs" />
     <Compile Include="Assets\VS\Parser\AKAO.cs" />

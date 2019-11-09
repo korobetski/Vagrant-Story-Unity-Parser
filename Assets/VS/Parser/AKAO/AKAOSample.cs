@@ -12,10 +12,9 @@ namespace VS.Parser.Akao
         public byte[] data;
         public int size;
         public ulong offset;
-        public uint NumBlocks;
+        private uint NumBlocks;
 
         private bool _IsDecompressed = false;
-        public float compressionRatio = 3.5f;
         public List<byte> WAVDatas;
 
 
@@ -37,7 +36,7 @@ namespace VS.Parser.Akao
             size = dt.Length;
             NumBlocks = (uint)(size / 0x10);
             offset = off;
-            Debug.Log(string.Concat(name, "   Size : ", size, "   numBlocks : ", NumBlocks, "   offset : ", offset));
+            //Debug.Log(string.Concat("AKAOSample => ", name, "   Size : ", size, "   numBlocks : ", NumBlocks, "   offset : ", offset));
         }
 
 
@@ -81,17 +80,16 @@ namespace VS.Parser.Akao
                 DecompressBlock(decomp, (int)(k * 28), theBlock);
             }
             _IsDecompressed = true;
-            return ConvertTo16bitSigned(decomp);
+            return From16bTo8b(decomp);
         }
 
-        private List<byte> ConvertTo16bitSigned(List<short> w8b)
+        private List<byte> From16bTo8b(List<short> w16b)
         {
             List<byte> decomp = new List<byte>();
-            for (int i = 0; i < w8b.Count; i++)
+            for (int i = 0; i < w16b.Count; i++)
             {
 
-                decomp.AddRange(BitConverter.GetBytes(w8b[i]));
-                //decomp.AddRange(new byte[]{ (byte)(w8b[i] << 8), (byte)(w8b[i]) });
+                decomp.AddRange(BitConverter.GetBytes(w16b[i]));
             }
 
             return decomp;
@@ -99,7 +97,6 @@ namespace VS.Parser.Akao
 
         private void DecompressBlock(List<short> pSmp, int a, VAGBlk pVBlk)
         {
-            //Debug.Log(string.Concat("DecompressBlock : ", prev1, "  :  ", prev2));
             float[,] coeff = {
                 { 0.0f, 0.0f },
                 { 60.0f / 64.0f, 0.0f },
@@ -122,8 +119,6 @@ namespace VS.Parser.Akao
 
             // Apply ADPCM decompression ----------------
             i = pVBlk.filter;
-            //Debug.Log(string.Concat("pVBlk.filter : "+ pVBlk.filter));
-
             if (i > 0)
             {
                 f1 = coeff[i, 0];

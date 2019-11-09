@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using VS.Format;
 using VS.Utils;
 
 //Minoru Akao
@@ -670,7 +671,8 @@ namespace VS.Parser.Akao
             internal List<byte> GetMidiBytes()
             {
                 List<byte> midiBytes = new List<byte>();
-                midiBytes.AddRange(ToVlqCollection(deltaTime));
+                VLQ time = new VLQ(deltaTime);
+                midiBytes.AddRange(time.Bytes);
                 midiBytes.Add(midiStatusByte);
                 if (midiArg1 != null)
                 {
@@ -695,45 +697,6 @@ namespace VS.Parser.Akao
                 {
                     return null;
                 }
-            }
-
-            private IEnumerable<byte> ToVlqCollection(int integer)
-            {
-                List<byte> vlq = new List<byte>();
-                if (integer >= 0x80)
-                {
-                    string binary = Convert.ToString(integer, 2);
-                    for (int i = binary.Length; i > 0; i -= 7)
-                    {
-                        if (i >= 7)
-                        {
-                            if (i == binary.Length)
-                            {
-                                vlq.Add((byte)Convert.ToInt32(binary.Substring(i - 7, 7).PadLeft(8, '0'), 2));
-                            }
-                            else
-                            {
-                                vlq.Add((byte)Convert.ToInt32("1" + binary.Substring(i - 7, 7), 2));
-                            }
-                        }
-                        else if (binary.Length < 7)
-                        {
-                            vlq.Add((byte)Convert.ToInt32(binary.Substring(0, i).PadLeft(8, '0'), 2));
-                        }
-                        else
-                        {
-                            vlq.Add((byte)Convert.ToInt32("1" + binary.Substring(0, i).PadLeft(7, '0'), 2));
-                        }
-                    }
-                    vlq.Reverse();
-                }
-                else
-                {
-                    vlq.Add((byte)integer);
-                }
-
-
-                return vlq.ToArray();
             }
         }
 

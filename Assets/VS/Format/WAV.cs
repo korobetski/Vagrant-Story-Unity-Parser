@@ -6,6 +6,7 @@ namespace VS.Format
     //http://soundfile.sapp.org/doc/WaveFormat/
     public class WAV : RIFF, IChunk
     {
+        public string name = "WAV";
         public ushort AudioFormat = 1; // PCM
         public ushort NumChannels = 1;
         public uint SampleRate = 44100;
@@ -16,6 +17,7 @@ namespace VS.Format
         public bool Riff = true;
         public bool hasLoop = false;
         private Loop loop;
+        private LCInfo _info;
 
         public WAV(List<byte> datas, ushort AF = 1, ushort NC = 1, uint SR = 44100, ushort BPS = 16) : base("WAVE")
         {
@@ -88,6 +90,19 @@ namespace VS.Format
                 AddChunk(smpl);
             }
         }
+
+        public void SetName(string inam)
+        {
+            name = inam;
+            /*
+            if (_info == null)
+            {
+                _info = AddChunk(new LCInfo()) as LCInfo;
+            }
+            _info.SetName(name);
+            */
+        }
+
 
         public void SetLoop(Loop lp)
         {

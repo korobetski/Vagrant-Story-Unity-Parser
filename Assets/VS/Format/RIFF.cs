@@ -22,13 +22,15 @@ namespace VS.Format
         {
         }
 
-        public static void AlignName(string name)
+        public static int AlignName(string name)
         {
             name += (char)0x00;
             if (name.Length % 2 > 0)     // if the size of the name string is odd
             {
                 name += (char)0x00;  // add another null byte
             }
+
+            return name.Length;
         }
 
         public bool WriteFile(string path, List<byte> buffer)
@@ -104,7 +106,7 @@ namespace VS.Format
 
         public uint GetSize()
         {
-            return (uint)data.Capacity;
+            return Math.Max((uint)data.Capacity, (uint)data.Count);
         }
 
         public List<byte> Write()
@@ -112,8 +114,8 @@ namespace VS.Format
             //Resize();
             List<byte> buffer = new List<byte>();
             buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
-            //buffer.AddRange(BitConverter.GetBytes((uint)size));
-            buffer.AddRange(new byte[] { (byte)(size & 0x000000FF), (byte)((size & 0x0000FF00) >> 8), (byte)((size & 0x00FF0000) >> 16), (byte)((size & 0xFF000000) >> 24) });
+            buffer.AddRange(BitConverter.GetBytes((uint)size));
+            //buffer.AddRange(new byte[] { (byte)(size & 0x000000FF), (byte)((size & 0x0000FF00) >> 8), (byte)((size & 0x00FF0000) >> 16), (byte)((size & 0xFF000000) >> 24) });
             if (data != null)
             {
                 buffer.AddRange(data);

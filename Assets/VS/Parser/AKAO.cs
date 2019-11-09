@@ -128,7 +128,7 @@ namespace VS.Parser
                         for (int i = 0; i < instrPtrs.Count; i++)
                         {
                             AKAOInstrument instrument = new AKAOInstrument(AKAOInstrument.InstrumentType.INSTR_MELODIC);
-                            instrument.name = "Instrument " + i;
+                            instrument.name = "Instrument #" + (ushort)i;
                             long instrStart = ptr1 + 0x20 + instrPtrs[i];
                             long instrEnd;
                             if (i < instrPtrs.Count - 1)
@@ -172,6 +172,7 @@ namespace VS.Parser
                         }
 
                         AKAOInstrument drum = new AKAOInstrument(AKAOInstrument.InstrumentType.INSTR_DRUM);
+                        drum.name = "Drum";
                         int drumRegLoop = (int)(byteLen - ptr2) / 0x08;
 
                         List<AKAORegion> dr = new List<AKAORegion>();
@@ -254,10 +255,12 @@ namespace VS.Parser
                     {
                         AKAOArticulation arti = new AKAOArticulation(buffer);
                         articulations[i] = arti;
-                        //Debug.Log("ID : " + i + " unityKey : " + arti.unityKey + " fineTune : " + arti.fineTune + " adr1 : " + arti.adr1 + " adr2 : " + arti.adr2);
                     }
+
+
                     // Samples section here
                     ulong samStart = (ulong)buffer.BaseStream.Position;
+                    //Debug.Log(string.Concat("samStart : ", samStart));
                     // First we need to determine the start and the end of the samples, 16 null bytes indicate a new sample, so lets find them.
                     List<long> samPtr = new List<long>();
                     List<long> samEPtr = new List<long>();
@@ -270,10 +273,6 @@ namespace VS.Parser
                                 samEPtr.Add(buffer.BaseStream.Position - 16);
                             }
                             samPtr.Add(buffer.BaseStream.Position);
-                            if (UseDebug)
-                            {
-                                //Debug.Log(string.Concat("New sample at : ", buffer.BaseStream.Position));
-                            }
                         }
                     }
                     samEPtr.Add(buffer.BaseStream.Length);
@@ -285,7 +284,7 @@ namespace VS.Parser
                         buffer.BaseStream.Position = samPtr[i];
                         int size = (int)(samEPtr[i] - samPtr[i]);
                         byte[] dt = buffer.ReadBytes(size);
-                        AKAOSample sam = new AKAOSample("Sample " + i, dt, (ulong)samPtr[i]);
+                        AKAOSample sam = new AKAOSample("Sample #" + (ushort)i, dt, (ulong)samPtr[i]);
                         samples[i] = sam;
                     }
 
@@ -297,9 +296,12 @@ namespace VS.Parser
                     {
                         for (uint l = 0; l < samples.Length; l++)
                         {
-                            if (articulations[i].sampleOff + samStart == samples[l].offset)
+                            // 0x10 = empty space between samples
+                            if (articulations[i].sampleOff + samStart + 0x10 == samples[l].offset)
                             {
+                                //Debug.Log("Articulation => Sample");
                                 articulations[i].sampleNum = l;
+                                articulations[i].sample = samples[l];
                                 break;
                             }
                         }
@@ -329,6 +331,7 @@ namespace VS.Parser
                         foreach (AKAORegion region in instrument.regions)
                         {
                             AKAOArticulation articulation;
+                            //Debug.Log(string.Concat("region.articulationId : ", region.articulationId));
                             if (!((region.articulationId - sampler.startingArticulationId) >= 0 && region.articulationId - sampler.startingArticulationId < 200))
                             {
                                 Debug.LogWarning("Articulation #" + region.articulationId + " does not exist in the samp collection.");
@@ -345,12 +348,8 @@ namespace VS.Parser
                                 articulation = sampler.articulations[region.articulationId - sampler.startingArticulationId];
                             }
 
-
-
                             region.articulation = articulation;
                             region.sampleNum = articulation.sampleNum;
-
-
                             region.ComputeADSR();
 
                             if (instrument.IsDrum())
@@ -380,13 +379,15 @@ namespace VS.Parser
 
 
 
-
+                            // Making DLS
                             Lrgn reg = new Lrgn(region.lowRange, region.hiRange, 0x00, 0x7F);
                             CKwsmp smp = new CKwsmp((ushort)region.unityKey, region.fineTune, region.attenuation, 1);
+
                             if (articulation.loopPt != 0)
                             {
                                 smp.AddLoop(new Loop(1, articulation.loopPt, (uint)(sampler.samples[region.sampleNum].size - articulation.loopPt)));
                             }
+
                             reg.SetSample(smp);
                             if (instrument.IsDrum())
                             {
@@ -404,7 +405,7 @@ namespace VS.Parser
                                 }
                             }
 
-                            reg.SetWaveLinkInfo(0, 0, 2, region.sampleNum);
+                            reg.SetWaveLinkInfo(0, 0, 1, region.sampleNum);
                             DSLInstrument.AddRegion(reg);
 
                         }
@@ -422,6 +423,7 @@ namespace VS.Parser
                 foreach (AKAOSample AKAOsmp in sampler.samples)
                 {
                     WAV nw = AKAOsmp.ConvertToWAV();
+                    //nw.SetName(AKAOsmp.name);
                     nw.Riff = false;
                     dls.AddWave(nw);
                 }

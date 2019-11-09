@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace VS.Format
 {
@@ -91,23 +92,25 @@ namespace VS.Format
             linsl = AddChunk(new Linsl()) as Linsl;
             ptbl = AddChunk(new CKptbl()) as CKptbl;
             wvpl = AddChunk(new Lwvpl()) as Lwvpl;
+            //INFO = AddChunk(new LCInfo()) as LCInfo;
         }
 
         public void SetName(string name)
         {
             _name = name;
+            //INFO.SetName(name);
         }
 
 
-        public void AddInstrument(uint bank, uint instrumentId)
+        public void AddInstrument(uint bank, byte instrumentId)
         {
-            Lins instrument = new Lins(bank, instrumentId, "Instrument " + instrumentId);
+            Lins instrument = new Lins(bank, instrumentId, "Instrument #" + BitConverter.GetBytes(instrumentId));
             linsl.AddChunk(instrument);
             colh.Instruments = (uint)linsl.chunks.Count;
             GetSize();
         }
 
-        public void AddInstrument(uint bank, uint instrumentId, string name)
+        public void AddInstrument(uint bank, byte instrumentId, string name)
         {
             Lins instrument = new Lins(bank, instrumentId, name);
             linsl.AddChunk(instrument);
@@ -132,15 +135,16 @@ namespace VS.Format
 
         internal bool WriteFile(string v)
         {
-            colh.Instruments = (uint)linsl.chunks.Count;
-            ptbl.Cues = (uint)wvpl.chunks.Count;
 
             // Wave Pool
             uint offset = 0;
-            foreach (WAV wave in wvpl.chunks)
+            foreach (IChunk wave in wvpl.chunks)
             {
-                ptbl.AddCue(offset);
-                offset += wave.GetSize();
+                if (wave.GetType() == typeof(WAV))
+                {
+                    ptbl.AddCue(offset);
+                    offset += wave.GetSize() + 8;
+                }
             }
 
             GetSize();
@@ -187,11 +191,13 @@ namespace VS.Format
         private CKinsh _insh;
         private Lrgnl _lrgnl;
         private Lart _lart;
+        private LCInfo _info;
 
         public Lins() : base("insh")
         {
             _insh = AddChunk(new CKinsh()) as CKinsh;
             _lrgnl = AddChunk(new Lrgnl()) as Lrgnl;
+            //_info = AddChunk(new LCInfo()) as LCInfo;
         }
 
         public Lins(uint bank, uint instrumentId) : base("ins ")
@@ -199,25 +205,25 @@ namespace VS.Format
 
             _insh = AddChunk(new CKinsh(bank, instrumentId)) as CKinsh;
             _lrgnl = AddChunk(new Lrgnl()) as Lrgnl;
-
+            //_info = AddChunk(new LCInfo()) as LCInfo;
             _name = "Instrument " + instrumentId;
-            RIFF.AlignName(_name);
+            //_info.SetName(_name);
         }
         public Lins(uint bank, uint instrumentId, string name) : base("ins ")
         {
             _insh = AddChunk(new CKinsh(bank, instrumentId)) as CKinsh;
             _lrgnl = AddChunk(new Lrgnl()) as Lrgnl;
-
+            //_info = AddChunk(new LCInfo()) as LCInfo;
             _name = name;
-            RIFF.AlignName(_name);
+            //_info.SetName(_name);
         }
         public Lins(uint bank, uint instrumentId, string name, Lrgnl regions) : base("ins ")
         {
             _insh = AddChunk(new CKinsh(bank, instrumentId)) as CKinsh;
             _lrgnl = AddChunk(regions) as Lrgnl;
-
+            //_info = AddChunk(new LCInfo()) as LCInfo;
             _name = name;
-            RIFF.AlignName(_name);
+            //_info.SetName(_name);
         }
 
         public Lrgnl regions { get => _lrgnl; }
@@ -510,9 +516,12 @@ Connections inferred by DLS1 Architecture
     /// </summary>
     public class Lwvpl : LISTChunk, IChunk
     {
+        private LCInfo _info;
+
         public Lwvpl() : base("wvpl")
         {
-
+            //_info = AddChunk(new LCInfo()) as LCInfo;
+            //_info.SetName("Instruments List");
         }
 
         public List<WAV> Waves
@@ -726,6 +735,7 @@ Connections inferred by DLS1 Architecture
     /// </summary>
     public class LCInfo : LISTChunk, IChunk
     {
+        public new uint headerSize = 12;
         public Chunk IARL;
         public Chunk IART;
         public Chunk ICMS;
@@ -748,6 +758,53 @@ Connections inferred by DLS1 Architecture
         {
 
         }
-    } //TODO
+
+        public void SetName(string inam)
+        {
+            INAM = AddChunk(new Chunk("inam", StringToBytes(inam))) as Chunk;
+            INAM.SetDataCapacity(RIFF.AlignName(inam));
+        }
+        public void SetComment(string icmt)
+        {
+            ICMT = AddChunk(new Chunk("icmt", StringToBytes(icmt))) as Chunk;
+            ICMT.SetDataCapacity(RIFF.AlignName(icmt));
+        }
+
+        public void SetArtist(string iart)
+        {
+            IART = AddChunk(new Chunk("iart", StringToBytes(iart))) as Chunk;
+            IART.SetDataCapacity(RIFF.AlignName(iart));
+        }
+
+        public void SetMedia(string imed)
+        {
+            IMED = AddChunk(new Chunk("imed", StringToBytes(imed))) as Chunk;
+            IMED.SetDataCapacity(RIFF.AlignName(imed));
+        }
+        public void SetSoftware(string isft)
+        {
+            ISFT = AddChunk(new Chunk("isft", StringToBytes(isft))) as Chunk;
+            ISFT.SetDataCapacity(RIFF.AlignName(isft));
+        }
+
+        private List<byte> StringToBytes(string str)
+        {
+            RIFF.AlignName(str);
+            return new List<byte>(Encoding.ASCII.GetBytes(str));
+        }
+
+        public new uint GetSize()
+        {
+            size = 4;
+            if (chunks != null && chunks.Count > 0)
+            {
+                foreach (IChunk ck in chunks)
+                {
+                    size += ck.GetHeaderSize() + ck.GetSize();
+                }
+            }
+            return size;
+        }
+    }
 
 }

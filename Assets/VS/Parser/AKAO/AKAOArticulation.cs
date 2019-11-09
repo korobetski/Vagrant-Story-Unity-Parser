@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using UnityEngine;
 
 
 //Minoru Akao
@@ -12,7 +13,9 @@ namespace VS.Parser.Akao
         public ushort unityKey;
         public ushort adr1;
         public ushort adr2;
+
         internal uint sampleNum;
+        internal AKAOSample sample;
 
         public AKAOArticulation(BinaryReader buffer)
         {
@@ -22,8 +25,10 @@ namespace VS.Parser.Akao
             unityKey = buffer.ReadUInt16();
             adr1 = buffer.ReadUInt16();
             adr2 = buffer.ReadUInt16();
-        }
 
+
+            //Debug.Log(string.Concat("AKAOArticulation =>  offset :", sampleOff, "  loopPt : ", loopPt, "  fineTune : ", fineTune, "  unityKey : ", unityKey, "  adr1 : ", adr1, "  adr2 : ", adr2));
+        }
     }
 
 }
