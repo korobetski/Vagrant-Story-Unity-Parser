@@ -44,6 +44,8 @@ namespace VS.Parser.Akao
             unk3 = b[5];
             unk4 = b[6];
             volume = b[7];
+
+            Debug.Log(string.Concat("articulationId : ", articulationId, "   lowRange : ", lowRange, "   hiRange : ", hiRange, "   volume : ", volume));
         }
 
         public void FeedDrum(byte[] b, int key)

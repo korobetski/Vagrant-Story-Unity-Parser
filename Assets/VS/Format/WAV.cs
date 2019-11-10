@@ -115,12 +115,12 @@ namespace VS.Format
             if (Riff == true)
             {
                 buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
-                buffer.AddRange(BitConverter.GetBytes((uint)size+4));
+                buffer.AddRange(BitConverter.GetBytes((uint)size + 4));
             }
             else
             {
                 buffer.AddRange(new byte[] { 0x4C, 0x49, 0x53, 0x54 }); // LIST
-                buffer.AddRange(BitConverter.GetBytes((uint)size+4));
+                buffer.AddRange(BitConverter.GetBytes((uint)size + 4));
             }
             buffer.AddRange(new byte[] { (byte)type[0], (byte)type[1], (byte)type[2], (byte)type[3] });
             foreach (IChunk ck in chunks)

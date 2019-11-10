@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using VS.Format;
@@ -74,21 +73,35 @@ namespace VS.Parser
                     buffer.ReadBytes(10); // padding
 
                     ushort jump = buffer.ReadUInt16();
-                    long jumpTo = buffer.BaseStream.Position + jump - 2;
+                    long musInstrPtr = buffer.BaseStream.Position + jump - 2;
                     uint numTrack = ToolBox.GetNumPositiveBits(bnumt);
+
                     // kind of listing here, i don't know what it is.
+                    if (UseDebug)
+                    {
+                        //Debug.Log(string.Concat("Listing count : ", (jump - 2) / 2));
+                    }
+                    for (uint i = 0; i < (jump - 2) / 2; i++)
+                    {
+                        byte[] b = buffer.ReadBytes(2);
+                        //Debug.Log(b[0] + "   ->   " + b[1]);
+                    }
+
+
 
                     if (UseDebug)
                     {
                         Debug.Log("AKAO from : " + FileName + " FileSize = " + FileSize + "    |    reverb : " + reverb + " numTrack : " + numTrack + " sampleSet : " + sampleSet);
-                        Debug.Log("instruments at : " + ptr1 + "  Drums at : " + ptr2 + "   |    unk1 : " + unk1 + "  unk3 : " + unk3 + "   Jump to : " + jumpTo);
+                        Debug.Log("instruments at : " + ptr1 + "  Drums at : " + ptr2 + "   |    unk1 : " + unk1 + "  unk3 : " + unk3 + "   musInstrPtr : " + musInstrPtr);
                     }
-                    buffer.BaseStream.Position = jumpTo;
+
 
 
                     // music instuctions begin here, MIDI like format
-                    long basePtr = buffer.BaseStream.Position;
-
+                    if (buffer.BaseStream.Position != musInstrPtr)
+                    {
+                        buffer.BaseStream.Position = musInstrPtr;
+                    }
                     uint instrCount = 0;
                     // Instruments
                     if (ptr1 > 0x30)
@@ -147,6 +160,11 @@ namespace VS.Parser
                                 }
                             }
                             int instrRegLoop = (int)(instrEnd - instrStart) / 0x08;
+                            if (UseDebug)
+                            {
+                                Debug.Log(string.Concat("Instrument #", i, "   Regions count : ", instrRegLoop - 1));
+                            }
+
                             instrument.regions = new AKAORegion[instrRegLoop - 1]; // -1 because the last 8 bytes are padding
                             for (int j = 0; j < instrRegLoop - 1; j++)
                             {
@@ -171,6 +189,13 @@ namespace VS.Parser
                             buffer.BaseStream.Position = ptr2;
                         }
 
+                        // Special case when there is no melodic instruments
+                        if (instruments == null)
+                        {
+                            instrCount++;
+                            instruments = new AKAOInstrument[1];
+                        }
+
                         AKAOInstrument drum = new AKAOInstrument(AKAOInstrument.InstrumentType.INSTR_DRUM);
                         drum.name = "Drum";
                         int drumRegLoop = (int)(byteLen - ptr2) / 0x08;
@@ -192,10 +217,12 @@ namespace VS.Parser
                         }
 
                         drum.regions = dr.ToArray();
-
                         instruments[instrCount - 1] = drum;
                     }
+                    composer = new AKAOComposer(buffer, musInstrPtr, ptr1, instrCount, numTrack, FileName);
 
+
+                    /*
                     // So we seek for the appropriate WAVE*.DAT in the SOUND folder
                     string[] hash = FilePath.Split("/"[0]);
                     hash[hash.Length - 2] = "SOUND";
@@ -219,19 +246,16 @@ namespace VS.Parser
                     AKAO sampleParser = new AKAO();
                     sampleParser.UseDebug = true;
                     sampleParser.Parse(samplePath, AKAO.SOUND);
-
-                    composer = new AKAOComposer(buffer, basePtr, ptr1, instrCount, numTrack, FileName);
-
                     Synthetize(this, sampleParser);
-
+                    */
 
 
                     break;
                 case AKAOType.SOUND:
                     // Samples Collection
-                    // header datas
                     // https://www.midi.org/specifications/category/dls-specifications
-                    header = buffer.ReadBytes(4);// AKAO
+                    // header datas
+                    header = buffer.ReadBytes(4);       // AKAO
                     ushort sampleId = buffer.ReadUInt16();
                     buffer.ReadBytes(10); // padding
 
@@ -299,7 +323,6 @@ namespace VS.Parser
                             // 0x10 = empty space between samples
                             if (articulations[i].sampleOff + samStart + 0x10 == samples[l].offset)
                             {
-                                //Debug.Log("Articulation => Sample");
                                 articulations[i].sampleNum = l;
                                 articulations[i].sample = samples[l];
                                 break;
@@ -334,13 +357,13 @@ namespace VS.Parser
                             //Debug.Log(string.Concat("region.articulationId : ", region.articulationId));
                             if (!((region.articulationId - sampler.startingArticulationId) >= 0 && region.articulationId - sampler.startingArticulationId < 200))
                             {
-                                Debug.LogWarning("Articulation #" + region.articulationId + " does not exist in the samp collection.");
+                                //Debug.LogWarning("Articulation #" + region.articulationId + " does not exist in the samp collection.");
                                 articulation = sampler.articulations[0];
                             }
 
                             if (region.articulationId - sampler.startingArticulationId >= sampler.articulations.Length)
                             {
-                                Debug.LogWarning("Articulation #" + region.articulationId + " referenced but not loaded");
+                                //Debug.LogWarning("Articulation #" + region.articulationId + " referenced but not loaded");
                                 articulation = sampler.articulations[sampler.articulations.Length - 1];
                             }
                             else

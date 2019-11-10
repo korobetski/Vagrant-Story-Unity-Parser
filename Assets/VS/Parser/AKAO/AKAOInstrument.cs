@@ -1,4 +1,5 @@
 ﻿//Minoru Akao
+
 namespace VS.Parser.Akao
 {
     public class AKAOInstrument
@@ -14,6 +15,8 @@ namespace VS.Parser.Akao
         public AKAOInstrument(InstrumentType type = InstrumentType.INSTR_MELODIC)
         {
             _type = type;
+
+            //Debug.Log(string.Concat("AKAOInstrument : ", name));
         }
 
         public bool IsDrum()

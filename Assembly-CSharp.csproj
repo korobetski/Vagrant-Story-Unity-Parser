@@ -67,10 +67,6 @@
     <Compile Include="Assets\Scripts\MainMenu.cs" />
     <Compile Include="Assets\Scripts\MiniMapsViewver.cs" />
     <Compile Include="Assets\Scripts\SceneSwitcher.cs" />
-    <Compile Include="Assets\SoundFont2\SoundFont2\SF2.cs" />
-    <Compile Include="Assets\SoundFont2\SoundFont2\SF2Chunks.cs" />
-    <Compile Include="Assets\SoundFont2\SoundFont2\SF2Types.cs" />
-    <Compile Include="Assets\SoundFont2\SoundFont2\SF2Utils.cs" />
     <Compile Include="Assets\VS\Core\Core.cs" />
     <Compile Include="Assets\VS\Core\Memory.cs" />
     <Compile Include="Assets\VS\Core\Opcode.cs" />
@@ -100,6 +96,7 @@
     <Compile Include="Assets\VS\Format\VLQ.cs" />
     <Compile Include="Assets\VS\Format\WAV.cs" />
     <Compile Include="Assets\VS\Format\XMF.cs" />
+    <Compile Include="Assets\VS\Format\XString.cs" />
     <Compile Include="Assets\VS\Parser\AKAO.cs" />
     <Compile Include="Assets\VS\Parser\AKAO\AKAOArticulation.cs" />
     <Compile Include="Assets\VS\Parser\AKAO\AKAOComposer.cs" />

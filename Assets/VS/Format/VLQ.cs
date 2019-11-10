@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
+using System.Collections.Generic;
 
 namespace VS.Format
 {
@@ -27,14 +27,18 @@ namespace VS.Format
             _value = FromVlqCollection(_bytes);
         }
 
-        public uint Value { get => _value; set
+        public uint Value
+        {
+            get => _value; set
             {
                 _value = value;
                 _bytes = ToVlqCollection(_value);
             }
         }
 
-        public List<byte> Bytes { get => _bytes; set
+        public List<byte> Bytes
+        {
+            get => _bytes; set
             {
                 _bytes = value;
                 _value = FromVlqCollection(_bytes);

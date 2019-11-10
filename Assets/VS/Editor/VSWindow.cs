@@ -281,7 +281,7 @@ public class VSWindow : EditorWindow
             }
             EditorUtility.ClearProgressBar();
         }
-        
+        /*
                 bool LoadAKAOTrigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE*.DAT"));
                 if (LoadAKAOTrigger && VSPath != "")
                 {
@@ -301,7 +301,7 @@ public class VSWindow : EditorWindow
                     }
                     EditorUtility.ClearProgressBar();
                 }
-        
+        */
         bool LoadAKAO2Trigger = GUILayout.Button(new GUIContent("Load Akao MUSIC/MUSIC*.DAT"));
         if (LoadAKAO2Trigger && VSPath != "")
         {
@@ -316,7 +316,7 @@ public class VSWindow : EditorWindow
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
                 AKAO parser = new AKAO();
-                //parser.UseDebug = true;
+                parser.UseDebug = true;
                 parser.Parse(file, AKAO.MUSIC);
                 if (parser.FileSize > 4)
                 {
@@ -327,8 +327,8 @@ public class VSWindow : EditorWindow
             */
 
             AKAO parser = new AKAO();
-            //parser.UseDebug = true;
-            parser.Parse(VSPath + "MUSIC/MUSIC000.DAT", AKAO.MUSIC);
+            parser.UseDebug = true;
+            parser.Parse(VSPath + "MUSIC/MUSIC001.DAT", AKAO.MUSIC);
             if (parser.FileSize > 4)
             {
                 parser.composer.OutputMidiFile();

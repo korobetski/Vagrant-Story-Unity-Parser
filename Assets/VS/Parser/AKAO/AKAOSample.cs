@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 using VS.Format;
 
 //Minoru Akao
@@ -77,7 +76,10 @@ namespace VS.Parser.Akao
                 }
 
                 decomp.AddRange(new short[28]);
-                DecompressBlock(decomp, (int)(k * 28), theBlock);
+                if (data[k * 16] != 0xFF && data[k * 16 + 1] != 0xFF)
+                {
+                    DecompressBlock(decomp, (int)(k * 28), theBlock);
+                }
             }
             _IsDecompressed = true;
             return From16bTo8b(decomp);
