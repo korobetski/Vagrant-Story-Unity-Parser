@@ -26,12 +26,12 @@ namespace VS.Parser.Akao
         private uint velocity = 127;
         private int quarterNote = 0x30;
 
-        public static uint timeDebug = 0;
+        public static bool UseDebug = false;
 
-        public AKAOComposer(BinaryReader buffer, long start, long end, uint NI, uint NT, string name)
+        public AKAOComposer(BinaryReader buffer, long start, long end, uint NI, uint NT, string name, bool UseDebug = false)
         {
             this.buffer = buffer;
-
+            AKAOComposer.UseDebug = UseDebug;
             numTrack = NT;
             numInstr = NI;
             this.name = name;
@@ -84,6 +84,7 @@ namespace VS.Parser.Akao
 
         private void SetTracks()
         {
+            long beginOffset = buffer.BaseStream.Position;
             //Debug.Log("SetTracks : "+ numTrack);
             tracks = new AKAOTrack[numTrack];
             for (uint i = 0; i < numTrack; i++)
@@ -101,9 +102,14 @@ namespace VS.Parser.Akao
             long repeatBegin = 0;
             int repeatNumber = 0;
             List<long> repeaterEndPositions = new List<long>();
+            List<long> condLoops = new List<long>();
 
 
-            //Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
+            if (AKAOComposer.UseDebug)
+            {
+                Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
+            }
+
             while (buffer.BaseStream.Position < end)
             {
                 AKAOTrack curTrack;
@@ -136,7 +142,7 @@ namespace VS.Parser.Akao
                 byte STATUS_BYTE = buffer.ReadByte();
                 int i, k;
 
-                //Debug.Log(timeDebug+"    STATUS_BYTE : " + STATUS_BYTE);
+                //Debug.Log("##    STATUS_BYTE : " + STATUS_BYTE);
                 if (STATUS_BYTE <= 0x9F)
                 {
                     i = STATUS_BYTE / 11;
@@ -150,7 +156,6 @@ namespace VS.Parser.Akao
                     {
                         if (playingNote)
                         {
-                            timeDebug += delta;
                             curTrack.AddEvent(new EvNoteOff(channel, prevKey, delta));
                             delta = 0;
                             playingNote = false;
@@ -159,7 +164,6 @@ namespace VS.Parser.Akao
                         uint relativeKey = (uint)i;
                         uint baseKey = octave * 12;
                         uint key = baseKey + relativeKey;
-                        timeDebug += delta;
                         curTrack.AddEvent(new EvNoteOn(channel, key, velocity, delta));
                         delta = delta_time_table[k];
                         prevKey = key;
@@ -167,30 +171,28 @@ namespace VS.Parser.Akao
                     }
                     else if (STATUS_BYTE < 0x8F) // Tie
                     {
-                        uint duration = delta_time_table[k];
-                        delta += (ushort)duration;
+                        ushort duration = delta_time_table[k];
+                        delta += duration;
                         curTrack.AddEvent(new EvTieTime(duration));
                     }
                     else // Rest
                     {
-                        if (playingNote)
+                        if (playingNote == true)
                         {
-                            timeDebug += delta;
                             curTrack.AddEvent(new EvNoteOff(channel, prevKey, delta));
                             delta = 0;
                             playingNote = false;
                         }
 
-                        uint duration = delta_time_table[k];
+                        ushort duration = delta_time_table[k];
                         delta += (ushort)duration;
-                        curTrack.AddEvent(new EvTieTime(delta));
+                        curTrack.AddEvent(new EvRest(delta));
                     }
                 }
                 else if ((STATUS_BYTE >= 0xF0) && (STATUS_BYTE <= 0xFB)) // Alternate Note On ?
                 {
                     if (playingNote)
                     {
-                        timeDebug += delta;
                         curTrack.AddEvent(new EvNoteOff(channel, prevKey, delta));
                         delta = 0;
                         playingNote = false;
@@ -199,7 +201,7 @@ namespace VS.Parser.Akao
                     uint baseKey = octave * 12;
                     uint key = baseKey + relativeKey;
                     uint time = buffer.ReadByte();
-                    timeDebug += delta;
+
                     curTrack.AddEvent(new EvNoteOn(channel, key, velocity, delta));
                     delta = (ushort)time;
                     prevKey = key;
@@ -210,13 +212,18 @@ namespace VS.Parser.Akao
                     switch (STATUS_BYTE)
                     {
                         case 0xA0:
-                            curTrack.AddEvent(new EvEndTrack());
-                            timeDebug = 0;
+                            /*
+                            curTrack.AddEvent(new EvEndTrack(cTrackId));
+                            cTrackId++;
+                            if (cTrackId < tracks.Length)
+                            {
+                                curTrack = tracks[cTrackId];
+                            }
                             delta = 0;
+                            */
+                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
                             break;
                         case 0xA1:// Program Change
-                            //articulations[articulationId]
-                            timeDebug += delta;
                             curTrack.AddEvent(new EvProgramChange(channel, (byte)(buffer.ReadByte() + numInstr), delta));
                             delta = 0;
                             break;
@@ -225,12 +232,12 @@ namespace VS.Parser.Akao
                             break;
                         case 0xA3:// Volume
                             uint volume = buffer.ReadByte();
-                            timeDebug += delta;
                             curTrack.AddEvent(new EvVolume(channel, volume, delta));
                             delta = 0;
                             break;
                         case 0xA4:// Portamento
-                            curTrack.AddEvent(new EvPortamento(channel));
+                            byte[] b = buffer.ReadBytes(2);
+                            curTrack.AddEvent(new EvPortamento(channel, b[0], b[1]));
                             break;
                         case 0xA5:// Octave
                             octave = buffer.ReadByte();
@@ -246,7 +253,6 @@ namespace VS.Parser.Akao
                             break;
                         case 0xA8:// Expression
                             uint expression = buffer.ReadByte();
-                            timeDebug += delta;
                             curTrack.AddEvent(new EvExpr(channel, expression, delta));
                             delta = 0;
                             break;
@@ -299,7 +305,7 @@ namespace VS.Parser.Akao
                             break;
                         // LFO (low-frequency oscillators) Pitch bend
                         case 0xB4: // LFO Pitch bend Range
-                            byte[] b = buffer.ReadBytes(3);
+                            b = buffer.ReadBytes(3);
                             curTrack.AddEvent(new EvLFOPitchRange(b[0], b[1], b[2]));
                             break;
                         case 0xB5: // LFO Pitch bend Depth
@@ -329,8 +335,8 @@ namespace VS.Parser.Akao
                             break;
                         // LFO (low-frequency oscillators) Panpot
                         case 0xBC: // LFO Panpot Range
-                            b = buffer.ReadBytes(3);
-                            curTrack.AddEvent(new EvLFOPanpotRange(b[0], b[1], b[2]));
+                            b = buffer.ReadBytes(2);
+                            curTrack.AddEvent(new EvLFOPanpotRange(b[0], b[1]));
                             break;
                         case 0xBD: // LFO Panpot Depth
                             depth = buffer.ReadByte();
@@ -340,7 +346,7 @@ namespace VS.Parser.Akao
                             curTrack.AddEvent(new EvLFOPanpotOff());
                             break;
                         case 0xBF: // LFO Panpot ??
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                            curTrack.AddEvent(new EvUnknown(buffer.ReadByte()));
                             break;
                         case 0xC0: // Transpose
                             int transpose = buffer.ReadByte();
@@ -385,10 +391,20 @@ namespace VS.Parser.Akao
                                 buffer.BaseStream.Position = repeatBegin;
                                 repeatNumber--;
                             }
-
                             curTrack.AddEvent(new EvRepeatEnd(loopId));
                             break;
                         case 0xCA: // Repeat End
+                            loopId = 2;
+                            if (!repeaterEndPositions.Contains(buffer.BaseStream.Position))
+                            {
+                                repeaterEndPositions.Add(buffer.BaseStream.Position);
+                                repeatNumber = loopId;
+                            }
+                            if (repeatNumber >= 2 && repeatBegin != 0)
+                            {
+                                buffer.BaseStream.Position = repeatBegin;
+                                repeatNumber--;
+                            }
                             curTrack.AddEvent(new EvRepeatEnd());
                             break;
                         case 0xCB: // Unknown
@@ -407,7 +423,6 @@ namespace VS.Parser.Akao
                             curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
                             break;
                         case 0xD0: // Note Off
-                            timeDebug += delta;
                             curTrack.AddEvent(new EvNoteOff(channel, prevKey, delta));
                             delta = 0;
                             playingNote = false;
@@ -434,16 +449,10 @@ namespace VS.Parser.Akao
                             curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
                             break;
                         case 0xD8: // Pitch Bend
-                            uint value = buffer.ReadByte();
-                            uint fullValue = (uint)(value * 64.503937007874015748031496062992f);
-                            fullValue += 0x2000;
-                            uint high = fullValue & 0x7F;
-                            uint low = (fullValue & 0x3F80) << 7;
-                            curTrack.AddEvent(new EvPitchBend(channel, low, high));
+                            curTrack.AddEvent(new EvPitchBend(channel, buffer.ReadSByte()));
                             break;
                         case 0xD9: // Pitch Bend Move
-                            value = buffer.ReadByte();
-                            curTrack.AddEvent(new EvPitchBendMove(value));
+                            curTrack.AddEvent(new EvPitchBendMove(buffer.ReadByte()));
                             break;
                         case 0xDA: // Unknown
                             curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
@@ -516,15 +525,14 @@ namespace VS.Parser.Akao
                             curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
                             break;
                         case 0xFC: // Tie
-                            value = buffer.ReadByte();
-                            delta += (ushort)value;
-                            curTrack.AddEvent(new EvTieTime(value));
+                            duration = buffer.ReadByte();
+                            delta += (byte)duration;
+                            curTrack.AddEvent(new EvTieTime(duration));
                             break;
                         case 0xFD: // Rest
                             duration = buffer.ReadByte();
                             if (playingNote)
                             {
-                                timeDebug += delta;
                                 curTrack.AddEvent(new EvNoteOff(channel, prevKey, delta));
                                 delta = 0;
                                 playingNote = false;
@@ -538,8 +546,8 @@ namespace VS.Parser.Akao
                             {
                                 case 0x00: // Tempo
                                     b = buffer.ReadBytes(2);
-                                    timeDebug += delta;
                                     curTrack.AddEvent(new EvTempo(b[0], b[1], delta));
+                                    delta = 0;
                                     break;
                                 case 0x01: // Tempo Slide
                                     b = buffer.ReadBytes(2);
@@ -560,29 +568,37 @@ namespace VS.Parser.Akao
                                 case 0x05: // Drum kit Off
                                     curTrack.AddEvent(new EvDrumKitOff());
                                     break;
-                                case 0x06: // End Track
-                                    b = buffer.ReadBytes(2);
-                                    curTrack.AddEvent(new EvEndTrack());
+                                case 0x06: // Perma Loop
+                                    long dest = buffer.BaseStream.Position + buffer.ReadInt16();
+                                    long loopLen = buffer.BaseStream.Position - beginOffset;
+                                    //buffer.BaseStream.Position = dest;
+                                    curTrack.AddEvent(new EvPermaLoop(cTrackId, dest));
+                                    // -----------------------------------------------------------
+                                    curTrack.AddEvent(new EvEndTrack(cTrackId));
                                     cTrackId++;
                                     if (cTrackId < tracks.Length)
                                     {
                                         curTrack = tracks[cTrackId];
                                     }
-                                    timeDebug = 0;
                                     delta = 0;
-                                    //Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
+
                                     break;
-                                case 0x07: // End Track
-                                    b = buffer.ReadBytes(2);
-                                    curTrack.AddEvent(new EvEndTrack());
-                                    cTrackId++;
-                                    if (cTrackId < tracks.Length)
+                                case 0x07: // Perma Loop break with conditional.
+                                    byte cond = buffer.ReadByte();
+                                    dest = buffer.BaseStream.Position + buffer.ReadInt16();
+                                    loopLen = buffer.BaseStream.Position - beginOffset;
+
+                                    //Debug.Log(string.Concat("Perma Loop break : ", buffer.BaseStream.Position, " -|- ", dest));
+                                    if (!condLoops.Contains(dest))
                                     {
-                                        curTrack = tracks[cTrackId];
+                                        condLoops.Add(dest);
+                                        //buffer.BaseStream.Position = dest;
                                     }
-                                    timeDebug = 0;
-                                    delta = 0;
-                                    //Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
+                                    else
+                                    {
+                                        // skip
+                                    }
+                                    curTrack.AddEvent(new EvPermaLoopBreak(cTrackId, cond, dest));
                                     break;
                                 case 0x09: // Repeat Break
                                     b = buffer.ReadBytes(3);
@@ -599,13 +615,12 @@ namespace VS.Parser.Akao
                                     break;
                                 case 0x14: // Program Change
                                     //curTrack.AddEvent(new EvProgramChange(channel, (byte)(buffer.ReadByte() + instruments.Length)));
-                                    curTrack.AddEvent(new EvProgramChange(channel, buffer.ReadByte()));
+                                    curTrack.AddEvent(new EvProgramChange(channel, buffer.ReadByte(), delta));
                                     delta = 0;
                                     break;
                                 case 0x15: // Time Signature
-                                    uint num = buffer.ReadByte();
-                                    uint denom = buffer.ReadByte();
-                                    curTrack.AddEvent(new EvTimeSign(num, denom));
+                                    b = buffer.ReadBytes(2);
+                                    curTrack.AddEvent(new EvTimeSign(b[0], b[1]));
                                     break;
                                 case 0x16: // Marker
                                     b = buffer.ReadBytes(2);
@@ -619,17 +634,13 @@ namespace VS.Parser.Akao
                                     break;
                             }
                             break;
-                        case 0xFF: // End Track Padding, End of AKAO instuctions
-                            
-                            curTrack.AddEvent(new EvVolume(channel, 0x00, delta));
-                            curTrack.AddEvent(new EvEndTrack(true));
+                        case 0xFF: // End Track Padding
+                            curTrack.AddEvent(new EvEndTrack(cTrackId, true));
                             break;
                         default:
                             Debug.Log("Unknonw instruction in " + name + " at " + buffer.BaseStream.Position + "  ->  " + (byte)STATUS_BYTE);
                             //curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
                             break;
-
-
                     }
                 }
             }
@@ -655,7 +666,6 @@ namespace VS.Parser.Akao
                 {
                     events = new List<AKAOEvent>();
                 }
-                Debug.Log("     AddEvent : " +ev);
                 events.Add(ev);
             }
         }
@@ -664,7 +674,7 @@ namespace VS.Parser.Akao
 
         private class AKAOEvent
         {
-            internal ushort deltaTime = 0x00;
+            internal uint deltaTime = 0x00;
             internal byte midiStatusByte;
             internal byte? midiArg1;
             internal byte? midiArg2;
@@ -710,22 +720,25 @@ namespace VS.Parser.Akao
         {
             private uint _num;
             private double _denom;
-            private byte _clocks = 0x24;
+            private byte _clocks = 0x20;
             private byte _quart = 0x08;
 
             public EvTimeSign(uint num, uint denom)
             {
                 _num = num;
                 _denom = Math.Round(Math.Log((double)(denom / 0.69314718055994530941723212145818)));
-
-                Debug.Log(string.Concat("EvTimeSign : ", num, ", ", denom));
-                
+                /*
                 deltaTime = 0x00;
                 midiStatusByte = 0xFF;
                 midiArg1 = 0x58;
                 midiArg2 = 0x04;
                 tail = new byte[] { (byte)_num, (byte)_denom, _clocks, _quart };
-                
+                */
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvTimeSign : ", num, ", ", denom));
+                }
             }
         }
 
@@ -739,29 +752,38 @@ namespace VS.Parser.Akao
                 this.v1 = v1;
                 this.v2 = v2;
 
-                Debug.Log(string.Concat("EvMarker : ", v1, ", ", v2));
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvMarker : ", v1, ", ", v2));
+                }
             }
         }
         private class EvVolume : AKAOEvent
         {
             private uint volume;
 
-            public EvVolume(uint channel, uint volume, ushort delta = 0x00)
+            public EvVolume(uint channel, uint volume, uint delta = 0x00)
             {
                 this.volume = volume;
                 double val = Math.Round(Math.Sqrt((volume / 127.0f)) * 127.0f);
+
 
                 deltaTime = delta;
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x07;
                 midiArg2 = (byte)val;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvVolume : ", volume, "   channel : ", channel, "    delta : ", delta));
+                }
             }
         }
         private class EvPan : AKAOEvent
         {
             private int pan;
 
-            public EvPan(uint channel, int pan, ushort delta = 0x00)
+            public EvPan(uint channel, int pan, uint delta = 0x00)
             {
                 this.pan = pan;
 
@@ -769,6 +791,11 @@ namespace VS.Parser.Akao
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x0A;
                 midiArg2 = (byte)pan;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvPan : ", pan, "   channel : ", channel, "    delta : ", delta));
+                }
             }
         }
 
@@ -786,11 +813,16 @@ namespace VS.Parser.Akao
             49-56       Ensemble                113-120     Percussive
             57-64       Brass                   121-128     Sound Effects
             */
-            public EvProgramChange(uint channel, byte articulationId, ushort delta = 0x00)
+            public EvProgramChange(uint channel, byte articulationId, uint delta = 0x00)
             {
                 deltaTime = delta;
                 midiStatusByte = (byte)(0xC0 + channel);
                 midiArg1 = (byte)articulationId;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("|| EvProgramChange : ", articulationId, "   channel : ", channel, "    delta : ", delta));
+                }
             }
         }
         private class EvReverbOn : AKAOEvent
@@ -798,6 +830,10 @@ namespace VS.Parser.Akao
             public EvReverbOn()
             {
                 // Maybe we should send a midi event to set the current channel's reverb value to 127 (max value) or 40 (default value)
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvReverbOn"));
+                }
             }
         }
         private class EvReverbOff : AKAOEvent
@@ -805,6 +841,10 @@ namespace VS.Parser.Akao
             public EvReverbOff()
             {
                 // Maybe we should send a midi event to set the current channel's reverb value to 0
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvReverbOff"));
+                }
             }
         }
 
@@ -822,19 +862,23 @@ namespace VS.Parser.Akao
              * *    This message adjusts the Reverb Send Level of each Part.
              */
 
-            public EvReverbLevel(uint channel, byte v1, byte v2, ushort delta = 0x00)
+            public EvReverbLevel(uint channel, byte v1, byte v2, uint delta = 0x00)
             {
                 _v1 = v1; // maybe the channel
                 _v2 = v2; // maybe the reverb value
 
 
-                Debug.Log(string.Concat("EvReverbLevel : ", v1, ", ", v2, "   channel : ", channel));
-                
+
                 deltaTime = delta;
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x5B;
                 //midiArg2 = 0x28; // set to default value
                 midiArg2 = _v2;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvReverbLevel : ", v1, ", ", v2, "   channel : ", channel, "    delta : ", delta));
+                }
             }
         }
 
@@ -842,10 +886,12 @@ namespace VS.Parser.Akao
         {
             private double tempo;
 
-            public EvTempo(byte val1, byte val2, ushort t)
+            public EvTempo(byte val1, byte val2, uint t)
             {
                 tempo = ((val2 << 8) + val1) / 218.4555555555555555555555555;
                 uint microSecs = (uint)Math.Round(60000000 / tempo);
+
+
 
                 deltaTime = t;
                 midiStatusByte = 0xFF;
@@ -853,13 +899,17 @@ namespace VS.Parser.Akao
                 midiArg2 = 0x03;
                 tail = new byte[] { (byte)((microSecs & 0xFF0000) >> 16), (byte)((microSecs & 0x00FF00) >> 8), (byte)(microSecs & 0x0000FF) };
 
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvTempo : ", microSecs, "    delta : ", t));
+                }
             }
         }
         private class EvExpr : AKAOEvent
         {
             private uint _expression;
 
-            public EvExpr(uint channel, uint expression, ushort delta = 0x00)
+            public EvExpr(uint channel, uint expression, uint delta = 0x00)
             {
                 _expression = expression;
                 double val = Math.Round(Math.Sqrt((_expression / 127.0f)) * 127.0f);
@@ -868,6 +918,11 @@ namespace VS.Parser.Akao
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x0B;
                 midiArg2 = (byte)val;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvExpr : ", val, "   channel : ", channel, "    delta : ", delta));
+                }
             }
         }
         private class EvNoteOn : AKAOEvent
@@ -880,7 +935,7 @@ namespace VS.Parser.Akao
             */
             private uint velocity;
 
-            public EvNoteOn(uint channel, uint key, uint velocity, ushort t = 0x00)
+            public EvNoteOn(uint channel, uint key, uint velocity, uint t = 0x00)
             {
                 //Debug.Log("EvNoteOn : " + channel + " k : " + key +" vel : "+ velocity + "  t : " + t);
                 this.key = key;
@@ -890,6 +945,11 @@ namespace VS.Parser.Akao
                 midiStatusByte = (byte)(0x90 + channel);
                 midiArg1 = (byte)key;
                 midiArg2 = (byte)velocity;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvNoteOn : ", key, "   velocity : ", velocity, "   channel : ", channel, "    delta : ", t));
+                }
             }
         }
         private class EvNoteOff : AKAOEvent
@@ -897,7 +957,7 @@ namespace VS.Parser.Akao
             //"8nH + 2 Bytes"; // 1000	MIDI channel [0 - 15]	Key Number [0 - 127]	Velocity [0 - 127]
             private uint key;
 
-            public EvNoteOff(uint channel, uint key, ushort t)
+            public EvNoteOff(uint channel, uint key, uint t)
             {
                 //Debug.Log("EvNoteOff : "+channel+" k : "+key+"  t : "+t);
                 this.key = key;
@@ -906,16 +966,26 @@ namespace VS.Parser.Akao
                 midiStatusByte = (byte)(0x80 + channel);
                 midiArg1 = (byte)key;
                 midiArg2 = 0x40; // Standard velocity
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvNoteOff : ", key, "   channel : ", channel, "    delta : ", t));
+                }
             }
         }
 
         private class EvPortamento : AKAOEvent
         {
-            public EvPortamento(uint channel)
+            public EvPortamento(uint channel, byte duration, byte step)
             {
                 deltaTime = 0x00;
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x41;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvPortamento :    channel : ", channel, "  duration :", duration, "  step : ", step));
+                }
             }
         }
 
@@ -929,6 +999,31 @@ namespace VS.Parser.Akao
             {
                 this.duration = duration;
                 this.expression = expression;
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvExprSlide : ", duration, ", ", expression));
+                }
+            }
+        }
+
+        private class EvPitchBend : AKAOEvent
+        {
+            private byte _msb;
+            private byte _lsb;
+
+            public EvPitchBend(uint channel, sbyte value)
+            {
+                _msb = (byte)(0x40 + value);
+                _lsb = 0x00;
+                deltaTime = 0x00;
+                midiStatusByte = (byte)(0xE0 + channel);
+                midiArg1 = _lsb;
+                midiArg2 = _msb;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvPitchBend : ", value));
+                }
             }
         }
         #endregion
@@ -946,11 +1041,20 @@ namespace VS.Parser.Akao
             public EvUnknown(byte value)
             {
 
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvUnknown : ", value));
+                }
             }
 
             public EvUnknown(byte value, byte v)
             {
                 this.v = v;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvUnknown : ", value, ", ", v));
+                }
             }
         }
 
@@ -963,6 +1067,11 @@ namespace VS.Parser.Akao
             {
                 this.duration = duration;
                 this.pan = pan;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvPanSlide : ", duration, ", ", pan));
+                }
             }
         }
 
@@ -973,6 +1082,11 @@ namespace VS.Parser.Akao
             public EvAttack(int attack)
             {
                 this.attack = attack;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvAttack : ", attack));
+                }
             }
         }
 
@@ -983,6 +1097,11 @@ namespace VS.Parser.Akao
             public EvDecay(int decay)
             {
                 this.decay = decay;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvDecay : ", decay));
+                }
             }
         }
 
@@ -993,6 +1112,11 @@ namespace VS.Parser.Akao
             public EvSustain(int sustain)
             {
                 this.sustain = sustain;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvSustain : ", sustain));
+                }
             }
         }
 
@@ -1003,6 +1127,11 @@ namespace VS.Parser.Akao
             public EvSustainRelease(uint duration)
             {
                 this.duration = duration;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvSustainRelease : ", duration));
+                }
             }
         }
 
@@ -1013,11 +1142,25 @@ namespace VS.Parser.Akao
             public EvRelease(uint duration)
             {
                 this.duration = duration;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvRelease : ", duration));
+                }
             }
         }
 
         private class EvResetADSR : AKAOEvent
         {
+            public EvResetADSR()
+            {
+
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvResetADSR "));
+                }
+            }
         }
 
         private class EvLFOPitchRange : AKAOEvent
@@ -1031,6 +1174,11 @@ namespace VS.Parser.Akao
                 this.v1 = v1;
                 this.v2 = v2;
                 this.v3 = v3;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvLFOPitchRange :  ", v1, ", ", v2, ", ", v3));
+                }
             }
         }
 
@@ -1041,11 +1189,23 @@ namespace VS.Parser.Akao
             public EvLFOPitchDepth(int depth)
             {
                 this.depth = depth;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvLFOPitchDepth : ", depth));
+                }
             }
         }
 
         private class EvLFOPitchOff : AKAOEvent
         {
+            public EvLFOPitchOff()
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvLFOPitchOff : "));
+                }
+            }
         }
 
         private class EvLFOExprRange : AKAOEvent
@@ -1059,6 +1219,11 @@ namespace VS.Parser.Akao
                 this.v1 = v1;
                 this.v2 = v2;
                 this.v3 = v3;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvLFOExprRange :  ", v1, ", ", v2, ", ", v3));
+                }
             }
         }
 
@@ -1069,24 +1234,39 @@ namespace VS.Parser.Akao
             public EvLFOExprDepth(int depth)
             {
                 this.depth = depth;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvLFOExprDepth : ", depth));
+                }
             }
         }
 
         private class EvLFOExprOff : AKAOEvent
         {
+            public EvLFOExprOff()
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvLFOExprOff : "));
+                }
+            }
         }
 
         private class EvLFOPanpotRange : AKAOEvent
         {
             private byte v1;
             private byte v2;
-            private byte v3;
 
-            public EvLFOPanpotRange(byte v1, byte v2, byte v3)
+            public EvLFOPanpotRange(byte v1, byte v2)
             {
                 this.v1 = v1;
                 this.v2 = v2;
-                this.v3 = v3;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvLFOPanpotRange :  ", v1, ", ", v2));
+                }
             }
         }
 
@@ -1097,11 +1277,24 @@ namespace VS.Parser.Akao
             public EvLFOPanpotDepth(int depth)
             {
                 this.depth = depth;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvLFOPanpotDepth : ", depth));
+                }
             }
         }
 
         private class EvLFOPanpotOff : AKAOEvent
         {
+
+            public EvLFOPanpotOff()
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvLFOPanpotOff"));
+                }
+            }
         }
 
         private class EvTranspose : AKAOEvent
@@ -1111,6 +1304,11 @@ namespace VS.Parser.Akao
             public EvTranspose(int transpose)
             {
                 this.transpose = transpose;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvTranspose : ", transpose));
+                }
             }
         }
 
@@ -1121,49 +1319,78 @@ namespace VS.Parser.Akao
             public EvTransposeMove(int transpose)
             {
                 this.transpose = transpose;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvTransposeMove : ", transpose));
+                }
             }
         }
 
 
         private class EvNoiseOn : AKAOEvent
         {
+            public EvNoiseOn()
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvNoiseOn"));
+                }
+            }
         }
 
         private class EvNoiseOff : AKAOEvent
         {
+            public EvNoiseOff()
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvNoiseOff"));
+                }
+            }
         }
 
         private class EvFMOn : AKAOEvent
         {
+            public EvFMOn()
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvFMOn"));
+                }
+            }
         }
 
         private class EvFMOff : AKAOEvent
         {
+            public EvFMOff()
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvFMOff"));
+                }
+            }
         }
 
         private class EvSlurOn : AKAOEvent
         {
+            public EvSlurOn()
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvSlurOn"));
+                }
+            }
         }
 
         private class EvSlurOff : AKAOEvent
         {
-        }
-
-        private class EvPitchBend : AKAOEvent
-        {
-            private uint low;
-            private uint high;
-
-            public EvPitchBend(uint channel, uint low, uint high)
+            public EvSlurOff()
             {
-                this.low = low;
-                this.high = high;
-                
-                deltaTime = 0x00;
-                midiStatusByte = (byte)(0xE0 + channel);
-                midiArg1 = (byte)low;
-                midiArg2 = (byte)high;
-                
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvSlurOff"));
+                }
             }
         }
 
@@ -1174,22 +1401,22 @@ namespace VS.Parser.Akao
             public EvPitchBendMove(uint value)
             {
                 this.value = value;
-            }
-        }
-
-        private class EvTieTime : AKAOEvent
-        {
-            private uint value;
-
-            public EvTieTime(uint value)
-            {
-                //Debug.Log("EvTieTime : "+value);
-                this.value = value;
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvPitchBendMove : ", value));
+                }
             }
         }
 
         private class EvTempoSlide : AKAOEvent
         {
+            public EvTempoSlide()
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvTempoSlide"));
+                }
+            }
         }
 
 
@@ -1202,10 +1429,45 @@ namespace VS.Parser.Akao
             {
                 this.v1 = v1;
                 this.v2 = v2;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvReverbFade :  ", v1, ", ", v2));
+                }
             }
         }
 
 
+
+
+
+        #region Non MIDI EVENTS
+
+        private class EvEndTrack : AKAOEvent
+        {
+            public EvEndTrack(uint trackId, bool bigEnd = false)
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvEndTrack : " + trackId, "    EOF : ", bigEnd));
+                    Debug.Log("|------------------------------------------------------------------------------------------------");
+                }
+
+            }
+        }
+        private class EvTieTime : AKAOEvent
+        {
+            private uint value;
+
+            public EvTieTime(uint value)
+            {
+                this.value = value;
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log("EvTieTime : " + value);
+                }
+            }
+        }
         private class EvRest : AKAOEvent
         {
             private uint duration;
@@ -1213,11 +1475,12 @@ namespace VS.Parser.Akao
             public EvRest(uint duration)
             {
                 this.duration = duration;
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log("EvRest : " + duration);
+                }
             }
         }
-
-
-        #region Non MIDI EVENTS
         private class EvOctave : AKAOEvent
         {
             private uint _octave;
@@ -1225,15 +1488,33 @@ namespace VS.Parser.Akao
             public EvOctave(uint octave)
             {
                 _octave = octave;
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvOctave : ", octave));
+                }
             }
         }
 
         private class EvOctaveUp : AKAOEvent
         {
+            public EvOctaveUp()
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log("EvOctaveUp");
+                }
+            }
         }
 
         private class EvOctaveDown : AKAOEvent
         {
+            public EvOctaveDown()
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log("EvOctaveDown");
+                }
+            }
         }
 
 
@@ -1241,7 +1522,10 @@ namespace VS.Parser.Akao
         {
             public EvRepeatStart()
             {
-
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log("EvRepeatStart");
+                }
             }
         }
         private class EvRepeatEnd : AKAOEvent
@@ -1250,29 +1534,84 @@ namespace VS.Parser.Akao
 
             public EvRepeatEnd()
             {
-
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log("EvRepeatEnd");
+                }
             }
 
             public EvRepeatEnd(int loopId)
             {
                 this.loopId = loopId;
-
-            }
-        }
-
-        private class EvEndTrack : AKAOEvent
-        {
-            public EvEndTrack(bool bigEnd = false)
-            {
-
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvRepeatEnd : ", loopId));
+                }
             }
         }
         private class EvDrumKitOn : AKAOEvent
         {
+
+            public EvDrumKitOn()
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.LogWarning("######-------------------------------------------------###########");
+                    Debug.LogWarning("EvDrumKitOn");
+                    Debug.LogWarning("######-------------------------------------------------###########");
+                }
+            }
         }
 
         private class EvDrumKitOff : AKAOEvent
         {
+
+            public EvDrumKitOff()
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.LogWarning("######-------------------------------------------------###########");
+                    Debug.LogWarning("EvDrumKitOff");
+                    Debug.LogWarning("######-------------------------------------------------###########");
+                }
+            }
+        }
+
+        private class EvPermaLoopBreak : AKAOEvent
+        {
+            private uint cTrackId;
+            private byte cond;
+            private long dest;
+
+            public EvPermaLoopBreak(uint cTrackId, byte cond, long dest)
+            {
+                this.cTrackId = cTrackId;
+                this.cond = cond;
+                this.dest = dest;
+
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvPermaLoopBreak : ", dest, "   condition : ", cond));
+                }
+            }
+        }
+
+        private class EvPermaLoop : AKAOEvent
+        {
+            private uint cTrackId;
+            private long dest;
+
+            public EvPermaLoop(uint cTrackId, long dest)
+            {
+                this.cTrackId = cTrackId;
+                this.dest = dest;
+
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("EvPermaLoop : ", dest));
+                }
+            }
         }
         #endregion
     }

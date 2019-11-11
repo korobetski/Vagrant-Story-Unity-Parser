@@ -93,6 +93,7 @@
     <Compile Include="Assets\VS\Format\RIFF.cs" />
     <Compile Include="Assets\VS\Format\RMID.cs" />
     <Compile Include="Assets\VS\Format\SF2.cs" />
+    <Compile Include="Assets\VS\Format\SMF.cs" />
     <Compile Include="Assets\VS\Format\VLQ.cs" />
     <Compile Include="Assets\VS\Format\WAV.cs" />
     <Compile Include="Assets\VS\Format\XMF.cs" />
@@ -134,6 +135,7 @@
     <Compile Include="Assets\VS\Utils\L10n.cs" />
     <Compile Include="Assets\VS\Utils\ToolBox.cs" />
     <Compile Include="Assets\VS\Utils\Util.cs" />
+    <None Include="Assets\Resources\Sounds\MUSIC028.txt" />
     <Reference Include="Unity.Timeline.Editor">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
     </Reference>

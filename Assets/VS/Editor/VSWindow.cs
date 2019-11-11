@@ -308,7 +308,7 @@ public class VSWindow : EditorWindow
 
             string[] files = Directory.GetFiles(VSPath + "MUSIC/", "*.DAT");
             float fileToParse = files.Length;
-            /*
+            
             float fileParsed = 0;
             foreach (string file in files)
             {
@@ -316,7 +316,7 @@ public class VSWindow : EditorWindow
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
                 AKAO parser = new AKAO();
-                parser.UseDebug = true;
+                //parser.UseDebug = true;
                 parser.Parse(file, AKAO.MUSIC);
                 if (parser.FileSize > 4)
                 {
@@ -324,16 +324,16 @@ public class VSWindow : EditorWindow
                 }
                 fileParsed++;
             }
-            */
-
+            
+            /*
             AKAO parser = new AKAO();
             parser.UseDebug = true;
-            parser.Parse(VSPath + "MUSIC/MUSIC001.DAT", AKAO.MUSIC);
+            parser.Parse(VSPath + "MUSIC/MUSIC028.DAT", AKAO.MUSIC);
             if (parser.FileSize > 4)
             {
                 parser.composer.OutputMidiFile();
             }
-
+            */
             EditorUtility.ClearProgressBar();
         }
     }

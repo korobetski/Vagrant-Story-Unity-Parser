@@ -219,7 +219,8 @@ namespace VS.Parser
                         drum.regions = dr.ToArray();
                         instruments[instrCount - 1] = drum;
                     }
-                    composer = new AKAOComposer(buffer, musInstrPtr, ptr1, instrCount, numTrack, FileName);
+
+                    composer = new AKAOComposer(buffer, musInstrPtr, ptr1, instrCount, numTrack, FileName, UseDebug);
 
 
                     /*
