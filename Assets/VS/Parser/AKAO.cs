@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using VS.Format;
@@ -223,7 +224,7 @@ namespace VS.Parser
                     composer = new AKAOComposer(buffer, musInstrPtr, ptr1, instrCount, numTrack, FileName, UseDebug);
 
 
-                    /*
+                    
                     // So we seek for the appropriate WAVE*.DAT in the SOUND folder
                     string[] hash = FilePath.Split("/"[0]);
                     hash[hash.Length - 2] = "SOUND";
@@ -245,10 +246,10 @@ namespace VS.Parser
                     }
 
                     AKAO sampleParser = new AKAO();
-                    sampleParser.UseDebug = true;
+                    //sampleParser.UseDebug = true;
                     sampleParser.Parse(samplePath, AKAO.SOUND);
                     Synthetize(this, sampleParser);
-                    */
+                    
 
 
                     break;
@@ -415,7 +416,7 @@ namespace VS.Parser
                             reg.SetSample(smp);
                             if (instrument.IsDrum())
                             {
-                                CKart1 dart = new CKart1();
+                                CKart2 dart = new CKart2();
                                 dart.AddPan(0x40);
                                 reg.AddArticulation(dart);
                             }
@@ -423,9 +424,9 @@ namespace VS.Parser
                             {
                                 if (articulation != null)
                                 {
-                                    CKart1 iart = new CKart1();
+                                    CKart2 iart = new CKart2();
                                     iart.AddPan(0x40);
-                                    reg.AddArticulation(iart);
+                                    DSLInstrument.AddArticulation(iart);
                                 }
                             }
 

@@ -135,7 +135,6 @@
     <Compile Include="Assets\VS\Utils\L10n.cs" />
     <Compile Include="Assets\VS\Utils\ToolBox.cs" />
     <Compile Include="Assets\VS\Utils\Util.cs" />
-    <None Include="Assets\Resources\Sounds\MUSIC020.txt" />
     <None Include="Assets\Resources\Sounds\MUSIC028.txt" />
     <Reference Include="Unity.Timeline.Editor">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>

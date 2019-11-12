@@ -325,15 +325,15 @@ public class VSWindow : EditorWindow
                 fileParsed++;
             }
             */
-
+            
             AKAO parser = new AKAO();
-            parser.UseDebug = true;
-            parser.Parse(VSPath + "MUSIC/MUSIC020.DAT", AKAO.MUSIC);
+            //parser.UseDebug = true;
+            parser.Parse(VSPath + "MUSIC/MUSIC004.DAT", AKAO.MUSIC);
             if (parser.FileSize > 4)
             {
                 parser.composer.OutputMidiFile();
             }
-
+            
             EditorUtility.ClearProgressBar();
         }
     }

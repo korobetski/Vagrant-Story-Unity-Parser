@@ -214,20 +214,25 @@ namespace VS.Parser.Akao
                     switch (STATUS_BYTE)
                     {
                         case 0xA0: // End Track ??
+
                             if (playingNote)
                             {
                                 curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
                                 delta = 0;
                                 playingNote = false;
                             }
-
-                            curTrack.AddEvent(new EvEndTrack(STATUS_BYTE, cTrackId, delta));
-                            cTrackId++;
-                            if (cTrackId < tracks.Length)
+                            // We don't want an empty track
+                            if (curTrack.Events.Count > 3)
                             {
-                                curTrack = tracks[cTrackId];
+                                curTrack.AddEvent(new EvEndTrack(STATUS_BYTE, cTrackId, delta));
+                                cTrackId++;
+                                if (cTrackId < tracks.Length)
+                                {
+                                    curTrack = tracks[cTrackId];
+                                }
+                                delta = 0;
                             }
-                            delta = 0;
+                            
                             break;
                         case 0xA1:// Program Change
                             curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, (byte)(buffer.ReadByte() + numInstr), delta));
@@ -412,7 +417,7 @@ namespace VS.Parser.Akao
                                     repeatIndex--;
                                 }
 
-                                Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  #######  Repeats Ends"));
+                                if(UseDebug) Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  #######  Repeats Ends"));
                             }
                             curTrack.AddEvent(new EvRepeatEnd(STATUS_BYTE, repeatIndex, loopId));
                             break;
@@ -436,7 +441,7 @@ namespace VS.Parser.Akao
                                     repeaterStartPositions.RemoveAt(repeatIndex);
                                     repeatIndex--;
                                 }
-                                Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  #######  Repeats Ends"));
+                                if (UseDebug) Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  #######  Repeats Ends"));
                             }
                             curTrack.AddEvent(new EvRepeatEnd(STATUS_BYTE, repeatIndex));
                             break;
@@ -605,16 +610,17 @@ namespace VS.Parser.Akao
                                 case 0x06: // Perma Loop
                                     long dest = buffer.BaseStream.Position + buffer.ReadInt16();
                                     long loopLen = buffer.BaseStream.Position - beginOffset;
-                                    //buffer.BaseStream.Position = dest;
+                                    curTrack.AddEvent(new EvPermaLoop(STATUS_BYTE, cTrackId, dest));
+
                                     if (UseDebug)
                                     {
-                                        Debug.Log(string.Concat("Perma Loop : ", buffer.BaseStream.Position, "   -|-   ", dest));
+                                        Debug.LogWarning(string.Concat("Perma Loop : ", buffer.BaseStream.Position, "   -|-   ", dest));
                                     }
 
-                                    curTrack.AddEvent(new EvPermaLoop(STATUS_BYTE, cTrackId, dest));
-                                    if (!condLoops.Contains(dest))
+                                    if (condLoops.Contains(dest) == false)
                                     {
                                         condLoops.Add(dest);
+                                        repeaterEndPositions = new List<long>();
                                         buffer.BaseStream.Position = dest;
                                     }
                                     else
@@ -628,6 +634,17 @@ namespace VS.Parser.Akao
                                         }
                                         delta = 0;
                                     }
+                                    
+                                    /*
+                                    // -----------------------------------------------------------
+                                    curTrack.AddEvent(new EvEndTrack(STATUS_BYTE, cTrackId, delta));
+                                    cTrackId++;
+                                    if (cTrackId < tracks.Length)
+                                    {
+                                        curTrack = tracks[cTrackId];
+                                    }
+                                    delta = 0;
+                                    */
                                     break;
                                 case 0x07: // Perma Loop break with conditional.
                                     byte cond = buffer.ReadByte();
@@ -636,26 +653,36 @@ namespace VS.Parser.Akao
 
                                     if (UseDebug)
                                     {
-                                        Debug.Log(string.Concat("Perma Loop break : ", buffer.BaseStream.Position, "   -|-   ", dest));
+                                        Debug.LogWarning(string.Concat("Perma Loop break : ", buffer.BaseStream.Position, "   -|-   ", dest, "  cond : ", cond));
                                     }
-
-                                    if (!condLoops.Contains(dest))
+                                    curTrack.AddEvent(new EvPermaLoopBreak(STATUS_BYTE, cTrackId, cond, dest));
+                                    /*
+                                    if (dest < buffer.BaseStream.Position)
                                     {
-                                        condLoops.Add(dest);
-                                        //buffer.BaseStream.Position = dest;
+                                        // we loop one time
+                                        if (condLoops.Contains(dest) == false)
+                                        {
+                                            condLoops.Add(dest);
+                                            buffer.BaseStream.Position = dest;
+                                        }
+                                        else
+                                        {
+
+                                        }
                                     }
                                     else
                                     {
-                                        // skip
+
                                     }
-                                    curTrack.AddEvent(new EvPermaLoopBreak(STATUS_BYTE, cTrackId, cond, dest));
+                                    */
                                     break;
                                 case 0x09: // Repeat Break
                                     b = buffer.ReadBytes(3);
                                     curTrack.AddEvent(new EvRepeatBreak(STATUS_BYTE, b));
                                     break;
-                                case 0x0E: // call subroutine
-                                    curTrack.AddEvent(new EvUnknown(STATUS_BYTE, Meta));
+                                case 0x0E: // call subroutine  Recurent in MUSIC034
+                                    b = buffer.ReadBytes(2);
+                                    curTrack.AddEvent(new EvUnknown(STATUS_BYTE, b));
                                     break;
                                 case 0x0F: // return from subroutine
                                     curTrack.AddEvent(new EvUnknown(STATUS_BYTE, Meta));
@@ -680,7 +707,7 @@ namespace VS.Parser.Akao
                                     curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
                                     break;
                                 case 0x1F: // Unknown Recurent in MUSIC020
-                                    curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
+                                    curTrack.AddEvent(new EvUnknown(STATUS_BYTE, Meta));
                                     break;
                                 default:
                                     curTrack.AddEvent(new EvUnknown(STATUS_BYTE, Meta));
@@ -1132,6 +1159,14 @@ namespace VS.Parser.Akao
                 if (AKAOComposer.UseDebug)
                 {
                     Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  ->  EvUnknown : ", STATUS_BYTE, ", ", v));
+                }
+            }
+
+            public EvUnknown(byte STATUS_BYTE, byte[] bytes)
+            {
+                if (AKAOComposer.UseDebug)
+                {
+                    Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  ->  EvUnknown : ", BitConverter.ToString(bytes)));
                 }
             }
         }
@@ -1597,6 +1632,7 @@ namespace VS.Parser.Akao
                 if (AKAOComposer.UseDebug)
                 {
                     Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  ->  EvRepeatStart"));
+                    Debug.Log(string.Concat("<<<<-----------------------------------------VV---------------------------------------------->>>>"));
                 }
             }
         }

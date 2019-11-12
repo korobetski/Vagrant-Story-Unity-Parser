@@ -235,6 +235,15 @@ namespace VS.Format
             _lrgnl.AddChunk(region);
             _insh.regions = (uint)_lrgnl.chunks.Count;
         }
+
+        internal void AddArticulation(CKart2 iart)
+        {
+            if (_lart == null)
+            {
+                _lart = AddChunk(new Lart()) as Lart;
+            }
+            _lart.AddChunk(iart);
+        }
     }
 
     public class CKinsh : Chunk, IChunk
@@ -302,7 +311,7 @@ namespace VS.Format
             _wlnk = AddChunk(new CKwlnk()) as CKwlnk;
         }
 
-        public void AddArticulation(CKart1 art)
+        public void AddArticulation(CKart2 art)
         {
             if (_lart == null)
             {
@@ -407,18 +416,18 @@ namespace VS.Format
         }
     }
 
-    public class CKart1 : Chunk, IChunk
+    public class CKart2 : Chunk, IChunk
     {
         public uint cbSize = 8;
         public uint cConnectionBlocks;
         public List<ConnectionBlock> ConnectionBlocks;
 
-        public CKart1() : base("art2")
+        public CKart2() : base("art2")
         {
             SetDataCapacity(8);
             ConnectionBlocks = new List<ConnectionBlock>();
         }
-        public CKart1(List<ConnectionBlock> connections) : base("art2")
+        public CKart2(List<ConnectionBlock> connections) : base("art2")
         {
             SetDataCapacity(8);
             ConnectionBlocks = connections;
@@ -432,6 +441,7 @@ namespace VS.Format
             ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_RELEASETIME, releaseTrans, release));
             SetDataCapacity(8 + ConnectionBlocks.Count * 12);
         }
+
         public void AddPan(int pan)
         {
             ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_PAN, DLS.CONN_TRN_NONE, pan));
