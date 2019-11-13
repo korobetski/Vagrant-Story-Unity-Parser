@@ -18,8 +18,9 @@ namespace VS.Parser
     {
         public static readonly AKAOType SOUND = AKAOType.SOUND;
         public static readonly AKAOType MUSIC = AKAOType.MUSIC;
+        public static readonly AKAOType MAP = AKAOType.MAP;
 
-        public enum AKAOType { SOUND, MUSIC }
+        public enum AKAOType { SOUND, MUSIC, MAP }
 
         public AKAOType _type;
         public AKAOInstrument[] instruments;
@@ -37,13 +38,13 @@ namespace VS.Parser
             {
                 return;
             }
-            Parse(buffer);
+            Parse(buffer, type);
 
             buffer.Close();
             fileStream.Close();
         }
 
-        public void Parse(BinaryReader buffer)
+        public void Parse(BinaryReader buffer, AKAOType type)
         {
             if (buffer.BaseStream.Length < 4)
             {
@@ -90,7 +91,7 @@ namespace VS.Parser
 
 
 
-                    if (UseDebug)
+                    if (true)
                     {
                         Debug.Log("AKAO from : " + FileName + " FileSize = " + FileSize + "    |    reverb : " + reverb + " numTrack : " + numTrack + " sampleSet : " + sampleSet);
                         Debug.Log("instruments at : " + ptr1 + "  Drums at : " + ptr2 + "   |    unk1 : " + unk1 + "  unk3 : " + unk3 + "   musInstrPtr : " + musInstrPtr);
@@ -224,7 +225,7 @@ namespace VS.Parser
                     composer = new AKAOComposer(buffer, musInstrPtr, ptr1, instrCount, numTrack, FileName, UseDebug);
 
 
-                    
+
                     // So we seek for the appropriate WAVE*.DAT in the SOUND folder
                     string[] hash = FilePath.Split("/"[0]);
                     hash[hash.Length - 2] = "SOUND";
@@ -249,7 +250,7 @@ namespace VS.Parser
                     //sampleParser.UseDebug = true;
                     sampleParser.Parse(samplePath, AKAO.SOUND);
                     Synthetize(this, sampleParser);
-                    
+
 
 
                     break;
@@ -269,7 +270,7 @@ namespace VS.Parser
 
                     buffer.ReadBytes(32); // padding
 
-                    if (UseDebug)
+                    if (true)
                     {
                         Debug.Log("AKAO from : " + FileName + " len = " + FileSize);
                         Debug.Log("ID : " + sampleId + " reverb : " + reverb + " sampleSize : " + sampleSize + " stArtId : " + startingArticulationId + " numArts : " + numArts);
@@ -310,7 +311,7 @@ namespace VS.Parser
                         buffer.BaseStream.Position = samPtr[i];
                         int size = (int)(samEPtr[i] - samPtr[i]);
                         byte[] dt = buffer.ReadBytes(size);
-                        AKAOSample sam = new AKAOSample("Sample #" + (ushort)i, dt, (ulong)samPtr[i]);
+                        AKAOSample sam = new AKAOSample(string.Concat("Sample #", (ushort)i), dt, (ulong)samPtr[i]);
                         samples[i] = sam;
                     }
 
@@ -332,6 +333,13 @@ namespace VS.Parser
                         }
                     }
                     break;
+                case AKAOType.MAP:
+                    header = buffer.ReadBytes(4);// AKAO
+                    fileId = buffer.ReadUInt16();
+                    byteLen = buffer.ReadUInt16();
+
+                    Debug.Log(string.Concat("AKAO MAP : id : ", fileId, "  byteLen : ", byteLen));
+                    break;
             }
 
         }
@@ -351,7 +359,17 @@ namespace VS.Parser
                 {
                     if (instrument.regions.Length > 0)
                     {
-                        Lins DSLInstrument = new Lins(0, (uint)(sequencer.instruments.Length + sequencer.startingArticulationId + i), instrument.name);
+                        uint instrId = (uint)(sequencer.startingArticulationId + i);
+                        uint midiBank = 0x00000000;
+                        if (instrument.IsDrum())
+                        {
+                            midiBank = DLS.F_INSTRUMENT_DRUMS;
+                        }
+                        if (instrId < SMF.INSTRUMENTS.Length)
+                        {
+                            instrument.name = SMF.INSTRUMENTS[instrId];
+                        }
+                        Lins DSLInstrument = new Lins(midiBank, instrId, instrument.name);
 
                         foreach (AKAORegion region in instrument.regions)
                         {
@@ -375,7 +393,6 @@ namespace VS.Parser
 
                             region.articulation = articulation;
                             region.sampleNum = articulation.sampleNum;
-                            region.ComputeADSR();
 
                             if (instrument.IsDrum())
                             {
@@ -414,21 +431,17 @@ namespace VS.Parser
                             }
 
                             reg.SetSample(smp);
-                            if (instrument.IsDrum())
+
+
+                            if (articulation != null)
                             {
-                                CKart2 dart = new CKart2();
-                                dart.AddPan(0x40);
-                                reg.AddArticulation(dart);
+                                articulation.BuildADSR();
+                                CKart2 iart = new CKart2();
+                                iart.AddPan(0x40);
+                                iart.AddADSR(articulation.A, articulation.D, articulation.S, articulation.R, articulation.AT, articulation.RT);
+                                reg.AddArticulation(iart);
                             }
-                            else
-                            {
-                                if (articulation != null)
-                                {
-                                    CKart2 iart = new CKart2();
-                                    iart.AddPan(0x40);
-                                    DSLInstrument.AddArticulation(iart);
-                                }
-                            }
+
 
                             reg.SetWaveLinkInfo(0, 0, 1, region.sampleNum);
                             DSLInstrument.AddRegion(reg);
@@ -448,7 +461,7 @@ namespace VS.Parser
                 foreach (AKAOSample AKAOsmp in sampler.samples)
                 {
                     WAV nw = AKAOsmp.ConvertToWAV();
-                    //nw.SetName(AKAOsmp.name);
+                    nw.SetName(AKAOsmp.name);
                     nw.Riff = false;
                     dls.AddWave(nw);
                 }

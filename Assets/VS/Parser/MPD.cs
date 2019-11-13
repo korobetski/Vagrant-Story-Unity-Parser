@@ -381,6 +381,89 @@ namespace VS.Parser
                     }
                 }
 
+                /*
+                 * 
+            lenSubSection0D = buffer.ReadUInt32();
+            lenSubSection0E = buffer.ReadUInt32();
+            lenSubSection0F = buffer.ReadUInt32();
+            lenSubSection10 = buffer.ReadUInt32();
+            lenSubSection11 = buffer.ReadUInt32();
+            lenSubSection12 = buffer.ReadUInt32();
+            lenSubSection13 = buffer.ReadUInt32();
+            lenAKAOSubSection = buffer.ReadUInt32();
+            lenSubSection15 = buffer.ReadUInt32();
+            lenSubSection16 = buffer.ReadUInt32();
+            lenSubSection17 = buffer.ReadUInt32();
+            lenSubSection18 = buffer.ReadUInt32();
+            */
+
+
+                if (lenSubSection0D > 0)
+                {
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0D;
+                }
+
+                if (lenSubSection0E > 0)
+                {
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0E;
+                }
+
+                if (lenSubSection0F > 0)
+                {
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0F;
+                }
+
+                if (lenSubSection10 > 0)
+                {
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection10;
+                }
+
+                if (lenSubSection11 > 0)
+                {
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection11;
+                }
+
+                if (lenSubSection12 > 0)
+                {
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection12;
+                }
+
+                if (lenSubSection13 > 0)
+                {
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection13;
+                }
+
+                if (lenAKAOSubSection > 0)
+                {
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenAKAOSubSection;
+                    AKAO audio = new AKAO();
+                    audio.UseDebug = true;
+                    audio.Parse(buffer, AKAO.AKAOType.SOUND);
+                    if (audio.FileSize > 4)
+                    {
+                        audio.composer.OutputMidiFile();
+                    }
+                }
+
+                if (lenSubSection15 > 0)
+                {
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection15;
+                }
+
+                if (lenSubSection16 > 0)
+                {
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection16;
+                }
+
+                if (lenSubSection17 > 0)
+                {
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection17;
+                }
+
+                if (lenSubSection18 > 0)
+                {
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection18;
+                }
             }
 
             // Cleared section
@@ -794,3 +877,4 @@ namespace VS.Parser
     }
 
 }
+ 

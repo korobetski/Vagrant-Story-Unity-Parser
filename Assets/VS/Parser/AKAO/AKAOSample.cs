@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 using VS.Format;
 
 //Minoru Akao
@@ -35,7 +36,8 @@ namespace VS.Parser.Akao
             size = dt.Length;
             NumBlocks = (uint)(size / 0x10);
             offset = off;
-            //Debug.Log(string.Concat("AKAOSample => ", name, "   Size : ", size, "   numBlocks : ", NumBlocks, "   offset : ", offset));
+
+            Debug.Log(string.Concat("AKAOSample => ", name, "   Size : ", size, "   numBlocks : ", NumBlocks, "   offset : ", offset));
         }
 
 
@@ -144,21 +146,6 @@ namespace VS.Parser.Akao
                 prev2 = pSmp[a + 26];
                 prev1 = pSmp[a + 27];
             }
-        }
-
-        private void SetLoopStatus(int statut)
-        {
-            loopStatus = statut;
-        }
-
-        private void SetLoopLength(uint length)
-        {
-            loopLength = length;
-        }
-
-        private void SetLoopOffset(uint start)
-        {
-            loopStart = start;
         }
 
         public class VAGBlk

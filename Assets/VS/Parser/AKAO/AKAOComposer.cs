@@ -232,9 +232,10 @@ namespace VS.Parser.Akao
                                 }
                                 delta = 0;
                             }
-                            
+
                             break;
                         case 0xA1:// Program Change
+                            // this program change don't work like Meta Event 0xFE 14, articulation ??
                             curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, (byte)(buffer.ReadByte() + numInstr), delta));
                             delta = 0;
                             break;
@@ -417,7 +418,10 @@ namespace VS.Parser.Akao
                                     repeatIndex--;
                                 }
 
-                                if(UseDebug) Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  #######  Repeats Ends"));
+                                if (UseDebug)
+                                {
+                                    Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  #######  Repeats Ends"));
+                                }
                             }
                             curTrack.AddEvent(new EvRepeatEnd(STATUS_BYTE, repeatIndex, loopId));
                             break;
@@ -441,7 +445,10 @@ namespace VS.Parser.Akao
                                     repeaterStartPositions.RemoveAt(repeatIndex);
                                     repeatIndex--;
                                 }
-                                if (UseDebug) Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  #######  Repeats Ends"));
+                                if (UseDebug)
+                                {
+                                    Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  #######  Repeats Ends"));
+                                }
                             }
                             curTrack.AddEvent(new EvRepeatEnd(STATUS_BYTE, repeatIndex));
                             break;
@@ -634,7 +641,7 @@ namespace VS.Parser.Akao
                                         }
                                         delta = 0;
                                     }
-                                    
+
                                     /*
                                     // -----------------------------------------------------------
                                     curTrack.AddEvent(new EvEndTrack(STATUS_BYTE, cTrackId, delta));

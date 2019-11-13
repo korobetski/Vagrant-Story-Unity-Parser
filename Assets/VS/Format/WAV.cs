@@ -18,6 +18,8 @@ namespace VS.Format
         public bool hasLoop = false;
         private Loop loop;
         private LCInfo _info;
+        private Chunk fmt;
+        private Chunk data;
 
         public WAV(List<byte> datas, ushort AF = 1, ushort NC = 1, uint SR = 44100, ushort BPS = 16) : base("WAVE")
         {
@@ -28,7 +30,7 @@ namespace VS.Format
             BlockAlign = (ushort)(NumChannels * BitsPerSample / 8);
             BitsPerSample = BPS;
 
-            Chunk fmt = new Chunk("fmt ");
+            fmt = new Chunk("fmt ");
             fmt.SetDataCapacity(16);
             List<byte> fmtb = new List<byte>();
             fmtb.AddRange(BitConverter.GetBytes((ushort)AudioFormat));      // Audio Format
@@ -40,10 +42,11 @@ namespace VS.Format
             fmt.SetData(fmtb);
             AddChunk(fmt);
 
-            Chunk data = new Chunk("data");
+            data = new Chunk("data");
             data.SetData(datas);
             data.SetDataCapacity(datas.Count);
             AddChunk(data);
+
 
             if (hasLoop)
             {
@@ -94,13 +97,11 @@ namespace VS.Format
         public void SetName(string inam)
         {
             name = inam;
-            /*
             if (_info == null)
             {
                 _info = AddChunk(new LCInfo()) as LCInfo;
             }
             _info.SetName(name);
-            */
         }
 
 
@@ -109,8 +110,10 @@ namespace VS.Format
             loop = lp;
         }
 
+
         public new List<byte> Write()
         {
+            GetSize();
             List<byte> buffer = new List<byte>();
             if (Riff == true)
             {

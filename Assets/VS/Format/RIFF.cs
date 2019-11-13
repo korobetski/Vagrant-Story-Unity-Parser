@@ -22,19 +22,19 @@ namespace VS.Format
         {
         }
 
-        public static int AlignName(string name)
+        public static string AlignName(string name)
         {
-            name += (char)0x00;
             if (name.Length % 2 > 0)     // if the size of the name string is odd
             {
-                name += (char)0x00;  // add another null byte
+                name += (char)0x20;  // add another space byte
             }
 
-            return name.Length;
+            return name;
         }
 
         public bool WriteFile(string path, List<byte> buffer)
         {
+            GetSize();
             using (FileStream fs = File.Create(path))
             {
                 for (int i = 0; i < buffer.Count; i++)
@@ -111,7 +111,7 @@ namespace VS.Format
 
         public List<byte> Write()
         {
-            //Resize();
+            GetSize();
             List<byte> buffer = new List<byte>();
             buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
             buffer.AddRange(BitConverter.GetBytes((uint)size));
@@ -177,11 +177,10 @@ namespace VS.Format
 
         public new List<byte> Write()
         {
-            //Resize();
+            GetSize();
             List<byte> buffer = new List<byte>();
             buffer.AddRange(new byte[] { (byte)id[0], (byte)id[1], (byte)id[2], (byte)id[3] });
             buffer.AddRange(BitConverter.GetBytes((uint)size + 4));
-            //buffer.AddRange(new byte[] { (byte)(size & 0x000000FF), (byte)((size & 0x0000FF00) >> 8), (byte)((size & 0x00FF0000) >> 16), (byte)((size & 0xFF000000) >> 24) });
             buffer.AddRange(new byte[] { (byte)type[0], (byte)type[1], (byte)type[2], (byte)type[3] });
             foreach (IChunk ck in chunks)
             {

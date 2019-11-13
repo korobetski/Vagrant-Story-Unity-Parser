@@ -6,8 +6,8 @@ namespace VS.Format
 {
 
 
-    //http://www.vgmpf.com/Wiki/index.php?title=DLS
-    //https://www.midi.org/specifications-old/item/dls-technology-overview
+    // http://www.vgmpf.com/Wiki/index.php?title=DLS
+    // https://www.midi.org/specifications-old/item/dls-technology-overview
     // https://www.recordingblogs.com/wiki/downloadable-sounds-dls-format
 
     public class DLS : RIFF
@@ -65,7 +65,7 @@ namespace VS.Format
         public static readonly ushort CONN_TRN_NONE = 0x0000;           // No Transform
         private static readonly int CONN_TRN_CONCAVE = 0x0001;          // Concave Transform
 
-        private static readonly uint F_INSTRUMENT_DRUMS = 0x80000000;
+        public static readonly uint F_INSTRUMENT_DRUMS = 0x80000000;
 
         public static readonly uint COLH_SIZE = 4 + 8;
         public static readonly uint INSH_SIZE = 12 + 8;
@@ -92,13 +92,13 @@ namespace VS.Format
             linsl = AddChunk(new Linsl()) as Linsl;
             ptbl = AddChunk(new CKptbl()) as CKptbl;
             wvpl = AddChunk(new Lwvpl()) as Lwvpl;
-            //INFO = AddChunk(new LCInfo()) as LCInfo;
+            INFO = AddChunk(new LCInfo()) as LCInfo;
         }
 
         public void SetName(string name)
         {
             _name = name;
-            //INFO.SetName(name);
+            INFO.SetName(name);
         }
 
 
@@ -197,7 +197,7 @@ namespace VS.Format
         {
             _insh = AddChunk(new CKinsh()) as CKinsh;
             _lrgnl = AddChunk(new Lrgnl()) as Lrgnl;
-            //_info = AddChunk(new LCInfo()) as LCInfo;
+            _info = AddChunk(new LCInfo()) as LCInfo;
         }
 
         public Lins(uint bank, uint instrumentId) : base("ins ")
@@ -205,25 +205,25 @@ namespace VS.Format
 
             _insh = AddChunk(new CKinsh(bank, instrumentId)) as CKinsh;
             _lrgnl = AddChunk(new Lrgnl()) as Lrgnl;
-            //_info = AddChunk(new LCInfo()) as LCInfo;
+            _info = AddChunk(new LCInfo()) as LCInfo;
             _name = "Instrument " + instrumentId;
-            //_info.SetName(_name);
+            _info.SetName(_name);
         }
         public Lins(uint bank, uint instrumentId, string name) : base("ins ")
         {
             _insh = AddChunk(new CKinsh(bank, instrumentId)) as CKinsh;
             _lrgnl = AddChunk(new Lrgnl()) as Lrgnl;
-            //_info = AddChunk(new LCInfo()) as LCInfo;
+            _info = AddChunk(new LCInfo()) as LCInfo;
             _name = name;
-            //_info.SetName(_name);
+            _info.SetName(_name);
         }
         public Lins(uint bank, uint instrumentId, string name, Lrgnl regions) : base("ins ")
         {
             _insh = AddChunk(new CKinsh(bank, instrumentId)) as CKinsh;
             _lrgnl = AddChunk(regions) as Lrgnl;
-            //_info = AddChunk(new LCInfo()) as LCInfo;
+            _info = AddChunk(new LCInfo()) as LCInfo;
             _name = name;
-            //_info.SetName(_name);
+            _info.SetName(_name);
         }
 
         public Lrgnl regions { get => _lrgnl; }
@@ -419,18 +419,20 @@ namespace VS.Format
     public class CKart2 : Chunk, IChunk
     {
         public uint cbSize = 8;
-        public uint cConnectionBlocks;
+        public uint cConnectionBlocks = 0;
         public List<ConnectionBlock> ConnectionBlocks;
 
         public CKart2() : base("art2")
         {
             SetDataCapacity(8);
             ConnectionBlocks = new List<ConnectionBlock>();
+            cConnectionBlocks = 0;
         }
         public CKart2(List<ConnectionBlock> connections) : base("art2")
         {
             SetDataCapacity(8);
             ConnectionBlocks = connections;
+            cConnectionBlocks = (uint)ConnectionBlocks.Count;
         }
 
         public void AddADSR(int attack, int decay, int sustain, int release, ushort attackTrans, ushort releaseTrans)
@@ -440,12 +442,14 @@ namespace VS.Format
             ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_SUSTAINLEVEL, DLS.CONN_TRN_NONE, sustain));
             ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_RELEASETIME, releaseTrans, release));
             SetDataCapacity(8 + ConnectionBlocks.Count * 12);
+            cConnectionBlocks = (uint)ConnectionBlocks.Count;
         }
 
         public void AddPan(int pan)
         {
             ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_PAN, DLS.CONN_TRN_NONE, pan));
             SetDataCapacity(8 + ConnectionBlocks.Count * 12);
+            cConnectionBlocks = (uint)ConnectionBlocks.Count;
         }
 
         public new List<byte> Write()
@@ -469,21 +473,21 @@ namespace VS.Format
     public class ConnectionBlock
     {
         /*
-Cid#        Articulator Name        usSource        usControl       usDestination       usTransform
+Cid#        Articulator Name        usSource        usControl       usDestination           usTransform
 LFO Section
-1*          LFO Frequency           SRC_NONE        SRC_NONE        DST_LFO_FREQ        TRN_NONE
-2*          LFO Start Delay         SRC_NONE        SRC_NONE        DST_LFO_DELAY       TRN_NONE
-3*          LFO Attenuation Scale   SRC_LFO         SRC_NONE        DST_ATTENUATION     TRN_NONE
-4           LFO Pitch Scale         SRC_LFO         SRC_NONE        DST_PITCH           TRN_NONE
-5           LFO Modw to Attenuation SRC_LFO         SRC_CC1         DST_ATTENUATION     TRN_NONE
-6           LFO Modw to Pitch       SRC_LFO         SRC_CC1         DST_PITCH           TRN_NONE
+1*          LFO Frequency           SRC_NONE        SRC_NONE        DST_LFO_FREQ            TRN_NONE
+2*          LFO Start Delay         SRC_NONE        SRC_NONE        DST_LFO_DELAY           TRN_NONE
+3*          LFO Attenuation Scale   SRC_LFO         SRC_NONE        DST_ATTENUATION         TRN_NONE
+4           LFO Pitch Scale         SRC_LFO         SRC_NONE        DST_PITCH               TRN_NONE
+5           LFO Modw to Attenuation SRC_LFO         SRC_CC1         DST_ATTENUATION         TRN_NONE
+6           LFO Modw to Pitch       SRC_LFO         SRC_CC1         DST_PITCH               TRN_NONE
 EG1 Section
-7* EG1 Attack Time SRC_NONE SRC_NONE DST_EG1_ATTACKTIME TRN_NONE
-8* EG1 Decay Time SRC_NONE SRC_NONE DST_EG1_DECAYTIME TRN_NONE
-9* EG1 Sustain Level SRC_NONE SRC_NONE DST_EG1_SUSTAINLEVEL TRN_NONE
-10* EG1 Release Time SRC_NONE SRC_NONE DST_EG1_RELEASETIME TRN_NONE
-11 EG1 Velocity to Attack SRC_KEYONVELOCITY SRC_NONE DST_EG1_ATTACKTIME TRN_NONE
-12 EG1 Key to Decay SRC_KEYNUMBER SRC_NONE DST_EG1_DECAYTIME TRN_NONE
+7*          EG1 Attack Time         SRC_NONE            SRC_NONE        DST_EG1_ATTACKTIME      TRN_NONE
+8*          EG1 Decay Time          SRC_NONE            SRC_NONE        DST_EG1_DECAYTIME       TRN_NONE
+9*          EG1 Sustain Level       SRC_NONE            SRC_NONE        DST_EG1_SUSTAINLEVEL    TRN_NONE
+10*         EG1 Release Time        SRC_NONE            SRC_NONE        DST_EG1_RELEASETIME     TRN_NONE
+11          EG1 Velocity to Attack  SRC_KEYONVELOCITY   SRC_NONE        DST_EG1_ATTACKTIME      TRN_NONE
+12          EG1 Key to Decay        SRC_KEYNUMBER       SRC_NONE        DST_EG1_DECAYTIME       TRN_NONE
 EG2 Section
 13* EG2 Attack Time SRC_NONE SRC_NONE DST_EG2_ATTACKTIME TRN_NONE
 14* EG2 Decay Time SRC_NONE SRC_NONE DST_EG2_DECAYTIME TRN_NONE
@@ -771,50 +775,38 @@ Connections inferred by DLS1 Architecture
 
         public void SetName(string inam)
         {
-            INAM = AddChunk(new Chunk("inam", StringToBytes(inam))) as Chunk;
-            INAM.SetDataCapacity(RIFF.AlignName(inam));
+            INAM = AddChunk(new Chunk("INAM", StringToBytes(inam))) as Chunk;
+            INAM.SetDataCapacity((int)INAM.GetSize());
         }
         public void SetComment(string icmt)
         {
-            ICMT = AddChunk(new Chunk("icmt", StringToBytes(icmt))) as Chunk;
-            ICMT.SetDataCapacity(RIFF.AlignName(icmt));
+            ICMT = AddChunk(new Chunk("ICMT", StringToBytes(icmt))) as Chunk;
+            ICMT.SetDataCapacity((int)ICMT.GetSize());
         }
 
         public void SetArtist(string iart)
         {
-            IART = AddChunk(new Chunk("iart", StringToBytes(iart))) as Chunk;
-            IART.SetDataCapacity(RIFF.AlignName(iart));
+            IART = AddChunk(new Chunk("IART", StringToBytes(iart))) as Chunk;
+            IART.SetDataCapacity((int)IART.GetSize());
         }
 
         public void SetMedia(string imed)
         {
-            IMED = AddChunk(new Chunk("imed", StringToBytes(imed))) as Chunk;
-            IMED.SetDataCapacity(RIFF.AlignName(imed));
+            IMED = AddChunk(new Chunk("IMED", StringToBytes(imed))) as Chunk;
+            IMED.SetDataCapacity((int)IMED.GetSize());
         }
         public void SetSoftware(string isft)
         {
-            ISFT = AddChunk(new Chunk("isft", StringToBytes(isft))) as Chunk;
-            ISFT.SetDataCapacity(RIFF.AlignName(isft));
+            ISFT = AddChunk(new Chunk("ISFT", StringToBytes(isft))) as Chunk;
+            ISFT.SetDataCapacity((int)ISFT.GetSize());
         }
 
         private List<byte> StringToBytes(string str)
         {
-            RIFF.AlignName(str);
+            str = RIFF.AlignName(str);
             return new List<byte>(Encoding.ASCII.GetBytes(str));
         }
 
-        public new uint GetSize()
-        {
-            size = 4;
-            if (chunks != null && chunks.Count > 0)
-            {
-                foreach (IChunk ck in chunks)
-                {
-                    size += ck.GetHeaderSize() + ck.GetSize();
-                }
-            }
-            return size;
-        }
     }
 
 }

@@ -1,5 +1,6 @@
-﻿//Minoru Akao
+﻿using UnityEngine;
 
+//Minoru Akao
 namespace VS.Parser.Akao
 {
     public class AKAOInstrument
@@ -16,7 +17,7 @@ namespace VS.Parser.Akao
         {
             _type = type;
 
-            //Debug.Log(string.Concat("AKAOInstrument : ", name));
+            Debug.Log(string.Concat("AKAOInstrument : ", _type));
         }
 
         public bool IsDrum()

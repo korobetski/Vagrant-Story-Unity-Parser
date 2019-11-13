@@ -267,7 +267,7 @@ public class VSWindow : EditorWindow
             string[] files = Directory.GetFiles(VSPath + "MAP/", "*.MPD");
             float fileToParse = files.Length;
             float fileParsed = 0f;
-
+            /*
             foreach (string file in files)
             {
                 string[] h = file.Split("/"[0]);
@@ -279,15 +279,22 @@ public class VSWindow : EditorWindow
                 parser.BuildPrefab();
                 fileParsed++;
             }
+            */
+            MPD parser = new MPD();
+            //parser.UseDebug = true;
+            parser.Parse(VSPath + "MAP/MAP009.MPD");
+            parser.BuildPrefab();
+
             EditorUtility.ClearProgressBar();
         }
-        /*
+        
                 bool LoadAKAOTrigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE*.DAT"));
                 if (LoadAKAOTrigger && VSPath != "")
                 {
 
                     string[] files = Directory.GetFiles(VSPath + "SOUND/", "*.DAT");
                     float fileToParse = files.Length;
+            /*
                     float fileParsed = 0;
                     foreach (string file in files)
                     {
@@ -299,9 +306,18 @@ public class VSWindow : EditorWindow
                         parser.Parse(file, AKAO.SOUND);
                         fileParsed++;
                     }
-                    EditorUtility.ClearProgressBar();
+                    */
+
+
+
+
+            AKAO parser = new AKAO();
+            //parser.UseDebug = true;
+            parser.Parse(VSPath + "SOUND/WAVE0088.DAT", AKAO.SOUND);
+
+            EditorUtility.ClearProgressBar();
                 }
-        */
+        
         bool LoadAKAO2Trigger = GUILayout.Button(new GUIContent("Load Akao MUSIC/MUSIC*.DAT"));
         if (LoadAKAO2Trigger && VSPath != "")
         {
@@ -325,7 +341,7 @@ public class VSWindow : EditorWindow
                 fileParsed++;
             }
             */
-            
+
             AKAO parser = new AKAO();
             //parser.UseDebug = true;
             parser.Parse(VSPath + "MUSIC/MUSIC004.DAT", AKAO.MUSIC);
@@ -333,7 +349,7 @@ public class VSWindow : EditorWindow
             {
                 parser.composer.OutputMidiFile();
             }
-            
+
             EditorUtility.ClearProgressBar();
         }
     }
