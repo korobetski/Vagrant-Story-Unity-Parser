@@ -146,6 +146,7 @@ namespace VS.Parser
                 Debug.Log("lenSubSection17 :" + lenSubSection17);
                 Debug.Log("lenSubSection18 :" + lenSubSection18);
             }
+
             // ROOM section
             if (UseDebug)
             {
@@ -196,7 +197,7 @@ namespace VS.Parser
                     uint TyleHeight = buffer.ReadUInt16();
                     if (UseDebug)
                     {
-                        Debug.Log("TyleWidth : " + TyleWidth + "  TyleHeight : " + TyleHeight);
+                        //Debug.Log("TyleWidth : " + TyleWidth + "  TyleHeight : " + TyleHeight);
                     }
 
                     uint unk1 = buffer.ReadUInt16();
@@ -210,7 +211,7 @@ namespace VS.Parser
                         FloorHeight[i] = buffer.ReadUInt16();
                         if (UseDebug)
                         {
-                            Debug.Log("FloorHeight[i] : " + FloorHeight[i]);
+                            //Debug.Log("FloorHeight[i] : " + FloorHeight[i]);
                         }
                     }
 
@@ -219,7 +220,7 @@ namespace VS.Parser
                         CeilingHeight[i] = buffer.ReadUInt16();
                         if (UseDebug)
                         {
-                            Debug.Log("CeilingHeight[i] : " + CeilingHeight[i]);
+                            //Debug.Log("CeilingHeight[i] : " + CeilingHeight[i]);
                         }
                     }
 
@@ -293,7 +294,7 @@ namespace VS.Parser
                             Vector4 v = new Vector4(buffer.ReadSByte(), buffer.ReadByte(), buffer.ReadSByte(), buffer.ReadByte());
                             if (UseDebug)
                             {
-                                Debug.Log(i + "," + j + " -> " + v);
+                                //Debug.Log(i + "," + j + " -> " + v);
                             }
 
                             vv.Add(v);
@@ -303,7 +304,7 @@ namespace VS.Parser
                             Vector4 c = new Vector4(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte());
                             if (UseDebug)
                             {
-                                Debug.Log(i + "," + j + " -> " + c);
+                                //Debug.Log(i + "," + j + " -> " + c);
                             }
 
                             cols.Add(c);
@@ -314,7 +315,7 @@ namespace VS.Parser
                         }
                         if (UseDebug)
                         {
-                            Debug.Log(i + " -> " + "##----------------");
+                            //Debug.Log(i + " -> " + "##----------------");
                         }
                         /*
                         GameObject lgo = new GameObject("Point Light");
@@ -338,6 +339,7 @@ namespace VS.Parser
                     }
 
                     buffer.BaseStream.Position = lightPtr + lenLightingSection;
+                    Debug.Log("buffer.BaseStream.Position  :  " + buffer.BaseStream.Position);
                 }
 
                 if (lenSubSection06 > 0)
@@ -373,30 +375,7 @@ namespace VS.Parser
                 if (lenTextureEffectsSection > 0)
                 {
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenTextureEffectsSection;
-                    if (UseDebug)
-                    {
-                        Debug.Log("TextureEffectsSection");
-                        byte[] texfx = buffer.ReadBytes((int)lenTextureEffectsSection);
-
-                    }
                 }
-
-                /*
-                 * 
-            lenSubSection0D = buffer.ReadUInt32();
-            lenSubSection0E = buffer.ReadUInt32();
-            lenSubSection0F = buffer.ReadUInt32();
-            lenSubSection10 = buffer.ReadUInt32();
-            lenSubSection11 = buffer.ReadUInt32();
-            lenSubSection12 = buffer.ReadUInt32();
-            lenSubSection13 = buffer.ReadUInt32();
-            lenAKAOSubSection = buffer.ReadUInt32();
-            lenSubSection15 = buffer.ReadUInt32();
-            lenSubSection16 = buffer.ReadUInt32();
-            lenSubSection17 = buffer.ReadUInt32();
-            lenSubSection18 = buffer.ReadUInt32();
-            */
-
 
                 if (lenSubSection0D > 0)
                 {
@@ -435,14 +414,27 @@ namespace VS.Parser
 
                 if (lenAKAOSubSection > 0)
                 {
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenAKAOSubSection;
+                    long akaoPtr = buffer.BaseStream.Position;
+                    if (UseDebug)
+                    {
+                        Debug.Log("akaoPtr : " + akaoPtr + "   lenAKAOSubSection : " + lenAKAOSubSection + "(" + (akaoPtr + lenAKAOSubSection) + ")");
+                    }
+
+                    buffer.ReadUInt32(); // 0200 0000
+                    buffer.ReadUInt32(); // 0000 0000
+                    buffer.ReadUInt32(); // 0C00 0000
+
+
                     AKAO audio = new AKAO();
+                    audio.FileName = FileName;
                     audio.UseDebug = true;
-                    audio.Parse(buffer, AKAO.AKAOType.SOUND);
+                    audio.Parse(buffer, AKAO.AKAOType.MAP, akaoPtr + lenAKAOSubSection);
                     if (audio.FileSize > 4)
                     {
                         audio.composer.OutputMidiFile();
                     }
+
+                    buffer.BaseStream.Position = akaoPtr + lenAKAOSubSection;
                 }
 
                 if (lenSubSection15 > 0)

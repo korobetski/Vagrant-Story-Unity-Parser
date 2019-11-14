@@ -238,7 +238,7 @@ namespace VS.Parser
                 long polyDec = buffer.BaseStream.Position - 4;
                 if (UseDebug)
                 {
-                    Debug.Log("face# " + i + "   face.type : " + face.type + "   face.size : " + face.size + "   face.side : " + face.side + "   face.alpha : " + face.alpha);
+                    //Debug.Log("face# " + i + "   face.type : " + face.type + "   face.size : " + face.size + "   face.side : " + face.side + "   face.alpha : " + face.alpha);
                 }
 
                 uint[] table = new uint[256];
@@ -254,7 +254,7 @@ namespace VS.Parser
                 {
                     if (UseDebug)
                     {
-                        Debug.Log("####  Unknown face type !");
+                        //Debug.Log("####  Unknown face type !");
                     }
 
                     if (face.size < 5)
@@ -270,7 +270,7 @@ namespace VS.Parser
                     face.vertices.Add(vId);
                     if (UseDebug)
                     {
-                        Debug.Log("vId : " + j + " - " + vId);
+                        //Debug.Log("vId : " + j + " - " + vId);
                     }
                 }
                 face.uv = new List<Vector2>();
@@ -281,7 +281,7 @@ namespace VS.Parser
                     face.uv.Add(new Vector2(u, v));
                     if (UseDebug)
                     {
-                        Debug.Log("u : " + u + "    v : " + v);
+                        //Debug.Log("u : " + u + "    v : " + v);
                     }
                 }
                 faces.Add(face);
@@ -296,26 +296,44 @@ namespace VS.Parser
                 }
 
                 buffer.BaseStream.Position = AKAOPtr;
-
-
-                uint akaoNum = buffer.ReadUInt32();
-                uint[] akaoFramesPtr = new uint[akaoNum];
-                for (uint j = 0; j < akaoNum; j++)
-                {
-                    akaoFramesPtr[j] = buffer.ReadUInt32();
-                }
-
-                for (uint j = 0; j < akaoNum; j++)
-                {
-                    /*
-                    AKAO akao = new AKAO();
-                    akao.soundName = shapeName + "_AKAO_" + j;
-                    akao.debugger = debugger;
-                    akao.aType = AKAO.akaotypes.shp;
-                    akao.parseFromBuffer(buffer);
-                    */
-                }
             }
+
+
+            uint akaoNum = buffer.ReadUInt32();
+            Debug.Log(string.Concat("akaoNum : ", akaoNum));
+            uint[] akaoFramesPtr = new uint[akaoNum];
+            // one pointer for AKAO header, a second for AKAO datas
+            for (uint j = 0; j < akaoNum; j++)
+            {
+                akaoFramesPtr[j] = buffer.ReadUInt32();
+            }
+            for (uint j = 0; j < akaoNum; j += 2)
+            {
+                long limit;
+                if (j < akaoFramesPtr.Length - 1)
+                {
+                    limit = AKAOPtr + akaoFramesPtr[j + 1];
+                    // somtimes there are empty ptrs at the begining so we skip
+                    if (akaoFramesPtr[j + 1] > 0)
+                    {
+                        AKAO akao = new AKAO();
+                        akao.FileName = string.Concat(FileName, "_Akao_", j);
+                        akao.UseDebug = true;
+                        akao.Parse(buffer, AKAO.AKAOType.SHP, limit);
+                    }
+                } else
+                {
+                    limit = magicPtr;
+                    AKAO akao = new AKAO();
+                    akao.FileName = string.Concat(FileName, "_Akao_", j);
+                    akao.UseDebug = true;
+                    akao.Parse(buffer, AKAO.AKAOType.SHP, limit);
+                }
+
+
+            }
+
+
             // skip
 
             // Magic section

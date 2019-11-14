@@ -19,8 +19,9 @@ namespace VS.Parser
         public static readonly AKAOType SOUND = AKAOType.SOUND;
         public static readonly AKAOType MUSIC = AKAOType.MUSIC;
         public static readonly AKAOType MAP = AKAOType.MAP;
+        public static readonly AKAOType SHP = AKAOType.SHP;
 
-        public enum AKAOType { SOUND, MUSIC, MAP }
+        public enum AKAOType { SOUND, MUSIC, MAP, SHP }
 
         public AKAOType _type;
         public AKAOInstrument[] instruments;
@@ -30,7 +31,7 @@ namespace VS.Parser
 
         public uint startingArticulationId;
 
-        public void Parse(string filePath, AKAOType type)
+        public void Parse(string filePath, AKAOType type, long limit = long.MaxValue)
         {
             PreParse(filePath);
             _type = type;
@@ -38,14 +39,15 @@ namespace VS.Parser
             {
                 return;
             }
-            Parse(buffer, type);
+            Parse(buffer, type, limit);
 
             buffer.Close();
             fileStream.Close();
         }
 
-        public void Parse(BinaryReader buffer, AKAOType type)
+        public void Parse(BinaryReader buffer, AKAOType type, long limit = long.MaxValue)
         {
+            _type = type;
             if (buffer.BaseStream.Length < 4)
             {
                 return;
@@ -91,7 +93,7 @@ namespace VS.Parser
 
 
 
-                    if (true)
+                    if (UseDebug)
                     {
                         Debug.Log("AKAO from : " + FileName + " FileSize = " + FileSize + "    |    reverb : " + reverb + " numTrack : " + numTrack + " sampleSet : " + sampleSet);
                         Debug.Log("instruments at : " + ptr1 + "  Drums at : " + ptr2 + "   |    unk1 : " + unk1 + "  unk3 : " + unk3 + "   musInstrPtr : " + musInstrPtr);
@@ -270,7 +272,7 @@ namespace VS.Parser
 
                     buffer.ReadBytes(32); // padding
 
-                    if (true)
+                    if (UseDebug)
                     {
                         Debug.Log("AKAO from : " + FileName + " len = " + FileSize);
                         Debug.Log("ID : " + sampleId + " reverb : " + reverb + " sampleSize : " + sampleSize + " stArtId : " + startingArticulationId + " numArts : " + numArts);
@@ -283,8 +285,6 @@ namespace VS.Parser
                         AKAOArticulation arti = new AKAOArticulation(buffer);
                         articulations[i] = arti;
                     }
-
-
                     // Samples section here
                     ulong samStart = (ulong)buffer.BaseStream.Position;
                     //Debug.Log(string.Concat("samStart : ", samStart));
@@ -314,8 +314,6 @@ namespace VS.Parser
                         AKAOSample sam = new AKAOSample(string.Concat("Sample #", (ushort)i), dt, (ulong)samPtr[i]);
                         samples[i] = sam;
                     }
-
-
                     // now to verify and associate each articulation with a sample index value
                     // for every sample of every instrument, we add sample_section offset, because those values
                     //  are relative to the beginning of the sample section
@@ -334,11 +332,52 @@ namespace VS.Parser
                     }
                     break;
                 case AKAOType.MAP:
+                    // Not understood yet
                     header = buffer.ReadBytes(4);// AKAO
-                    fileId = buffer.ReadUInt16();
+                    Debug.Log(BitConverter.ToString(header));
+                    uint id = buffer.ReadUInt32();
+                    ushort len = buffer.ReadUInt16();
+                    buffer.ReadUInt16();
+                    buffer.ReadUInt32();
+
+                    buffer.ReadUInt32();
+                    buffer.ReadUInt32();
+                    buffer.ReadUInt32();
+                    buffer.ReadUInt32();
+
+                    buffer.ReadUInt16();
                     byteLen = buffer.ReadUInt16();
 
-                    Debug.Log(string.Concat("AKAO MAP : id : ", fileId, "  byteLen : ", byteLen));
+                    Debug.Log(string.Concat("AKAO MAP : id : ", id, "  len : ", len, "  byteLen : ", byteLen));
+                    // datas seems to be compressed
+                    int waveLen = (int)(limit - buffer.BaseStream.Position);
+                    WAV sound = new WAV(new List<byte>(buffer.ReadBytes(waveLen)));
+                    ToolBox.DirExNorCreate("Assets/Resources/Sounds/MAP/");
+                    sound.WriteFile(string.Concat("Assets/Resources/Sounds/MAP/", FileName, ".wav"), sound.Write());
+                    break;
+                case AKAOType.SHP:
+                    // Not understood yet, seems similare to AKAO MAP format
+                    header = buffer.ReadBytes(4);// AKAO
+                    Debug.Log(BitConverter.ToString(header));
+                    id = buffer.ReadUInt32();
+                    len = buffer.ReadUInt16();
+                    buffer.ReadUInt16();
+                    buffer.ReadUInt32();
+
+                    buffer.ReadUInt32();
+                    buffer.ReadUInt32();
+                    buffer.ReadUInt32();
+                    buffer.ReadUInt32();
+
+                    buffer.ReadUInt16();
+                    byteLen = buffer.ReadUInt16();
+
+                    Debug.Log(string.Concat("AKAO SHP : id : ", id, "  len : ", len, "  byteLen : ", byteLen));
+                    // datas seems to be compressed
+                    waveLen = (int) (limit - buffer.BaseStream.Position);
+                    sound = new WAV(new List<byte>(buffer.ReadBytes(waveLen)));
+                    ToolBox.DirExNorCreate("Assets/Resources/Sounds/SHP/");
+                    sound.WriteFile(string.Concat("Assets/Resources/Sounds/SHP/",FileName,".wav"), sound.Write());
                     break;
             }
 
