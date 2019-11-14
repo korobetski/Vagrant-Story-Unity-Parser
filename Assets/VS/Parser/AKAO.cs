@@ -20,8 +20,25 @@ namespace VS.Parser
         public static readonly AKAOType MUSIC = AKAOType.MUSIC;
         public static readonly AKAOType MAP = AKAOType.MAP;
         public static readonly AKAOType SHP = AKAOType.SHP;
+        public static readonly AKAOType EFFECT_1 = AKAOType.EFFECT_1;
+        public static readonly AKAOType EFFECT_2 = AKAOType.EFFECT_2;
 
-        public enum AKAOType { SOUND, MUSIC, MAP, SHP }
+
+        public static bool CheckHeader(byte[] bytes)
+        {
+            //41 4B 41 4F
+            Debug.Log(BitConverter.ToString(bytes));
+            if (bytes[0] == 0x41 && bytes[1] == 0x4B && bytes[2] == 0x41 && bytes[3] == 0x4F)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public enum AKAOType { SOUND, MUSIC, MAP, SHP, EFFECT_1, EFFECT_2 }
 
         public AKAOType _type;
         public AKAOInstrument[] instruments;
@@ -351,9 +368,8 @@ namespace VS.Parser
                     Debug.Log(string.Concat("AKAO MAP : id : ", id, "  len : ", len, "  byteLen : ", byteLen));
                     // datas seems to be compressed
                     int waveLen = (int)(limit - buffer.BaseStream.Position);
-                    WAV sound = new WAV(new List<byte>(buffer.ReadBytes(waveLen)));
-                    ToolBox.DirExNorCreate("Assets/Resources/Sounds/MAP/");
-                    sound.WriteFile(string.Concat("Assets/Resources/Sounds/MAP/", FileName, ".wav"), sound.Write());
+                    /*
+                    */
                     break;
                 case AKAOType.SHP:
                     // Not understood yet, seems similare to AKAO MAP format
@@ -373,11 +389,54 @@ namespace VS.Parser
                     byteLen = buffer.ReadUInt16();
 
                     Debug.Log(string.Concat("AKAO SHP : id : ", id, "  len : ", len, "  byteLen : ", byteLen));
-                    // datas seems to be compressed
                     waveLen = (int) (limit - buffer.BaseStream.Position);
-                    sound = new WAV(new List<byte>(buffer.ReadBytes(waveLen)));
-                    ToolBox.DirExNorCreate("Assets/Resources/Sounds/SHP/");
-                    sound.WriteFile(string.Concat("Assets/Resources/Sounds/SHP/",FileName,".wav"), sound.Write());
+                    break;
+                case AKAOType.EFFECT_1:
+                    // Not understood yet, seems similare to AKAO MAP & AKAO SHP format
+                    header = buffer.ReadBytes(4);// AKAO
+                    Debug.Log(BitConverter.ToString(header));
+                    id = buffer.ReadUInt32();
+                    len = buffer.ReadUInt16();
+                    buffer.ReadUInt16();
+                    buffer.ReadUInt32();
+
+                    buffer.ReadUInt32();
+                    buffer.ReadUInt32();
+                    buffer.ReadUInt32();
+                    buffer.ReadUInt32();
+
+                    buffer.ReadUInt16();
+
+                    len = buffer.ReadUInt16();
+
+                    Debug.Log(string.Concat("AKAO EFFECT_1 : id : ", id, "  len : ", len));
+
+                    buffer.ReadBytes(len*6);
+                    break;
+                case AKAOType.EFFECT_2:
+                    // similar to AKAOType.SOUND without articulations, we can output a WAV file
+                    // header datas
+                    header = buffer.ReadBytes(4);       // AKAO
+                    Debug.Log(BitConverter.ToString(header));
+                    sampleId = buffer.ReadUInt16();
+                    buffer.ReadBytes(10); // padding
+
+                    reverb = buffer.ReadUInt16(); // 0x0031 - 0x0051
+                    buffer.ReadBytes(2); // padding
+                    sampleSize = buffer.ReadUInt32();
+                    startingArticulationId = buffer.ReadUInt32();
+                    numArts = buffer.ReadUInt32();
+
+                    buffer.ReadBytes(32); // padding
+                    buffer.ReadBytes(16); // sample padding
+
+                    AKAOSample sample = new AKAOSample(FileName, buffer.ReadBytes((int)(limit - buffer.BaseStream.Position)), (ulong)buffer.BaseStream.Position);
+                    WAV nw = sample.ConvertToWAV();
+                    nw.SetName(FileName);
+
+                    ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Sounds/Effects/");
+                    nw.WriteFile(Application.dataPath + "/../Assets/Resources/Sounds/Effects/" + FileName + ".wav", nw.Write());
+
                     break;
             }
 

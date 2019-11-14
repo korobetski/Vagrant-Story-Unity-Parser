@@ -369,7 +369,7 @@ public class VSWindow : EditorWindow
 
             string[] files = Directory.GetFiles(VSPath + "EFFECT/", "*.P");
             float fileToParse = files.Length;
-
+            /*
             float fileParsed = 0;
             foreach (string file in files)
             {
@@ -379,6 +379,10 @@ public class VSWindow : EditorWindow
                 EFFECT effect = new EFFECT(file);
                 fileParsed++;
             }
+            */
+
+            EFFECT effect = new EFFECT(VSPath + "EFFECT/E002.P");
+
             EditorUtility.ClearProgressBar();
         }
     }
