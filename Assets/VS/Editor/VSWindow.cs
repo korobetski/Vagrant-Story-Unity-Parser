@@ -158,7 +158,7 @@ public class VSWindow : EditorWindow
             fatal.Add("AF.SHP");
             fatal.Add("B0.SHP");
             fatal.Add("C6.SHP");
-            /*
+            
             foreach (string file in files)
             {
                 string[] h = file.Split("/"[0]);
@@ -201,13 +201,13 @@ public class VSWindow : EditorWindow
                 }
                 fileParsed++;
             }
-            */
 
+            /*
             SHP parser = new SHP();
             parser.UseDebug = true;
             parser.Parse(VSPath + "OBJ/00.SHP");
             parser.BuildPrefab();
-
+            */
             EditorUtility.ClearProgressBar();
         }
 
@@ -296,14 +296,15 @@ public class VSWindow : EditorWindow
             */
             EditorUtility.ClearProgressBar();
         }
-        
+
+        /*
                 bool LoadAKAOTrigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE*.DAT"));
                 if (LoadAKAOTrigger && VSPath != "")
                 {
 
                     string[] files = Directory.GetFiles(VSPath + "SOUND/", "*.DAT");
                     float fileToParse = files.Length;
-            /*
+            
                     float fileParsed = 0;
                     foreach (string file in files)
                     {
@@ -315,18 +316,18 @@ public class VSWindow : EditorWindow
                         parser.Parse(file, AKAO.SOUND);
                         fileParsed++;
                     }
-                    */
+                    
 
 
 
 
-            AKAO parser = new AKAO();
+            //AKAO parser = new AKAO();
             //parser.UseDebug = true;
-            parser.Parse(VSPath + "SOUND/WAVE0088.DAT", AKAO.SOUND);
+            //parser.Parse(VSPath + "SOUND/WAVE0088.DAT", AKAO.SOUND);
 
             EditorUtility.ClearProgressBar();
                 }
-        
+        */
         bool LoadAKAO2Trigger = GUILayout.Button(new GUIContent("Load Akao MUSIC/MUSIC*.DAT"));
         if (LoadAKAO2Trigger && VSPath != "")
         {
@@ -359,6 +360,25 @@ public class VSWindow : EditorWindow
                 parser.composer.OutputMidiFile();
             }
             */
+            EditorUtility.ClearProgressBar();
+        }
+
+        bool LoadEFFECTTrigger = GUILayout.Button(new GUIContent("Load Akao EFFECT/E0*.P, E0*.FBC, E0*.FBT"));
+        if (LoadEFFECTTrigger && VSPath != "")
+        {
+
+            string[] files = Directory.GetFiles(VSPath + "EFFECT/", "*.P");
+            float fileToParse = files.Length;
+
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                EFFECT effect = new EFFECT(file);
+                fileParsed++;
+            }
             EditorUtility.ClearProgressBar();
         }
     }
