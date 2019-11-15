@@ -319,15 +319,16 @@ namespace VS.Parser
                         AKAO akao = new AKAO();
                         akao.FileName = string.Concat(FileName, "_Akao_", j);
                         akao.UseDebug = true;
-                        akao.Parse(buffer, AKAO.AKAOType.SHP, limit);
+                        akao.Parse(buffer, AKAO.UNKNOWN, limit);
                     }
-                } else
+                }
+                else
                 {
                     limit = magicPtr;
                     AKAO akao = new AKAO();
                     akao.FileName = string.Concat(FileName, "_Akao_", j);
                     akao.UseDebug = true;
-                    akao.Parse(buffer, AKAO.AKAOType.SHP, limit);
+                    akao.Parse(buffer, AKAO.UNKNOWN, limit);
                 }
 
 

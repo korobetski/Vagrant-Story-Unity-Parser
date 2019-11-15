@@ -1,10 +1,9 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using VS.Utils;
 
 namespace VS.Parser.Effect
 {
-    public class FBC:FileParser
+    public class FBC : FileParser
     {
         private Color32[,] _pallets;
 
@@ -31,7 +30,7 @@ namespace VS.Parser.Effect
             {
                 for (uint j = 0; j < 256; j++)
                 {
-                    _pallets[i,j] = (ToolBox.BitColorConverter(buffer.ReadUInt16()));
+                    _pallets[i, j] = (ToolBox.BitColorConverter(buffer.ReadUInt16()));
                 }
             }
         }

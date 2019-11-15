@@ -32,7 +32,8 @@ namespace VS.Parser
                 colFx = new FBC(string.Concat(cf.VSPath, "EFFECT/", "E000_0.FBC"));
                 FBT texFx = new FBT(string.Concat(cf.VSPath, "EFFECT/", "E000_0.FBT"), colFx.GetPallets());
                 lTexFx.Add(texFx);
-            } else
+            }
+            else
             {
                 if (File.Exists(string.Concat(cf.VSPath, "EFFECT/", name, "_1.FBC")))
                 {
@@ -64,7 +65,7 @@ namespace VS.Parser
                 {
                     // no FBC = no FBT
                 }
-                
+
 
             }
 

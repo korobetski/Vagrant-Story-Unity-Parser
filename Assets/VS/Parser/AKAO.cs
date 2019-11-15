@@ -16,18 +16,19 @@ namespace VS.Parser
 
     public class AKAO : FileParser
     {
+        public enum AKAOType { UNKNOWN, SOUND, MUSIC, PROG, SAMPLE }
+
+        public static readonly AKAOType UNKNOWN = AKAOType.UNKNOWN;
         public static readonly AKAOType SOUND = AKAOType.SOUND;
         public static readonly AKAOType MUSIC = AKAOType.MUSIC;
-        public static readonly AKAOType MAP = AKAOType.MAP;
-        public static readonly AKAOType SHP = AKAOType.SHP;
-        public static readonly AKAOType EFFECT_1 = AKAOType.EFFECT_1;
-        public static readonly AKAOType EFFECT_2 = AKAOType.EFFECT_2;
+        public static readonly AKAOType PROG = AKAOType.PROG;
+        public static readonly AKAOType SAMPLE = AKAOType.SAMPLE;
 
 
         public static bool CheckHeader(byte[] bytes)
         {
             //41 4B 41 4F
-            Debug.Log(BitConverter.ToString(bytes));
+            //Debug.Log(BitConverter.ToString(bytes));
             if (bytes[0] == 0x41 && bytes[1] == 0x4B && bytes[2] == 0x41 && bytes[3] == 0x4F)
             {
                 return true;
@@ -38,7 +39,6 @@ namespace VS.Parser
             }
         }
 
-        public enum AKAOType { SOUND, MUSIC, MAP, SHP, EFFECT_1, EFFECT_2 }
 
         public AKAOType _type;
         public AKAOInstrument[] instruments;
@@ -69,6 +69,48 @@ namespace VS.Parser
             {
                 return;
             }
+
+            if (_type == AKAOType.UNKNOWN)
+            {
+                // we must try to find the AKAO type
+                byte[] header = buffer.ReadBytes(4);       // AKAO
+                if (!CheckHeader(header))
+                {
+                    return;
+                }
+                ushort v1 = buffer.ReadUInt16();    // ID or type
+                ushort v2 = buffer.ReadUInt16();    // File Length or empty
+                byte v3 = buffer.ReadByte();    // Type or empty
+                byte v4 = buffer.ReadByte();    // Type var or empty
+
+                if (v2 + v3 + v4 == 0)
+                {
+                    if (v1 == 0)
+                    {
+                        _type = AKAOType.SAMPLE;
+                    } else
+                    {
+                        if (buffer.BaseStream.Position == 10)
+                        {
+                            // v1 is the sample collection ID in this case
+                            _type = AKAOType.SOUND;
+                        } else
+                        {
+                            // E075.P have an AKAO PROG without v3 = 0xC8...
+                            _type = AKAOType.PROG;
+                        }
+                    }
+                } else if (v3 == 0xC8)
+                {
+                    _type = AKAOType.PROG;
+                } else if (v2 > 0 && v2 == buffer.BaseStream.Length)
+                {
+                    _type = AKAOType.MUSIC;
+                }
+
+                buffer.BaseStream.Position -= 10;
+            }
+
 
             switch (_type)
             {
@@ -348,12 +390,12 @@ namespace VS.Parser
                         }
                     }
                     break;
-                case AKAOType.MAP:
+                case AKAOType.PROG:
                     // Not understood yet
                     header = buffer.ReadBytes(4);// AKAO
-                    Debug.Log(BitConverter.ToString(header));
-                    uint id = buffer.ReadUInt32();
-                    ushort len = buffer.ReadUInt16();
+                    ushort id = buffer.ReadUInt16();
+                    buffer.ReadUInt16();
+                    ushort tp = buffer.ReadUInt16();
                     buffer.ReadUInt16();
                     buffer.ReadUInt32();
 
@@ -365,67 +407,24 @@ namespace VS.Parser
                     buffer.ReadUInt16();
                     byteLen = buffer.ReadUInt16();
 
-                    Debug.Log(string.Concat("AKAO MAP : id : ", id, "  len : ", len, "  byteLen : ", byteLen));
-                    // datas seems to be compressed
+                    //Debug.Log(string.Concat("AKAO PROG : id : ", id, "  tp : ", tp, "  byteLen : ", byteLen));
                     int waveLen = (int)(limit - buffer.BaseStream.Position);
+                    buffer.ReadBytes(waveLen);
                     /*
                     */
                     break;
-                case AKAOType.SHP:
-                    // Not understood yet, seems similare to AKAO MAP format
-                    header = buffer.ReadBytes(4);// AKAO
-                    Debug.Log(BitConverter.ToString(header));
-                    id = buffer.ReadUInt32();
-                    len = buffer.ReadUInt16();
-                    buffer.ReadUInt16();
-                    buffer.ReadUInt32();
-
-                    buffer.ReadUInt32();
-                    buffer.ReadUInt32();
-                    buffer.ReadUInt32();
-                    buffer.ReadUInt32();
-
-                    buffer.ReadUInt16();
-                    byteLen = buffer.ReadUInt16();
-
-                    Debug.Log(string.Concat("AKAO SHP : id : ", id, "  len : ", len, "  byteLen : ", byteLen));
-                    waveLen = (int) (limit - buffer.BaseStream.Position);
-                    break;
-                case AKAOType.EFFECT_1:
-                    // Not understood yet, seems similare to AKAO MAP & AKAO SHP format
-                    header = buffer.ReadBytes(4);// AKAO
-                    Debug.Log(BitConverter.ToString(header));
-                    id = buffer.ReadUInt32();
-                    len = buffer.ReadUInt16();
-                    buffer.ReadUInt16();
-                    buffer.ReadUInt32();
-
-                    buffer.ReadUInt32();
-                    buffer.ReadUInt32();
-                    buffer.ReadUInt32();
-                    buffer.ReadUInt32();
-
-                    buffer.ReadUInt16();
-
-                    len = buffer.ReadUInt16();
-
-                    Debug.Log(string.Concat("AKAO EFFECT_1 : id : ", id, "  len : ", len));
-
-                    buffer.ReadBytes(len*6);
-                    break;
-                case AKAOType.EFFECT_2:
+                case AKAOType.SAMPLE:
                     // similar to AKAOType.SOUND without articulations, we can output a WAV file
                     // header datas
                     header = buffer.ReadBytes(4);       // AKAO
-                    Debug.Log(BitConverter.ToString(header));
-                    sampleId = buffer.ReadUInt16();
+                    buffer.ReadUInt16();
                     buffer.ReadBytes(10); // padding
 
-                    reverb = buffer.ReadUInt16(); // 0x0031 - 0x0051
+                    buffer.ReadUInt16(); // 
                     buffer.ReadBytes(2); // padding
-                    sampleSize = buffer.ReadUInt32();
-                    startingArticulationId = buffer.ReadUInt32();
-                    numArts = buffer.ReadUInt32();
+                    buffer.ReadUInt32();
+                    buffer.ReadUInt32();
+                    buffer.ReadUInt32();
 
                     buffer.ReadBytes(32); // padding
                     buffer.ReadBytes(16); // sample padding

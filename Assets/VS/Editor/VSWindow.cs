@@ -158,7 +158,7 @@ public class VSWindow : EditorWindow
             fatal.Add("AF.SHP");
             fatal.Add("B0.SHP");
             fatal.Add("C6.SHP");
-            
+
             foreach (string file in files)
             {
                 string[] h = file.Split("/"[0]);
@@ -275,7 +275,7 @@ public class VSWindow : EditorWindow
             string[] files = Directory.GetFiles(VSPath + "MAP/", "*.MPD");
             float fileToParse = files.Length;
             float fileParsed = 0f;
-            
+
             foreach (string file in files)
             {
                 string[] h = file.Split("/"[0]);
@@ -287,7 +287,7 @@ public class VSWindow : EditorWindow
                 parser.BuildPrefab();
                 fileParsed++;
             }
-            
+
             /*
             MPD parser = new MPD();
             parser.UseDebug = true;
@@ -334,7 +334,7 @@ public class VSWindow : EditorWindow
 
             string[] files = Directory.GetFiles(VSPath + "MUSIC/", "*.DAT");
             float fileToParse = files.Length;
-            
+
             float fileParsed = 0;
             foreach (string file in files)
             {
@@ -350,7 +350,7 @@ public class VSWindow : EditorWindow
                 }
                 fileParsed++;
             }
-            
+
             /*
             AKAO parser = new AKAO();
             //parser.UseDebug = true;
@@ -369,7 +369,7 @@ public class VSWindow : EditorWindow
 
             string[] files = Directory.GetFiles(VSPath + "EFFECT/", "*.P");
             float fileToParse = files.Length;
-            /*
+
             float fileParsed = 0;
             foreach (string file in files)
             {
@@ -379,9 +379,9 @@ public class VSWindow : EditorWindow
                 EFFECT effect = new EFFECT(file);
                 fileParsed++;
             }
-            */
 
-            EFFECT effect = new EFFECT(VSPath + "EFFECT/E002.P");
+
+            //EFFECT effect = new EFFECT(VSPath + "EFFECT/E008.P");
 
             EditorUtility.ClearProgressBar();
         }

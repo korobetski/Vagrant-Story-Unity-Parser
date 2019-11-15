@@ -1,10 +1,8 @@
-﻿using System.IO;
-using UnityEngine;
-using VS.Utils;
+﻿using UnityEngine;
 
 namespace VS.Parser.Effect
 {
-    public class FBT:FileParser
+    public class FBT : FileParser
     {
         private Color32[,] _pallets;
         public Texture2D texture;
@@ -32,7 +30,10 @@ namespace VS.Parser.Effect
             size = width * height;
 
             Color[] clut = new Color[size];
-            for (int i = 0; i < size; ++i) clut[i] = _pallets[0, buffer.ReadByte()];
+            for (int i = 0; i < size; ++i)
+            {
+                clut[i] = _pallets[0, buffer.ReadByte()];
+            }
 
             texture = new Texture2D(width, height, TextureFormat.ARGB32, false);
             texture.SetPixels(clut);

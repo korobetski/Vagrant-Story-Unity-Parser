@@ -428,12 +428,7 @@ namespace VS.Parser
                     AKAO audio = new AKAO();
                     audio.FileName = FileName;
                     audio.UseDebug = true;
-                    audio.Parse(buffer, AKAO.AKAOType.MAP, akaoPtr + lenAKAOSubSection);
-                    if (audio.FileSize > 4)
-                    {
-                        audio.composer.OutputMidiFile();
-                    }
-
+                    audio.Parse(buffer, AKAO.UNKNOWN, akaoPtr + lenAKAOSubSection);
                     buffer.BaseStream.Position = akaoPtr + lenAKAOSubSection;
                 }
 
@@ -869,4 +864,3 @@ namespace VS.Parser
     }
 
 }
- 
