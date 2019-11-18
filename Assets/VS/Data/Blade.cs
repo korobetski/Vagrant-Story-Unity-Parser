@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
-
 
 namespace VS.Data
 {
-    [System.Serializable]
+    [Serializable]
     public class Blade : MonoBehaviour
     {
         public static readonly string[] DaggerBlades = new string[] { "01", "02", "03", "04", "05", "06", "07", "08", "09", "0A", "0B", "0C" };
@@ -21,7 +21,12 @@ namespace VS.Data
         public static List<Blade> list = new List<Blade>();
         public static string JSONlist()
         {
-            return JsonUtility.ToJson(list);
+            string[] slst = new string[list.Count];
+            for (int i = 0; i < list.Count; i++)
+            {
+                slst[i] = list[i].ToJSON();
+            }
+            return string.Concat("[", string.Join(", ", slst), "]");
         }
 
         public static Blade GetBladeByWEP(byte WEPID)
@@ -39,6 +44,8 @@ namespace VS.Data
 
         [SerializeField]
         private string _name = "";
+        [SerializeField]
+        private string _desc = "";
         [SerializeField]
         private byte _ID;
         [SerializeField]
@@ -89,6 +96,7 @@ namespace VS.Data
         public sbyte AGI { get => _AGI; set => _AGI = value; }
         public byte Range { get => _Range; set => _Range = value; }
         public byte Damage { get => _Damage; set => _Damage = value; }
+        public string Desc { get => _desc; set => _desc = value; }
 
         public Blade()
         {
@@ -103,7 +111,7 @@ namespace VS.Data
             _Range = 0;
             _Damage = 0;
         }
-        public Blade(byte[] rawDatas)
+        public Blade(byte[] rawDatas, string name = "", string desc = "")
         {
             // From "MENU/BLADE.SYD"
             //ID|ID.WEP|weapon type|damage type|02|Risk|0000|STR|INT|AGI|00|Range|?|range|always 01
@@ -118,6 +126,10 @@ namespace VS.Data
             _AGI = (sbyte)rawDatas[10];
             _Range = rawDatas[12];
             _Damage = rawDatas[13]; // Not sure about that
+
+
+            _name = name;
+            _desc = desc;
         }
 
         public override string ToString()

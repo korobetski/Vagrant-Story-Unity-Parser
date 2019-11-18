@@ -88,22 +88,26 @@ namespace VS.Parser
                     if (v1 == 0)
                     {
                         _type = AKAOType.SAMPLE;
-                    } else
+                    }
+                    else
                     {
                         if (buffer.BaseStream.Position == 10)
                         {
                             // v1 is the sample collection ID in this case
                             _type = AKAOType.SOUND;
-                        } else
+                        }
+                        else
                         {
                             // E075.P have an AKAO PROG without v3 = 0xC8...
                             _type = AKAOType.PROG;
                         }
                     }
-                } else if (v3 == 0xC8)
+                }
+                else if (v3 == 0xC8)
                 {
                     _type = AKAOType.PROG;
-                } else if (v2 > 0 && v2 == buffer.BaseStream.Length)
+                }
+                else if (v2 > 0 && v2 == buffer.BaseStream.Length)
                 {
                     _type = AKAOType.MUSIC;
                 }

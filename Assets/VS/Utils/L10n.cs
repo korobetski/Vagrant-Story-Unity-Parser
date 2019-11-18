@@ -10,7 +10,6 @@ namespace VS.Utils
 
         public static string Charset(int num)
         {
-            //0D242A3828
             string[] table = new string[256];
             table[0x00] = "";
             table[0x01] = "1";
@@ -138,10 +137,62 @@ namespace VS.Utils
             table[0xA5] = "?";
             table[0xA7] = "-";
             table[0xA8] = "+";
+            table[0xB0] = "&B0 ";
             table[0xB6] = "Lv.";
-            table[0xE7] = "\n";
+            table[0xE7] = "\r\n";
+            table[0xE8] = "\r\n";
+            table[0xEB] = "&EB ";
+            table[0xFA] = " ";
+            table[0xFB] = "\n";
             return table[num];
         }
-    }
 
+
+        public static string Translate(byte[] raw)
+        {
+            string text = "";
+            for (int i = 0; i < raw.Length; i++)
+            {
+                byte c = raw[i];
+                if (c < 0xB0)
+                {
+                    text += Charset(c);
+                }
+                else
+                {
+                    switch (c)
+                    {
+                        case 0xE7:
+                            text += Charset(c);
+                            break;
+                        case 0xE8:
+                            text += Charset(c);
+                            break;
+                        case 0xF8: // ???
+                            text += string.Concat(" (§F8:", raw[i + 1], ") ");
+                            i++;
+                            break;
+                        case 0xFA: // space between words + one byte parameter
+                            int sps = raw[i + 1] / 6;
+                            string[] spaces = new string[sps];
+                            for (int j = 0; j < sps; j++)
+                            {
+                                spaces[j] = " ";
+                            }
+
+                            text += string.Join("", spaces);
+                            i++;
+                            break;
+                        case 0xFB: // new dialog bubble + one byte parameter
+                            text += string.Concat("\n (§FB:", raw[i + 1], ") ");
+                            i++;
+                            break;
+                    }
+                }
+            }
+
+            return text;
+        }
+
+    }
 }

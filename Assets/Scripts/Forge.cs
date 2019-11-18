@@ -181,7 +181,7 @@ public class Forge : MonoBehaviour
     {
         conf = Memory.LoadConfig();
         catCompo = CAT.GetComponent<ClassAffinityType>();
-        ToolBox.FeedDatabases(new string[] { conf.VSPath + "MENU/SHIELD.SYD", conf.VSPath + "MENU/ARMOR.SYD", conf.VSPath + "MENU/BLADE.SYD", conf.VSPath + "MENU/ITEMNAME.BIN", conf.VSPath + "MENU/ITEMHELP.BIN" });
+        //ToolBox.FeedDatabases(new string[] { conf.VSPath + "MENU/SHIELD.SYD", conf.VSPath + "MENU/ARMOR.SYD", conf.VSPath + "MENU/BLADE.SYD", conf.VSPath + "MENU/ITEMNAME.BIN", conf.VSPath + "MENU/ITEMHELP.BIN" });
         Grip.GripList();
         Gem.GemList();
 

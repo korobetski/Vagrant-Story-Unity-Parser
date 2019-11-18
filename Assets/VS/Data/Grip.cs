@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 /*
  * 
@@ -185,13 +186,23 @@ namespace VS.Data
             return null;
         }
 
+        [SerializeField]
         private string _name;
+        [SerializeField]
+        private string _desc = "";
+        [SerializeField]
         private uint _gemSlots;
+        [SerializeField]
         private int _STR;
+        [SerializeField]
         private int _INT;
+        [SerializeField]
         private int _AGI;
+        [SerializeField]
         private int _blunt;
+        [SerializeField]
         private int _edged;
+        [SerializeField]
         private int _piercing;
         public uint _type; // { Guard = 0, Grip = 1, Pole = 2, Bolt = 3};
 

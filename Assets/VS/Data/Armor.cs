@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /*
@@ -102,33 +103,50 @@ FD - Marlenes Ring
 
 namespace VS.Data
 {
-    [System.Serializable]
+    [Serializable]
     public class Armor
     {
         public static List<Armor> list = new List<Armor>();
         public static string JSONlist()
         {
-            return JsonUtility.ToJson(list);
+            string[] slst = new string[list.Count];
+            for (int i = 0; i < list.Count; i++)
+            {
+                slst[i] = list[i].ToJSON();
+            }
+            return string.Concat("[", string.Join(", ", slst), "]");
         }
-
+        [SerializeField]
         private string _name = "";
+        [SerializeField]
+        private string _desc = "";
+        [SerializeField]
         private byte _ID;
+        [SerializeField]
         private byte _WEP;
+        [SerializeField]
         private byte _ArmorType;
-        //private byte _GemSlots;
+        [SerializeField]
+        private byte _GemSlots;
+        [SerializeField]
         private sbyte _STR;
+        [SerializeField]
         private sbyte _INT;
+        [SerializeField]
         private sbyte _AGI;
 
-        public Armor(byte[] rawDatas)
+        public Armor(byte[] rawDatas, string name = "", string desc = "")
         {
             _ID = rawDatas[0];
             _WEP = rawDatas[1];
             _ArmorType = rawDatas[2];
-            //_GemSlots = rawDatas[3];
+            GemSlots = rawDatas[3];
             _STR = (sbyte)rawDatas[4];
             _INT = (sbyte)rawDatas[5];
             _AGI = (sbyte)rawDatas[6];
+
+            _name = name;
+            _desc = desc;
         }
 
         public string Name { get => _name; set => _name = value; }
@@ -138,6 +156,8 @@ namespace VS.Data
         public sbyte STR { get => _STR; set => _STR = value; }
         public sbyte INT { get => _INT; set => _INT = value; }
         public sbyte AGI { get => _AGI; set => _AGI = value; }
+        public byte GemSlots { get => _GemSlots; set => _GemSlots = value; }
+        public string Desc { get => _desc; set => _desc = value; }
 
         public override string ToString()
         {

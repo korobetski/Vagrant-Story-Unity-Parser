@@ -76,6 +76,7 @@
     <Compile Include="Assets\VS\Data\Gem.cs" />
     <Compile Include="Assets\VS\Data\GemEffect.cs" />
     <Compile Include="Assets\VS\Data\Grip.cs" />
+    <Compile Include="Assets\VS\Data\Monster.cs" />
     <Compile Include="Assets\VS\Data\Shield.cs" />
     <Compile Include="Assets\VS\Data\SmithMaterial.cs" />
     <Compile Include="Assets\VS\Entity\ARMRoom.cs" />
@@ -132,6 +133,7 @@
     <Compile Include="Assets\VS\Parser\XA.cs" />
     <Compile Include="Assets\VS\Parser\ZND.cs" />
     <Compile Include="Assets\VS\Parser\ZUD.cs" />
+    <Compile Include="Assets\VS\Utils\JsonHelper.cs" />
     <Compile Include="Assets\VS\Utils\L10n.cs" />
     <Compile Include="Assets\VS\Utils\ToolBox.cs" />
     <Compile Include="Assets\VS\Utils\Util.cs" />

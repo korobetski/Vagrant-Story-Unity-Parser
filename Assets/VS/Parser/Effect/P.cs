@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace VS.Parser.Effect
@@ -218,7 +217,7 @@ namespace VS.Parser.Effect
                 }
             }
             akaoEnds.Add(buffer.BaseStream.Length);
-            for (int i = 0; i< akaoStarts.Count; i++)
+            for (int i = 0; i < akaoStarts.Count; i++)
             {
                 AKAO akaoFx = new AKAO();
                 akaoFx.FileName = string.Concat(FileName, "_akao_", i);

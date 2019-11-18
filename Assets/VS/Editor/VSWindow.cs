@@ -68,6 +68,13 @@ public class VSWindow : EditorWindow
             BuildDatabase();
         }
 
+        bool LoadITEMTrigger = GUILayout.Button(new GUIContent("Load MENU ITEM*.BIN"));
+        if (LoadITEMTrigger && VSPath != "")
+        {
+            BIN itemDB = new BIN();
+            itemDB.BuildItems(VSPath + "MENU/ITEMNAME.BIN", VSPath + "MENU/ITEMHELP.BIN");
+        }
+
         bool LoadARMTrigger = GUILayout.Button(new GUIContent("Load MiniMaps.ARM"));
         if (LoadARMTrigger && VSPath != "")
         {
@@ -385,19 +392,127 @@ public class VSWindow : EditorWindow
 
             EditorUtility.ClearProgressBar();
         }
+
+        bool LoadEVENTTrigger = GUILayout.Button(new GUIContent("Load EVENT/*.EVT"));
+        if (LoadEVENTTrigger && VSPath != "")
+        {
+
+            string[] files = Directory.GetFiles(VSPath + "EVENT/", "*.EVT");
+            float fileToParse = files.Length;
+
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                EVT evt = new EVT(file);
+                fileParsed++;
+            }
+
+
+            EditorUtility.ClearProgressBar();
+        }
+
+        bool LoadGIMTrigger = GUILayout.Button(new GUIContent("Load GIM/*.GIM"));
+        if (LoadGIMTrigger && VSPath != "")
+        {
+
+            string[] files = Directory.GetFiles(VSPath + "GIM/", "*.GIM");
+            float fileToParse = files.Length;
+
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                GIM gim = new GIM(file);
+                fileParsed++;
+            }
+
+
+            EditorUtility.ClearProgressBar();
+        }
+
+        bool LoadMENUBGTrigger = GUILayout.Button(new GUIContent("Load MENU/*BG.BIN"));
+        if (LoadMENUBGTrigger && VSPath != "")
+        {
+
+            string[] files = new string[] { VSPath + "MENU/MAPBG.BIN", VSPath + "MENU/MENUBG.BIN" };
+            float fileToParse = files.Length;
+
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                TIM bg = new TIM();
+                bg.ParseBG(file);
+                fileParsed++;
+            }
+
+
+            EditorUtility.ClearProgressBar();
+        }
+
+        bool LoadDISTrigger = GUILayout.Button(new GUIContent("Load SMALL/*.DIS"));
+        if (LoadDISTrigger && VSPath != "")
+        {
+            string[] files = Directory.GetFiles(VSPath + "SMALL/", "*.DIS");
+            float fileToParse = files.Length;
+
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                DIS dis = new DIS();
+                dis.Parse(file);
+                fileParsed++;
+            }
+
+
+            EditorUtility.ClearProgressBar();
+        }
+
+        bool LoadHFTrigger = GUILayout.Button(new GUIContent("Load SMALL/*.HF"));
+        if (LoadHFTrigger && VSPath != "")
+        {
+            string[] files = Directory.GetFiles(VSPath + "SMALL/", "*.HF0");
+            float fileToParse = files.Length;
+
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                HF0 parser = new HF0();
+                parser.Parse(file);
+                fileParsed++;
+            }
+
+
+            EditorUtility.ClearProgressBar();
+        }
     }
 
 
     private void BuildDatabase()
     {
+        BIN DB = new BIN();
+        List<string>[] texts = DB.BuildItems(VSPath + "MENU/ITEMNAME.BIN", VSPath + "MENU/ITEMHELP.BIN");
+        DB.Parse(VSPath + "SMALL/MON.BIN");
+
         string[] files = Directory.GetFiles(VSPath + "MENU/", "*.SYD");
         foreach (string file in files)
         {
-            Debug.Log(file);
             SYD parser = new SYD();
             //parser.UseDebug = true;
-            parser.Parse(file);
+            parser.Parse(file, texts);
         }
-        Memory.SaveDB();
     }
 }

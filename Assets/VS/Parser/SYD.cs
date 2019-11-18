@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using VS.Data;
+using VS.Utils;
 
 
 // MENU/ARMOR.SYD
@@ -12,9 +13,16 @@ namespace VS.Parser
 {
     public class SYD : FileParser
     {
-        public void Parse(string filePath)
+        public void Parse(string filePath, List<string>[] texts)
         {
             PreParse(filePath);
+
+            KeyValuePair<int, int> bladeIdx = new KeyValuePair<int, int>(0, 0);
+            KeyValuePair<int, int> gripIdx = new KeyValuePair<int, int>(90, 90);
+            KeyValuePair<int, int> shieldIdx = new KeyValuePair<int, int>(121, 0); // shields have no descs  ?
+            KeyValuePair<int, int> armorIdx = new KeyValuePair<int, int>(121, 0); // armors have no descs  ?
+
+
             // Header
             if (UseDebug)
             {
@@ -49,8 +57,11 @@ namespace VS.Parser
                     for (var i = 0; i < 16; i++)
                     {
                         //ID|ID.WEP|armor type 01(shield)|gem slots|STR|INT|AGI|always 00
-                        Shield.list.Add(new Shield(buffer.ReadBytes(8)));
+                        Shield.list.Add(new Shield(buffer.ReadBytes(8), texts[0][shieldIdx.Key + i]));
                     }
+
+                    ToolBox.DirExNorCreate("Assets/Resources/JSON/");
+                    ToolBox.WriteJSON("Assets/Resources/JSON/SHIELD.json", Shield.JSONlist());
                     break;
                 case "ARMOR":
                     //Debug.Log("VS/MENU/ARMOR.SYD");
@@ -59,8 +70,11 @@ namespace VS.Parser
                     for (var i = 0; i < 80; i++)
                     {
                         //ID|ID.WEP|armor type[01-05]|00|STR|INT|AGI|always 00
-                        Armor.list.Add(new Armor(buffer.ReadBytes(8)));
+                        Armor.list.Add(new Armor(buffer.ReadBytes(8), texts[0][armorIdx.Key + i]));
                     }
+
+                    ToolBox.DirExNorCreate("Assets/Resources/JSON/");
+                    ToolBox.WriteJSON("Assets/Resources/JSON/ARMOR.json", Armor.JSONlist());
                     break;
                 case "BLADE":
                     //Debug.Log("VS/MENU/BLADE.SYD");
@@ -72,8 +86,11 @@ namespace VS.Parser
                         // Damage types : 1 = Blunt - 2 = Edged  -  3 = Piercing
                         //22   22         03          02    02  02  0000 23  00  FA  00  06  05   06       01       Holy Win
                         //ID|ID.WEP|weapon type|damage type|02|Risk|0000|STR|INT|AGI|00|Range|?|range|always 01
-                        Blade.list.Add(new Blade(buffer.ReadBytes(16)));
+                        Blade.list.Add(new Blade(buffer.ReadBytes(16), texts[0][bladeIdx.Key + i], texts[1][bladeIdx.Value + i]));
                     }
+
+                    ToolBox.DirExNorCreate("Assets/Resources/JSON/");
+                    ToolBox.WriteJSON("Assets/Resources/JSON/BLADE.json", Blade.JSONlist());
                     break;
             }
         }

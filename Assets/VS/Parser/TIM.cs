@@ -14,6 +14,103 @@ namespace VS.Parser
         public int height;
         public int numColors;
 
+        public void ParseBG(string filePath)
+        {
+            PreParse(filePath);
+
+            switch (FileName)
+            {
+                case ("MAPBG"):
+                    width = 320;
+                    break;
+                case ("MENUBG"):
+                    width = 192;
+                    break;
+
+            }
+            height = Mathf.FloorToInt((FileSize - 512) / width);
+
+            Color[] col = new Color[256];
+            for (int i = 0; i < 256; ++i)
+            {
+                col[i] = ToolBox.BitColorConverter(buffer.ReadUInt16());
+            }
+
+
+            if (FileName == "MENUBG")
+            {
+                List<Color> cluts = new List<Color>();
+                List<Color> cl2 = new List<Color>();
+                while (buffer.BaseStream.Position + 4 < buffer.BaseStream.Length)
+                {
+                    byte[] b = buffer.ReadBytes(4);
+                    byte lt = b[0];
+                    byte rt = b[2];
+                    int blank = lt * 4;
+                    int pix = rt * 4;
+                    if (buffer.BaseStream.Position + pix <= buffer.BaseStream.Length)
+                    {
+
+                        for (uint y = 0; y < blank; y++)
+                        {
+                            cl2.Add(Color.black);
+                        }
+
+                        for (uint y = 0; y < pix; y++)
+                        {
+                            cl2.Add(col[buffer.ReadByte()]);
+                        }
+                    }
+                    if (buffer.BaseStream.Position == buffer.BaseStream.Length)
+                    {
+                        break;
+                    }
+                }
+                for (uint y = 0; y < width; y++)
+                {
+                    List<Color> line = cl2.GetRange((int)y * width, width);
+                    line.Reverse();
+                    cluts.AddRange(line);
+                }
+
+
+                cluts.Reverse();
+
+                height = cluts.Count / width;
+                Texture2D tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
+                tex.SetPixels(cluts.ToArray());
+                tex.Apply();
+
+                byte[] bytes = tex.EncodeToPNG();
+                ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/BG/");
+                File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/BG/" + FileName + width + ".png", bytes);
+            }
+            else
+            {
+
+                List<Color> cluts = new List<Color>();
+                for (uint x = 0; x < height; x++)
+                {
+                    List<Color> cl2 = new List<Color>();
+                    for (uint y = 0; y < width; y++)
+                    {
+                        cl2.Add(col[buffer.ReadByte()]);
+                    }
+                    cl2.Reverse();
+                    cluts.AddRange(cl2);
+                }
+                cluts.Reverse();
+                Texture2D tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
+                tex.SetPixels(cluts.ToArray());
+                tex.Apply();
+
+                byte[] bytes = tex.EncodeToPNG();
+                ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/BG/");
+                File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/BG/" + FileName + ".png", bytes);
+
+            }
+
+        }
 
         public void ParseWEP(BinaryReader buffer)
         {
@@ -134,7 +231,6 @@ namespace VS.Parser
                 textures.Add(tex);
             }
         }
-
         public Texture2D DrawSHP(bool CreatePNG = false)
         {
             Texture2D tex = new Texture2D(width * 2, height, TextureFormat.ARGB32, false);
@@ -155,7 +251,6 @@ namespace VS.Parser
             tex.Compress(true);
             return tex;
         }
-
         public Texture2D DrawPack(bool CreatePNG = false)
         {
             Texture2D tex = new Texture2D(width * 2, height * 4, TextureFormat.ARGB32, false);

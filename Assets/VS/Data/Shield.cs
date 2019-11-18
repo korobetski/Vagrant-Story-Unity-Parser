@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace VS.Data
@@ -23,14 +24,19 @@ namespace VS.Data
         Jazeraint_Shield = 109,
         Dread_Shield = 110
     }
-    [System.Serializable]
+    [Serializable]
     public class Shield : MonoBehaviour
     {
         public static readonly List<string> ShieldIds = new List<string> { "60", "61", "62", "63", "64", "65", "66", "67", "68", "69", "6A", "6B", "6C", "6A", "6E", "6F" };
         public static List<Shield> list = new List<Shield>();
         public static string JSONlist()
         {
-            return JsonUtility.ToJson(list);
+            string[] slst = new string[list.Count];
+            for (int i = 0; i < list.Count; i++)
+            {
+                slst[i] = list[i].ToJSON();
+            }
+            return string.Concat("[", string.Join(", ", slst), "]");
         }
         public static Shield GetShieldByWEP(byte WEPID)
         {
@@ -73,6 +79,8 @@ namespace VS.Data
         [SerializeField]
         private string _name = "";
         [SerializeField]
+        private string _desc = "";
+        [SerializeField]
         private byte _ID;
         [SerializeField]
         private byte _WEP;
@@ -88,7 +96,7 @@ namespace VS.Data
 
         private ShieldType _type = ShieldType.UNARMED;
 
-        public Shield(byte[] rawDatas)
+        public Shield(byte[] rawDatas, string name = "", string desc = "")
         {
             _ID = rawDatas[0];
             _WEP = rawDatas[1];
@@ -97,7 +105,8 @@ namespace VS.Data
             _INT = (sbyte)rawDatas[5];
             _AGI = (sbyte)rawDatas[6];
 
-            //Debug.Log(this.ToString());
+            _name = name;
+            _desc = desc;
         }
 
         public string Name { get => _name; set => _name = value; }
@@ -125,8 +134,7 @@ namespace VS.Data
             get => _type;
             set => _type = value;
         }
-
-
+        public string Desc { get => _desc; set => _desc = value; }
 
         public override string ToString()
         {

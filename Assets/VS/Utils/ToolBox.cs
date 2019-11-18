@@ -252,6 +252,13 @@ namespace VS.Utils
 
             return null;
         }
+
+
+        public static void WriteJSON(string path, string data)
+        {
+            File.WriteAllText(path, data);
+        }
+
         public static void FeedDatabases(string[] DataPaths)
         {
 
@@ -262,8 +269,6 @@ namespace VS.Utils
                     conf.VSPath+"MENU/SHIELD.SYD",
                     conf.VSPath+"MENU/ARMOR.SYD",
                     conf.VSPath+"MENU/BLADE.SYD",
-                    conf.VSPath+"MENU/ITEMNAME.BIN",
-                    conf.VSPath+"MENU/ITEMHELP.BIN",
                     conf.VSPath+"MENU/MCMAN.BIN",
                     conf.VSPath+"MENU/MAINMENU.PRG",
                     conf.VSPath+"MENU/MENU0.PRG", // MENU0.PRG  Spells
@@ -286,6 +291,7 @@ namespace VS.Utils
                     conf.VSPath+"SMALL/MON.BIN"      // Monstres names & descriptions
                 };
             }
+
             foreach (string path in DataPaths)
             {
                 FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
@@ -328,44 +334,8 @@ namespace VS.Utils
                             Blade.list.Add(new Blade(buffer.ReadBytes(16)));
                         }
                         break;
-                    case "ITEMNAME.BIN":
-                        buffer.BaseStream.Position = 0x18;
-                        string sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.itemNames.Add(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
-                        break;
-                    case "ITEMHELP.BIN":
-                        // list of 2 bytes, the second seems to be incremental in a certain way from 0x02 to 0x31
-                        // lots of things i don't know at the begining so let's jump.
-                        buffer.BaseStream.Position = 0x054E;
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.itemDescs.Add(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
-                        break;
                     case "MCMAN.BIN":
-                        sname = "";
+                        string sname = "";
                         while (buffer.BaseStream.Position < buffer.BaseStream.Length)
                         {
                             byte b = buffer.ReadByte();
@@ -652,55 +622,6 @@ namespace VS.Utils
                                 sname = sname + L10n.Charset(b);
                             }
                         }
-                        break;
-                    case "MENUBG.BIN":
-                        // NOT  FONCTIONNAL
-                        /*
-                        buffer.ReadByte();
-
-                        List<Color32> hcolors = new List<Color32>();
-                            for (uint i = 0; i < 308; i++)
-                            {
-                                hcolors.Add(VSHelper.BitColorConverter(buffer.ReadUInt16()));
-                            }
-
-                        int height = 128;
-                        int width = 128;
-                        List<int> cluts = new List<int>();
-
-                        buffer.BaseStream.Position = 0x200;
-                        for (uint x = 0; x < height; x++)
-                        {
-                            for (uint y = 0; y < width; y++)
-                            {
-                                cluts.Add(buffer.ReadByte());
-                            }
-                        }
-
-                        Texture2D texture = new Texture2D(width, height);
-                        List<Color> colors = new List<Color>();
-                        for (int y = 0; y < height; y++)
-                        {
-                            for (int x = 0; x < width; x++)
-                            {
-                                if (cluts[(int)((y * width) + x)] < 308)
-                                {
-                                    colors.Add(hcolors[cluts[(int)((y * width) + x)]]);
-                                }
-                                else
-                                {
-                                    colors.Add(Color.clear);
-                                }
-                            }
-                        }
-
-                        Texture2D tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
-                        tex.SetPixels(colors.ToArray());
-                        tex.Apply();
-                        texture = tex;
-                        byte[] bytes = texture.EncodeToPNG();
-                        File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/MENU/MENUBG.BIN.png", bytes);
-                        */
                         break;
                     case "MON.BIN":
                         sname = "";
