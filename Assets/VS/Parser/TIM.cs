@@ -14,6 +14,99 @@ namespace VS.Parser
         public int height;
         public int numColors;
 
+
+        public void Parse(string filePath)
+        {
+            if (!filePath.EndsWith(".TIM"))
+            {
+                return;
+            }
+
+            PreParse(filePath);
+
+            ushort timH = buffer.ReadUInt16();
+            ushort timTag = buffer.ReadUInt16();
+            byte[] b = buffer.ReadBytes(12);
+
+
+            Color[] col = new Color[256];
+            for (int i = 0; i < 256; ++i)
+            {
+                col[i] = ToolBox.BitColorConverter(buffer.ReadUInt16());
+            }
+
+            width = 256;
+            height = Mathf.FloorToInt((FileSize - 512-20) / width);
+
+            List<Color> cluts = new List<Color>();
+            for (uint x = 0; x < height; x++)
+            {
+                List<Color> cl2 = new List<Color>();
+                for (uint y = 0; y < width; y++)
+                {
+                    cl2.Add(col[buffer.ReadByte()]);
+                }
+                //cl2.Reverse();
+                cluts.AddRange(cl2);
+            }
+            //cluts.Reverse();
+            Texture2D tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
+            tex.SetPixels(cluts.ToArray());
+            tex.Apply();
+
+            byte[] bytes = tex.EncodeToPNG();
+            ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/TIM/");
+            File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/TIM/" + FileName + ".png", bytes);
+        }
+
+        public void ParseIllust(string filePath)
+        {
+            if (!filePath.EndsWith(".BIN"))
+            {
+                return;
+            }
+
+            PreParse(filePath);
+            // i don't know how to decode this for the moment
+
+            /*
+            ushort timH = buffer.ReadUInt16();
+            ushort timTag = buffer.ReadUInt16();
+            byte[] b = buffer.ReadBytes(12);
+            width = buffer.ReadUInt16();
+            height = buffer.ReadUInt16();
+            
+            Color[] col = new Color[256];
+            for (int i = 0; i < 256; ++i)
+            {
+                col[i] = ToolBox.BitColorConverter(buffer.ReadUInt16());
+            }
+            
+            width = 256;
+            height = Mathf.FloorToInt((FileSize -512- 24) / width/2);
+
+            List<Color> cluts = new List<Color>();
+            for (uint x = 0; x < height; x++)
+            {
+                List<Color> cl2 = new List<Color>();
+                for (uint y = 0; y < width; y++)
+                {
+                    cl2.Add(ToolBox.BitColorConverter(buffer.ReadUInt16()));
+                }
+                //cl2.Reverse();
+                cluts.AddRange(cl2);
+            }
+            //cluts.Reverse();
+            Texture2D tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
+            tex.SetPixels(cluts.ToArray());
+            tex.Apply();
+
+            byte[] bytes = tex.EncodeToPNG();
+            ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/ILLUST/");
+            File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/ILLUST/" + FileName + ".png", bytes);
+            */
+        }
+
         public void ParseBG(string filePath)
         {
             PreParse(filePath);

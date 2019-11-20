@@ -15,6 +15,26 @@ namespace VS.Parser
         }
 
 
+        public void Explore(string filePath)
+        {
+            PreParse(filePath);
+                List<byte> bname = new List<byte>();
+                while (buffer.BaseStream.Position < buffer.BaseStream.Length)
+                {
+                    byte b = buffer.ReadByte();
+                    if (b == 0xE7)
+                    {
+                        string inam = L10n.Translate(bname.ToArray());
+                        Debug.Log(string.Concat(inam));
+                        bname = new List<byte>();
+                    }
+                    else
+                    {
+                        bname.Add(b);
+                    }
+                }
+        }
+
         public void Parse(string filePath)
         {
             if (!filePath.EndsWith(".BIN"))
@@ -60,7 +80,7 @@ namespace VS.Parser
                         //Debug.Log(string.Concat(monsterDescs.Count, " : ", inam));
                         inam = inam.Replace("\r\n", " ");
                         monsterDescs.Add(inam);
-                        Monster.list[(int)i].Desc = inam;
+                        Monster.list[(int)i].desc = inam;
                         if (monsterDescs.Count == monsterNames.Count)
                         {
                                 break;

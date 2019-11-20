@@ -36,7 +36,7 @@ namespace VS.Parser.Akao
             ADSR2 = buffer.ReadUInt16();
 
 
-            Debug.Log(string.Concat("AKAOArticulation =>  offset :", sampleOff, "  loopPt : ", loopPt, "  fineTune : ", fineTune, "  unityKey : ", unityKey, "  adr1 : ", ADSR1, "  adr2 : ", ADSR2));
+            //Debug.Log(string.Concat("AKAOArticulation =>  offset :", sampleOff, "  loopPt : ", loopPt, "  fineTune : ", fineTune, "  unityKey : ", unityKey, "  adr1 : ", ADSR1, "  adr2 : ", ADSR2));
         }
 
         internal bool BuildADSR()

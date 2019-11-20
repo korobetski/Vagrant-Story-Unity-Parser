@@ -44,6 +44,7 @@ namespace VS.Parser
             buffer.Close();
             fileStream.Close();
         }
+
         public void Parse(BinaryReader buffer)
         {
             byte[] header = buffer.ReadBytes(4);
@@ -231,14 +232,14 @@ namespace VS.Parser
             for (uint i = 0; i < numFaces; i++)
             {
                 VSFace face = new VSFace();
+                long polyDec = buffer.BaseStream.Position;
                 face.type = buffer.ReadByte();
                 face.size = buffer.ReadByte();
                 face.side = buffer.ReadByte();
                 face.alpha = buffer.ReadByte();
-                long polyDec = buffer.BaseStream.Position - 4;
                 if (UseDebug)
                 {
-                    //Debug.Log("face# " + i + "   face.type : " + face.type + "   face.size : " + face.size + "   face.side : " + face.side + "   face.alpha : " + face.alpha);
+                    Debug.Log(string.Concat("#####   At : ", polyDec, " face# ", i, "   face.type : ", face.type, "   face.size : ", face.size, "   face.side : ", face.side, "   face.alpha : ", face.alpha));
                 }
 
                 uint[] table = new uint[256];
@@ -254,12 +255,7 @@ namespace VS.Parser
                 {
                     if (UseDebug)
                     {
-                        //Debug.Log("####  Unknown face type !");
-                    }
-
-                    if (face.size < 5)
-                    {
-                        face.verticesCount = (uint)face.size;
+                        Debug.Log("####  Unknown face type !");
                     }
                 }
 
@@ -287,6 +283,7 @@ namespace VS.Parser
                 faces.Add(face);
             }
 
+
             // AKAO section
             if (buffer.BaseStream.Position != AKAOPtr)
             {
@@ -300,7 +297,7 @@ namespace VS.Parser
 
 
             uint akaoNum = buffer.ReadUInt32();
-            Debug.Log(string.Concat("akaoNum : ", akaoNum));
+            if (UseDebug) Debug.Log(string.Concat("akaoNum : ", akaoNum));
             uint[] akaoFramesPtr = new uint[akaoNum];
             // one pointer for AKAO header, a second for AKAO datas
             for (uint j = 0; j < akaoNum; j++)
@@ -334,9 +331,6 @@ namespace VS.Parser
 
             }
 
-
-            // skip
-
             // Magic section
             if (buffer.BaseStream.Position != magicPtr)
             {
@@ -356,29 +350,54 @@ namespace VS.Parser
 
             if (UseDebug)
             {
-                Debug.Log("num : " + num);
-                Debug.Log("magicSize : " + magicSize);
-                Debug.Log("num1 : " + num1);
-                Debug.Log("num2 : " + num2);
-                Debug.Log("num3 : " + num3);
+                Debug.Log(string.Concat("Magic   num : ", num, "   magicSize : ", magicSize, "  num1 : " + num1, "  num2 : " + num2, "  num3 : " + num3));
             }
             if (buffer.BaseStream.Position + (magicSize - 12) < buffer.BaseStream.Length)
             {
                 buffer.BaseStream.Position = buffer.BaseStream.Position + (magicSize - 12);
             }
 
+            if (UseDebug) Debug.Log(string.Concat("buffer.BaseStream.Position : ", buffer.BaseStream.Position, "   buffer.BaseStream.Length : ", buffer.BaseStream.Length));
 
-
-            // Textures section
-            tim = new TIM();
-            tim.FileName = FileName;
-            tim.ParseSHP(buffer);
-            texture = tim.DrawSHP(true);
+            if (buffer.BaseStream.Position + 8 < buffer.BaseStream.Length)
+            {
+                // Textures section
+                tim = new TIM();
+                tim.FileName = FileName;
+                tim.ParseSHP(buffer);
+                texture = tim.DrawSHP(true);
+            }
 
             //buffer.Close();
         }
 
+        public void BuildWireframe()
+        {
+            Material linesMaterial = (Material)Resources.Load("Prefabs/ARMLineMaterial", typeof(Material));
+            if (!linesMaterial)
+            {
+                linesMaterial = new Material(Shader.Find("Standard"));
+                linesMaterial.color = new Color32(0x00, 0xA0, 0xFF, 192);
+                AssetDatabase.CreateAsset(linesMaterial, "Assets/Resources/Prefabs/ARMLineMaterial.mat");
+            }
 
+            GameObject wire = new GameObject("wireframe");
+            LineRenderer lines = wire.AddComponent<LineRenderer>();
+            lines.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            lines.receiveShadows = false;
+            lines.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+            lines.material = linesMaterial;
+            lines.startWidth = 0.25f;
+            lines.endWidth = 0.25f;
+            lines.positionCount = (int)(vertices.Count);
+            lines.useWorldSpace = false;
+            Vector3[] linePos = new Vector3[vertices.Count];
+            for (int j = 0; j < vertices.Count; j++)
+            {
+                linePos[j] = vertices[j].position;
+            }
+            lines.SetPositions(linePos);
+        }
 
         public GameObject BuildGameObject()
         {
@@ -415,9 +434,15 @@ namespace VS.Parser
             {
                 for (int j = 0; j < faces[i].verticesCount; j++)
                 {
-                    float u = faces[i].uv[j].x / tim.width;
-                    float v = faces[i].uv[j].y / tim.height;
-                    faces[i].uv[j] = (new Vector2(u, v));
+                    if (tim != null)
+                    {
+                        float u = faces[i].uv[j].x / tim.width;
+                        float v = faces[i].uv[j].y / tim.height;
+                        faces[i].uv[j] = (new Vector2(u, v));
+                    } else
+                    {
+                        faces[i].uv[j] = Vector2.zero;
+                    }
                 }
             }
             Mesh shapeMesh = new Mesh();
@@ -569,15 +594,20 @@ namespace VS.Parser
 
             mesh = shapeMesh;
 
-            texture = tim.textures[0];
-
-            texture.filterMode = FilterMode.Trilinear;
-            texture.anisoLevel = 4;
+            if (tim != null)
+            {
+                texture = tim.textures[0];
+                texture.filterMode = FilterMode.Trilinear;
+                texture.anisoLevel = 4;
 #if UNITY_EDITOR
-            texture.alphaIsTransparency = true;
+                texture.alphaIsTransparency = true;
 #endif
-            texture.wrapMode = TextureWrapMode.Repeat;
-            texture.Compress(true);
+                texture.wrapMode = TextureWrapMode.Repeat;
+                texture.Compress(true);
+            } else
+            {
+                texture = new Texture2D(128, 128);
+            }
 
 
             Shader shader = Shader.Find("Standard");

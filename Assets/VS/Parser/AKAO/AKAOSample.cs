@@ -15,7 +15,7 @@ namespace VS.Parser.Akao
         private uint NumBlocks;
 
         private bool _IsDecompressed = false;
-        public List<byte> WAVDatas;
+        public List<short> WAVDatas;
 
 
         public int loopStatus = -1;
@@ -37,7 +37,7 @@ namespace VS.Parser.Akao
             NumBlocks = (uint)(size / 0x10);
             offset = off;
 
-            Debug.Log(string.Concat("AKAOSample => ", name, "   Size : ", size, "   numBlocks : ", NumBlocks, "   offset : ", offset));
+            //Debug.Log(string.Concat("AKAOSample => ", name, "   Size : ", size, "   numBlocks : ", NumBlocks, "   offset : ", offset));
         }
 
 
@@ -47,11 +47,11 @@ namespace VS.Parser.Akao
             {
                 WAVDatas = DecompressDatas();
             }
-            WAV wav = new WAV(WAVDatas, 1, 1, 44100, 16);
+            WAV wav = new WAV(From16bTo8b(WAVDatas), 1, 1, 44100, 16);
             return wav;
         }
 
-        private List<byte> DecompressDatas()
+        private List<short> DecompressDatas()
         {
             List<short> decomp = new List<short>();
             loopStatus = 0;
@@ -84,7 +84,7 @@ namespace VS.Parser.Akao
                 }
             }
             _IsDecompressed = true;
-            return From16bTo8b(decomp);
+            return decomp;
         }
 
         private List<byte> From16bTo8b(List<short> w16b)

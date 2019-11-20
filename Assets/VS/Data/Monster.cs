@@ -1,10 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 namespace VS.Data
 {
 
+    [System.Serializable]
     public class Monster
     {
         public static List<Monster> list = new List<Monster>();
@@ -20,32 +22,26 @@ namespace VS.Data
 
 
 
-        [SerializeField]
-        private string _name = "";
-        [SerializeField]
-        private string _desc = "";
-        [SerializeField]
-        private uint _id = 0;
-        [SerializeField]
-        private byte _shp1 = 0;
-        [SerializeField]
-        private byte _shp2 = 0;
+        public string name = "";
+        public string desc = "";
+        public uint id = 0;
+        public byte shp1 = 0;
+        public byte shp2 = 0;
 
         public Monster(byte[] rawDatas, uint id, string name = "", string desc = "")
         {
-            _shp1 = rawDatas[0];
-            _shp2 = rawDatas[4];
-            _id = id;
-            _name = name;
-            _desc = desc;
+            shp1 = rawDatas[0];
+            shp2 = rawDatas[4];
+            this.id = id;
+            this.name = name;
+            this.desc = desc;
         }
 
+        public string ToString()
+        {
+            return string.Concat("Monster #", id, " - ", name, " - ", desc, " - ", shp1, " - ", shp2 );
+        }
 
-        public string Name { get => _name; set => _name = value; }
-        public string Desc { get => _desc; set => _desc = value; }
-        public uint Id { get => _id; set => _id = value; }
-        public byte Shp1 { get => _shp1; set => _shp1 = value; }
-        public byte Shp2 { get => _shp2; set => _shp2 = value; }
         public string ToJSON()
         {
             return JsonUtility.ToJson(this);

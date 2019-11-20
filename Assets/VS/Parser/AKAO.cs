@@ -413,7 +413,7 @@ namespace VS.Parser
 
                     //Debug.Log(string.Concat("AKAO PROG : id : ", id, "  tp : ", tp, "  byteLen : ", byteLen));
                     int waveLen = (int)(limit - buffer.BaseStream.Position);
-                    buffer.ReadBytes(waveLen);
+                    if(waveLen >0) buffer.ReadBytes(waveLen);
                     /*
                     */
                     break;
@@ -452,6 +452,8 @@ namespace VS.Parser
         {
             DLS dls = new DLS();
             dls.SetName(FileName + ".dls");
+
+            SF2 sf2 = new SF2();
 
             if (sequencer.instruments != null)
             {
@@ -547,10 +549,23 @@ namespace VS.Parser
                             reg.SetWaveLinkInfo(0, 0, 1, region.sampleNum);
                             DSLInstrument.AddRegion(reg);
 
+
+                            sf2.AddInstrumentBag();
+                            sf2.AddInstrumentGenerator(SF2Generator.Pan, new SF2GeneratorAmount { UAmount = 0x40 });
+                            sf2.AddInstrumentGenerator(SF2Generator.AttackVolEnv, new SF2GeneratorAmount { UAmount = (ushort)articulation.A });
+                            sf2.AddInstrumentGenerator(SF2Generator.DecayVolEnv, new SF2GeneratorAmount { UAmount = (ushort)articulation.D });
+                            sf2.AddInstrumentGenerator(SF2Generator.SustainVolEnv, new SF2GeneratorAmount { UAmount = (ushort)articulation.S });
+                            sf2.AddInstrumentGenerator(SF2Generator.ReleaseVolEnv, new SF2GeneratorAmount { UAmount = (ushort)articulation.R });
                         }
 
 
                         dls.AddInstrument(DSLInstrument);
+
+                        sf2.AddInstrument(instrument.name);
+                        sf2.AddInstrumentModulator();
+                        sf2.AddPreset(instrument.name, (ushort)i, 0);
+                        sf2.AddPresetModulator();
+                        sf2.AddPresetBag();
                     }
 
                     i++;
@@ -565,11 +580,17 @@ namespace VS.Parser
                     nw.SetName(AKAOsmp.name);
                     nw.Riff = false;
                     dls.AddWave(nw);
+
+                    short[] pcm = AKAOsmp.WAVDatas.ToArray();
+                    sf2.AddSample(pcm, AKAOsmp.name, false, 0, 44100, 0, 0);
                 }
             }
 
             ToolBox.DirExNorCreate("Assets/Resources/Sounds/DLS/");
             dls.WriteFile("Assets/Resources/Sounds/DLS/" + FileName + ".dls");
+
+            ToolBox.DirExNorCreate("Assets/Resources/Sounds/SF2/");
+            sf2.Save("Assets/Resources/Sounds/SF2/" + FileName + ".sf2");
         }
     }
 }

@@ -17,7 +17,7 @@ namespace VS.Parser.Akao
         {
             _type = type;
 
-            Debug.Log(string.Concat("AKAOInstrument : ", _type));
+            //Debug.Log(string.Concat("AKAOInstrument : ", _type));
         }
 
         public bool IsDrum()

@@ -47,7 +47,7 @@ namespace VS.Parser.Akao
             unk4 = b[6];
             volume = b[7];
 
-            Debug.Log(string.Concat("AKAORegion : articulationId : ", articulationId, "   lowRange : ", lowRange, "   hiRange : ", hiRange, "   volume : ", volume, "  |  ", unk1, ", ", unk2, ", ", unk3, ", ", unk4));
+            //Debug.Log(string.Concat("AKAORegion : articulationId : ", articulationId, "   lowRange : ", lowRange, "   hiRange : ", hiRange, "   volume : ", volume, "  |  ", unk1, ", ", unk2, ", ", unk3, ", ", unk4));
         }
 
         public void FeedDrum(byte[] b, int key)
@@ -64,7 +64,7 @@ namespace VS.Parser.Akao
             hiRange = lowRange;
             volume = (byte)(attenuation / 127);
 
-            Debug.Log(string.Concat("AKAORegion : articulationId : ", articulationId, " relativeKey : ", relativeKey, "   note : ", lowRange, "   volume : ", volume, "  |  ", unk1, ", ", unk2, ", ", unk3, ", ", unk4));
+            //Debug.Log(string.Concat("AKAORegion : articulationId : ", articulationId, " relativeKey : ", relativeKey, "   note : ", lowRange, "   volume : ", volume, "  |  ", unk1, ", ", unk2, ", ", unk3, ", ", unk4));
         }
     }
 }

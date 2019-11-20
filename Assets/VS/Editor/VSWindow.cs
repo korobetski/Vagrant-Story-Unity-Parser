@@ -3,6 +3,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using VS.Core;
+using VS.Format;
 using VS.Parser;
 
 public class VSWindow : EditorWindow
@@ -126,6 +127,8 @@ public class VSWindow : EditorWindow
             float fileToParse = files.Length;
             float fileParsed = 0f;
 
+
+            // excp = list of models with a weird polygons section, impossible to build rigth now
             List<string> excp = new List<string>();
             excp.Add("26.SHP"); // 26.SHP is a Mimic : http://chrysaliswiki.com/bestiary:mimic#VS
             excp.Add("3A.SHP"); // a dragon maybe the first Wyvern like Z006U00.ZUD
@@ -154,18 +157,6 @@ public class VSWindow : EditorWindow
             excp.Add("C2.SHP"); // Stone
             excp.Add("C3.SHP"); // Stone
 
-            List<string> fatal = new List<string>();
-            fatal.Add("50.SHP");
-            fatal.Add("6D.SHP");
-            fatal.Add("7D.SHP");
-            fatal.Add("91.SHP");
-            fatal.Add("A4.SHP");
-            fatal.Add("A5.SHP");
-            fatal.Add("AB.SHP");
-            fatal.Add("AF.SHP");
-            fatal.Add("B0.SHP");
-            fatal.Add("C6.SHP");
-
             foreach (string file in files)
             {
                 string[] h = file.Split("/"[0]);
@@ -185,7 +176,7 @@ public class VSWindow : EditorWindow
                     golemPrefab.GetComponentInChildren<SkinnedMeshRenderer>().sharedMaterial.mainTexture = parser.texture;
                     AssetDatabase.SaveAssets();
                 }
-                else if (!excp.Contains(filename) && !fatal.Contains(filename))
+                else if (!excp.Contains(filename))
                 {
                     SHP parser = new SHP();
                     //parser.UseDebug = true;
@@ -194,25 +185,18 @@ public class VSWindow : EditorWindow
                 }
                 else
                 {
-                    if (!fatal.Contains(filename))
-                    {
                         SHP parser = new SHP();
-                        parser.UseDebug = true;
+                        //parser.UseDebug = true;
                         parser.Parse(file);
                         //parser.buildPrefab();
-                    }
-                    else
-                    {
-                        // cannot parse fatal files
-                    }
                 }
                 fileParsed++;
             }
-
+            
             /*
             SHP parser = new SHP();
-            parser.UseDebug = true;
-            parser.Parse(VSPath + "OBJ/00.SHP");
+            //parser.UseDebug = true;
+            parser.Parse(VSPath + "OBJ/A4.SHP");
             parser.BuildPrefab();
             */
             EditorUtility.ClearProgressBar();
@@ -221,12 +205,11 @@ public class VSWindow : EditorWindow
         bool LoadZUDTrigger = GUILayout.Button(new GUIContent("Load Zones Units Datas.ZUD"));
         if (LoadZUDTrigger && VSPath != "")
         {
-
-            BuildDatabase();
             string[] files = Directory.GetFiles(VSPath + "MAP/", "*.ZUD");
             float fileToParse = files.Length;
             float fileParsed = 0f;
 
+            // excp = list of models with a weird polygons section, impossible to build rigth now
             List<string> excp = new List<string>();
             excp.Add("Z006U00.ZUD");
             excp.Add("Z050U00.ZUD");
@@ -237,18 +220,14 @@ public class VSWindow : EditorWindow
             excp.Add("Z055U04.ZUD");
             excp.Add("Z055U05.ZUD");
             excp.Add("Z234U16.ZUD");
-
-
-            List<string> fatal = new List<string>();
-            fatal.Add("Z027U04.ZUD");
-
+            
             foreach (string file in files)
             {
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
 
-                if (!excp.Contains(filename) && !fatal.Contains(filename))
+                if (!excp.Contains(filename))
                 {
                     ZUD parser = new ZUD();
                     //parser.UseDebug = true;
@@ -257,20 +236,19 @@ public class VSWindow : EditorWindow
                 }
                 else
                 {
-                    if (!fatal.Contains(filename))
-                    {
-                        ZUD parser = new ZUD();
-                        parser.UseDebug = true;
-                        parser.Parse(file);
-                    }
-                    else
-                    {
-                        // cannot parse fatal files
-                    }
+                    ZUD parser = new ZUD();
+                    //parser.UseDebug = true;
+                    parser.Parse(file);
                 }
 
                 fileParsed++;
             }
+            
+            /*
+            ZUD parser = new ZUD();
+            parser.UseDebug = true;
+            parser.Parse(VSPath + "MAP/Z006U00.ZUD");
+            */
             EditorUtility.ClearProgressBar();
         }
 
@@ -304,37 +282,31 @@ public class VSWindow : EditorWindow
             EditorUtility.ClearProgressBar();
         }
 
-        /*
-                bool LoadAKAOTrigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE*.DAT"));
-                if (LoadAKAOTrigger && VSPath != "")
-                {
-
-                    string[] files = Directory.GetFiles(VSPath + "SOUND/", "*.DAT");
-                    float fileToParse = files.Length;
-            
-                    float fileParsed = 0;
-                    foreach (string file in files)
-                    {
-                        string[] h = file.Split("/"[0]);
-                        string filename = h[h.Length - 1];
-                        EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                        AKAO parser = new AKAO();
-                        parser.UseDebug = true;
-                        parser.Parse(file, AKAO.SOUND);
-                        fileParsed++;
-                    }
-                    
-
-
-
+        
+        bool LoadAKAOTrigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE*.DAT"));
+        if (LoadAKAOTrigger && VSPath != "")
+        {
+            string[] files = Directory.GetFiles(VSPath + "SOUND/", "*.DAT");
+            float fileToParse = files.Length;
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                AKAO parser = new AKAO();
+                //parser.UseDebug = true;
+                parser.Parse(file, AKAO.SOUND);
+                fileParsed++;
+            }
 
             //AKAO parser = new AKAO();
             //parser.UseDebug = true;
             //parser.Parse(VSPath + "SOUND/WAVE0088.DAT", AKAO.SOUND);
 
             EditorUtility.ClearProgressBar();
-                }
-        */
+        }
+        /*
         bool LoadAKAO2Trigger = GUILayout.Button(new GUIContent("Load Akao MUSIC/MUSIC*.DAT"));
         if (LoadAKAO2Trigger && VSPath != "")
         {
@@ -358,19 +330,19 @@ public class VSWindow : EditorWindow
                 fileParsed++;
             }
 
-            /*
-            AKAO parser = new AKAO();
+            
+            //AKAO parser = new AKAO();
             //parser.UseDebug = true;
-            parser.Parse(VSPath + "MUSIC/MUSIC004.DAT", AKAO.MUSIC);
-            if (parser.FileSize > 4)
-            {
-                parser.composer.OutputMidiFile();
-            }
-            */
+            //parser.Parse(VSPath + "MUSIC/MUSIC004.DAT", AKAO.MUSIC);
+            //if (parser.FileSize > 4)
+            //{
+                //parser.composer.OutputMidiFile();
+            //}
+            
             EditorUtility.ClearProgressBar();
         }
-
-        bool LoadEFFECTTrigger = GUILayout.Button(new GUIContent("Load Akao EFFECT/E0*.P, E0*.FBC, E0*.FBT"));
+        */
+        bool LoadEFFECTTrigger = GUILayout.Button(new GUIContent("Load EFFECT/E0*.P, E0*.FBC, E0*.FBT"));
         if (LoadEFFECTTrigger && VSPath != "")
         {
 
@@ -478,7 +450,7 @@ public class VSWindow : EditorWindow
             EditorUtility.ClearProgressBar();
         }
 
-        bool LoadHFTrigger = GUILayout.Button(new GUIContent("Load SMALL/*.HF"));
+        bool LoadHFTrigger = GUILayout.Button(new GUIContent("Load InGame Help SMALL/*.HF"));
         if (LoadHFTrigger && VSPath != "")
         {
             string[] files = Directory.GetFiles(VSPath + "SMALL/", "*.HF0");
@@ -498,6 +470,71 @@ public class VSWindow : EditorWindow
 
             EditorUtility.ClearProgressBar();
         }
+        bool LoadTIMTrigger = GUILayout.Button(new GUIContent("BG/*.TIM"));
+        if (LoadTIMTrigger && VSPath != "")
+        {
+            string[] files = Directory.GetFiles(VSPath + "BG/", "*.TIM");
+            float fileToParse = files.Length;
+
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                TIM parser = new TIM();
+                parser.Parse(file);
+                fileParsed++;
+            }
+
+
+            EditorUtility.ClearProgressBar();
+        }
+        /*
+        bool LoadILLUSTTrigger = GUILayout.Button(new GUIContent("ENDING/ILLUST*.BIN"));
+        if (LoadILLUSTTrigger && VSPath != "")
+        {
+            // not working yet
+            string[] files = Directory.GetFiles(VSPath + "ENDING/", "*.BIN");
+            float fileToParse = files.Length;
+
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                TIM parser = new TIM();
+                parser.ParseIllust(file);
+                fileParsed++;
+            }
+
+
+            EditorUtility.ClearProgressBar();
+        }
+        */
+        /*
+        bool LoadEXPLOTrigger = GUILayout.Button(new GUIContent("Explore..."));
+        if (LoadEXPLOTrigger && VSPath != "")
+        {
+            //BIN parser = new BIN();
+            //parser.Explore(VSPath + "SLES_027.55"); // spell and skills
+            // "BATTLE/INITBTL.PRG" // Fandango
+            //parser.Explore(VSPath + "BATTLE/BOG.DAT");
+
+
+            SF2 sf2 = new SF2(Application.dataPath + "/Resources/Sounds/SF2/Akao Seq.sf2");
+            Debug.Log("IBAGSubChunk : " + sf2.HydraChunk.IBAGSubChunk);
+            Debug.Log("IGENSubChunk : " + sf2.HydraChunk.IGENSubChunk);
+            Debug.Log("IMODSubChunk : " + sf2.HydraChunk.IMODSubChunk);
+            Debug.Log("INSTSubChunk : " + sf2.HydraChunk.INSTSubChunk);
+            Debug.Log("PBAGSubChunk : " + sf2.HydraChunk.PBAGSubChunk);
+            Debug.Log("PGENSubChunk : " + sf2.HydraChunk.PGENSubChunk);
+            Debug.Log("PHDRSubChunk : " + sf2.HydraChunk.PHDRSubChunk);
+            Debug.Log("PMODSubChunk : " + sf2.HydraChunk.PMODSubChunk);
+            Debug.Log("SHDRSubChunk : " + sf2.HydraChunk.SHDRSubChunk);
+        }
+        */
     }
 
 

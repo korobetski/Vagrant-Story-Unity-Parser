@@ -120,7 +120,7 @@ namespace VS.Parser
                 }
                 zudShape = new SHP();
                 zudShape.FileName = FileName + "_ZSHP";
-                //zudShape.debugger = debugger;
+                zudShape.UseDebug = UseDebug;
                 zudShape.Parse(buffer);
             }
 
