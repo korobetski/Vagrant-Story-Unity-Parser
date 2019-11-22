@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace VS.Parser.Effect
 {
@@ -29,20 +30,22 @@ namespace VS.Parser.Effect
             height *= pad;
             size = width * height;
 
-            Color[] clut = new Color[size];
-            for (int i = 0; i < size; ++i)
+            List<Color> cluts = new List<Color>();
+            for (uint x = 0; x < height; x++)
             {
-                clut[i] = _pallets[0, buffer.ReadByte()];
+                List<Color> cl2 = new List<Color>();
+                for (uint y = 0; y < width; y++)
+                {
+                    cl2.Add(_pallets[0, buffer.ReadByte()]);
+                }
+                cl2.Reverse();
+                cluts.AddRange(cl2);
             }
+            cluts.Reverse();
 
             texture = new Texture2D(width, height, TextureFormat.ARGB32, false);
-            texture.SetPixels(clut);
+            texture.SetPixels(cluts.ToArray());
             texture.Apply();
-
-            //Effects
-            /*
-            */
-
         }
     }
 }

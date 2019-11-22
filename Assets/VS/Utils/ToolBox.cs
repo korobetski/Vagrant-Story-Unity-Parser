@@ -56,6 +56,33 @@ namespace VS.Utils
 
             return null;
         }
+
+        internal static Color[] ExpandColors(Color[] colors, ushort? count = null)
+        {
+            Color[] newColors = new Color[colors.Length*2];
+            for (var i = 0; i < colors.Length; i++)
+            {
+                newColors[i * 2] = colors[i];
+                if (i < colors.Length-1)
+                {
+                    newColors[i * 2 + 1] = Color.Lerp(colors[i],colors[i + 1], 0.5f);
+                } else
+                {
+                    newColors[i * 2 + 1] = Color.Lerp(colors[i], Color.black, 0.5f);
+                }
+            }
+
+            if (count != null)
+            {
+                if (newColors.Length < count)
+                {
+                    newColors = ExpandColors(newColors, count);
+                }
+            }
+
+            return newColors;
+        }
+
         public static Quaternion quatFromAxisAnle(Vector3 axis, float angle)
         {
             Quaternion q = new Quaternion(axis.x * Mathf.Sin(angle / 2), axis.y * Mathf.Sin(angle / 2), axis.z * Mathf.Sin(angle / 2), Mathf.Cos(angle / 2));
@@ -261,15 +288,11 @@ namespace VS.Utils
 
         public static void FeedDatabases(string[] DataPaths)
         {
-
+            Debug.Log("FeedDatabases");
             VSPConfig conf = Memory.LoadConfig();
             if (DataPaths == null)
             {
                 DataPaths = new string[]{
-                    conf.VSPath+"MENU/SHIELD.SYD",
-                    conf.VSPath+"MENU/ARMOR.SYD",
-                    conf.VSPath+"MENU/BLADE.SYD",
-                    conf.VSPath+"MENU/MCMAN.BIN",
                     conf.VSPath+"MENU/MAINMENU.PRG",
                     conf.VSPath+"MENU/MENU0.PRG", // MENU0.PRG  Spells
                     conf.VSPath+"MENU/MENU1.PRG", // MENU1.PRG  Break arts
@@ -287,8 +310,6 @@ namespace VS.Utils
                     conf.VSPath+"MENU/MENUE.PRG", // MENU9.PRG  Game Help
                     conf.VSPath+"MENU/MENUF.PRG", // MENU9.PRG  After boss roulette
                     conf.VSPath+"MENU/MENU12.BIN", // Forge
-                    conf.VSPath+"MENU/MENUBG.BIN",
-                    conf.VSPath+"SMALL/MON.BIN"      // Monstres names & descriptions
                 };
             }
 
@@ -301,352 +322,101 @@ namespace VS.Utils
 
                 switch (h[h.Length - 1])
                 {
-                    case "SHIELD.SYD":
-                        //Debug.Log("VS/MENU/SHIELD.SYD");
-                        Shield.list = new List<Shield>();
-                        buffer.BaseStream.Position = 0x0178;
-                        for (var i = 0; i < 16; i++)
-                        {
-                            //ID|ID.WEP|armor type 01(shield)|gem slots|STR|INT|AGI|always 00
-                            Shield.list.Add(new Shield(buffer.ReadBytes(8)));
-                        }
-                        break;
-                    case "ARMOR.SYD":
-                        //Debug.Log("VS/MENU/ARMOR.SYD");
-                        Armor.list = new List<Armor>();
-                        buffer.BaseStream.Position = 0x1498;
-                        for (var i = 0; i < 80; i++)
-                        {
-                            //ID|ID.WEP|armor type[01-05]|00|STR|INT|AGI|always 00
-                            Armor.list.Add(new Armor(buffer.ReadBytes(8)));
-                        }
-                        break;
-                    case "BLADE.SYD":
-                        //Debug.Log("VS/MENU/BLADE.SYD");
-                        Blade.list = new List<Blade>();
-                        Blade.list.Add(new Blade());
-                        buffer.BaseStream.Position = 0x2DE0;
-                        for (var i = 0; i < 90; i++)
-                        {
-                            // Damage types : 1 = Blunt - 2 = Edged  -  3 = Piercing
-                            //22   22         03          02    02  02  0000 23  00  FA  00  06  05   06       01       Holy Win
-                            //ID|ID.WEP|weapon type|damage type|02|Risk|0000|STR|INT|AGI|00|Range|?|range|always 01
-                            Blade.list.Add(new Blade(buffer.ReadBytes(16)));
-                        }
-                        break;
-                    case "MCMAN.BIN":
-                        string sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                    case "MAINMENU.PRG":
+                        Debug.Log("MAINMENU");
+                        SeekText(buffer);
                         break;
                     case "MENU0.PRG":
-                        //Debug.Log("MENU0");
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENU0");
+                        SeekText(buffer);
                         break;
                     case "MENU1.PRG":
-                        //Debug.Log("MENU1");
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENU1");
+                        SeekText(buffer);
                         break;
                     case "MENU2.PRG":
-                        //Debug.Log("MENU2");
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENU2");
+                        SeekText(buffer);
                         break;
                     case "MENU3.PRG":
-                        //Debug.Log("MENU3");
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENU3");
+                        SeekText(buffer);
                         break;
                     case "MENU4.PRG":
-                        //Debug.Log("MENU4");
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENU4");
+                        SeekText(buffer);
                         break;
                     case "MENU5.PRG":
-                        //Debug.Log("MENU5");
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENU5");
+                        SeekText(buffer);
                         break;
                     case "MENU7.PRG":
-                        //Debug.Log("MENU7");
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENU7");
+                        SeekText(buffer);
                         break;
-                    case "VMENU8.PRG":
-                        //Debug.Log("MENU8");
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                    case "MENU8.PRG":
+                        Debug.Log("MENU8");
+                        SeekText(buffer);
                         break;
                     case "MENU9.PRG":
-                        //Debug.Log("MENU9");
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENU9");
+                        SeekText(buffer);
                         break;
                     case "MENUB.PRG":
-                        //Debug.Log("MENUB");
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENUB");
+                        SeekText(buffer);
                         break;
                     case "MENUC.PRG":
-                        //Debug.Log("MENUC");
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENUC");
+                        SeekText(buffer);
                         break;
                     case "MENUD.PRG":
-                        //Debug.Log("MENUD");
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENUD");
+                        SeekText(buffer);
                         break;
                     case "MENUE.PRG":
-                        //Debug.Log("MENUE");
-                        sname = "";
-                        buffer.BaseStream.Position = 0x1000;
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENUE");
+                        SeekText(buffer);
                         break;
                     case "MENUF.PRG":
-                        //Debug.Log("MENUF");
-                        sname = "";
-                        buffer.BaseStream.Position = 0x1000;
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENUF");
+                        SeekText(buffer);
                         break;
                     case "MENU12.BIN":
-                        //Debug.Log("MENU12");
                         // FORGE MENU
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
-                        break;
-                    case "MON.BIN":
-                        sname = "";
-                        while (buffer.BaseStream.Position < buffer.BaseStream.Length)
-                        {
-                            byte b = buffer.ReadByte();
-                            if (b == 0xE7)
-                            {
-                                L10n.menu.Add(sname);
-                                //Debug.Log(sname);
-                                sname = "";
-                            }
-                            else
-                            {
-                                sname = sname + L10n.Charset(b);
-                            }
-                        }
+                        Debug.Log("MENU12");
+                        SeekText(buffer);
                         break;
                 }
+
 
                 buffer.Close();
                 fileStream.Close();
             }
+        }
 
+        private static void SeekText(BinaryReader buffer)
+        {
 
+            List<byte> bname = new List<byte>();
+            while (buffer.BaseStream.Position < buffer.BaseStream.Length)
+            {
+                byte b = buffer.ReadByte();
+                if (b == 0xE7)
+                {
+                    string inam = L10n.Translate(bname.ToArray());
+                    /*
+                    Debug.Log(string.Concat((buffer.BaseStream.Position - bname.Count), "   at   :   ", inam
+                        ,"\r\nbytes : ", BitConverter.ToString(bname.ToArray()) 
+                        ));
+                        */
+                    bname = new List<byte>();
+                }
+                else
+                {
+                    bname.Add(b);
+                }
+            }
         }
 
         public static string[] GetZNDRoomList(uint ZNDId)

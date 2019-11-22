@@ -5,6 +5,7 @@ using UnityEngine;
 using VS.Core;
 using VS.Format;
 using VS.Parser;
+using VS.Utils;
 
 public class VSWindow : EditorWindow
 {
@@ -513,7 +514,7 @@ public class VSWindow : EditorWindow
             EditorUtility.ClearProgressBar();
         }
         */
-        /*
+        
         bool LoadEXPLOTrigger = GUILayout.Button(new GUIContent("Explore..."));
         if (LoadEXPLOTrigger && VSPath != "")
         {
@@ -523,18 +524,29 @@ public class VSWindow : EditorWindow
             //parser.Explore(VSPath + "BATTLE/BOG.DAT");
 
 
-            SF2 sf2 = new SF2(Application.dataPath + "/Resources/Sounds/SF2/Akao Seq.sf2");
-            Debug.Log("IBAGSubChunk : " + sf2.HydraChunk.IBAGSubChunk);
-            Debug.Log("IGENSubChunk : " + sf2.HydraChunk.IGENSubChunk);
-            Debug.Log("IMODSubChunk : " + sf2.HydraChunk.IMODSubChunk);
-            Debug.Log("INSTSubChunk : " + sf2.HydraChunk.INSTSubChunk);
-            Debug.Log("PBAGSubChunk : " + sf2.HydraChunk.PBAGSubChunk);
-            Debug.Log("PGENSubChunk : " + sf2.HydraChunk.PGENSubChunk);
-            Debug.Log("PHDRSubChunk : " + sf2.HydraChunk.PHDRSubChunk);
-            Debug.Log("PMODSubChunk : " + sf2.HydraChunk.PMODSubChunk);
-            Debug.Log("SHDRSubChunk : " + sf2.HydraChunk.SHDRSubChunk);
+            //SF2 sf2 = new SF2(Application.dataPath + "/Resources/Sounds/SF2/Akao Seq.sf2");
+            //Debug.Log("IBAGSubChunk : " + sf2.HydraChunk.IBAGSubChunk);
+            //Debug.Log("IGENSubChunk : " + sf2.HydraChunk.IGENSubChunk);
+            //Debug.Log("IMODSubChunk : " + sf2.HydraChunk.IMODSubChunk);
+            //Debug.Log("INSTSubChunk : " + sf2.HydraChunk.INSTSubChunk);
+            //Debug.Log("PBAGSubChunk : " + sf2.HydraChunk.PBAGSubChunk);
+            //Debug.Log("PGENSubChunk : " + sf2.HydraChunk.PGENSubChunk);
+            //Debug.Log("PHDRSubChunk : " + sf2.HydraChunk.PHDRSubChunk);
+            //Debug.Log("PMODSubChunk : " + sf2.HydraChunk.PMODSubChunk);
+            //Debug.Log("SHDRSubChunk : " + sf2.HydraChunk.SHDRSubChunk);
+            /*
+            string[] files = Directory.GetFiles(VSPath + "MENU/", "*.PRG");
+            ToolBox.FeedDatabases(files);
+            */
+
+            PRG parser = new PRG();
+            //parser.Explore(VSPath + "SLES_027.55"); // spell and skills
+            //parser.Parse(VSPath + "TITLE/TITLE.PRG"); // spell and skills
+            //parser.Parse(VSPath + "ENDING/ENDING.PRG");
+            parser.Parse(VSPath + "BATTLE/BATTLE.PRG");
+            parser.Parse(VSPath + "BATTLE/INITBTL.PRG");
         }
-        */
+
     }
 
 

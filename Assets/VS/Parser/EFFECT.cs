@@ -58,17 +58,14 @@ namespace VS.Parser
                     pack.wrapMode = TextureWrapMode.Repeat;
 
                     byte[] bytes = pack.EncodeToPNG();
-                    ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/Effects/");
-                    File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Effects/" + name + ".png", bytes);
+                    ToolBox.DirExNorCreate(Application.dataPath + "/Resources/Textures/Effects/");
+                    File.WriteAllBytes(Application.dataPath + "/Resources/Textures/Effects/" + name + ".png", bytes);
                 }
                 else
                 {
                     // no FBC = no FBT
                 }
-
-
             }
-
         }
     }
 }

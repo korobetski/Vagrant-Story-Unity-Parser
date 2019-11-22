@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using VS.Data;
 using VS.Utils;
@@ -18,6 +19,7 @@ namespace VS.Parser
         public void Explore(string filePath)
         {
             PreParse(filePath);
+            
                 List<byte> bname = new List<byte>();
                 while (buffer.BaseStream.Position < buffer.BaseStream.Length)
                 {
@@ -33,6 +35,7 @@ namespace VS.Parser
                         bname.Add(b);
                     }
                 }
+                
         }
 
         public void Parse(string filePath)

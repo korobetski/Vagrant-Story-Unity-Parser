@@ -72,14 +72,23 @@ namespace VS.Entity
                 uint c = buffer.ReadByte();
                 uint l = ((c & 0xF0) >> 4);
                 uint r = (c & 0x0F);
-                pixels[i * 2] = colors[r];
-                pixels[i * 2 + 1] = colors[l];
+                Color32 cr = colors[r];
+                //cr.a = AlphaFromGrayscale(cr);
+                Color32 cl = colors[l];
+                //cl.a = AlphaFromGrayscale(cl);
+                pixels[i * 2] = cr;
+                pixels[i * 2 + 1] = cl;
             }
 
             Texture2D tex = new Texture2D((int)width * 4, (int)height);
             tex.SetPixels32(pixels);
             tex.Apply();
             return tex;
+        }
+
+        private byte AlphaFromGrayscale(Color32 cr)
+        {
+            return (byte)Mathf.Round(cr.r+cr.g+cr.b/3);
         }
     }
 }
