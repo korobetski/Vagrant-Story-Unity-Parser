@@ -37,7 +37,7 @@ namespace VS.Parser
             int pal = buffer.ReadInt16(); // num of 256 col pallets (0 means no pallet)
             int pal2 = buffer.ReadInt16(); // num of 16 col pallets (0 means 1 if there is no other pallet)
             pal2++;
-            Debug.Log(FileName + "  timH : " + timH + "  ptr : " + ptr+ "   pal : " + pal + "   pal2 : " + pal2);
+            Debug.Log(FileName + "  timH : " + timH + "  ptr : " + ptr + "   pal : " + pal + "   pal2 : " + pal2);
 
             buffer.BaseStream.Position = 0xA8;
             switch (FileName)
@@ -182,7 +182,7 @@ namespace VS.Parser
                 pallets16[i] = col;
             }
             buffer.ReadBytes(32); // padding between 16 col & 256 col pallets
-            if (pal>1)
+            if (pal > 1)
             {
                 buffer.ReadBytes(32);
             }
@@ -237,7 +237,7 @@ namespace VS.Parser
                     File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/GIM/" + FileName + "_4b_" + j + ".png", bytes);
                 }
             }
-            
+
             for (int j = 0; j < pallets256.Length; j++)
             {
                 buffer.BaseStream.Position = pixPtr;

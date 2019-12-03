@@ -118,6 +118,7 @@ namespace VS.Data
                 _WEP = value;
                 Shield db = GetShieldByWEP(_WEP);
                 _name = db.Name;
+                _desc = db.Desc;
                 _ID = db.ID;
                 _GemSlots = db.GemSlots;
                 _STR = db.STR;

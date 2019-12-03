@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using VS.Core;
-using VS.Data;
 namespace VS.Utils
 {
     public class ToolBox
@@ -59,14 +58,15 @@ namespace VS.Utils
 
         internal static Color[] ExpandColors(Color[] colors, ushort? count = null)
         {
-            Color[] newColors = new Color[colors.Length*2];
+            Color[] newColors = new Color[colors.Length * 2];
             for (var i = 0; i < colors.Length; i++)
             {
                 newColors[i * 2] = colors[i];
-                if (i < colors.Length-1)
+                if (i < colors.Length - 1)
                 {
-                    newColors[i * 2 + 1] = Color.Lerp(colors[i],colors[i + 1], 0.5f);
-                } else
+                    newColors[i * 2 + 1] = Color.Lerp(colors[i], colors[i + 1], 0.5f);
+                }
+                else
                 {
                     newColors[i * 2 + 1] = Color.Lerp(colors[i], Color.black, 0.5f);
                 }

@@ -75,6 +75,7 @@ namespace VS.Parser
 
                     ToolBox.DirExNorCreate("Assets/Resources/JSON/");
                     ToolBox.WriteJSON("Assets/Resources/JSON/ARMOR.json", Armor.JSONlist());
+                    ToolBox.WriteJSON("Assets/Resources/JSON/ARMOR.txt", Armor.CSlist());
                     break;
                 case "BLADE":
                     //Debug.Log("VS/MENU/BLADE.SYD");
@@ -91,6 +92,7 @@ namespace VS.Parser
 
                     ToolBox.DirExNorCreate("Assets/Resources/JSON/");
                     ToolBox.WriteJSON("Assets/Resources/JSON/BLADE.json", Blade.JSONlist());
+                    ToolBox.WriteJSON("Assets/Resources/JSON/BLADE.txt", Blade.CSlist());
                     break;
             }
         }

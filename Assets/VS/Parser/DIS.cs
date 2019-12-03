@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using VS.Utils;
@@ -33,27 +32,27 @@ namespace VS.Parser
             if (FileName.StartsWith("ENDSCR"))
             {
                 width = 320;
-                height = (int)(FileSize - 16) / width/2;
-                    List<Color> gim = new List<Color>();
+                height = (int)(FileSize - 16) / width / 2;
+                List<Color> gim = new List<Color>();
 
-                    for (uint x = 0; x < height; x++)
+                for (uint x = 0; x < height; x++)
+                {
+                    List<Color> cl2 = new List<Color>();
+                    for (uint y = 0; y < width; y++)
                     {
-                        List<Color> cl2 = new List<Color>();
-                        for (uint y = 0; y < width; y++)
-                        {
                         cl2.Add(ToolBox.BitColorConverter(buffer.ReadUInt16()));
                     }
-                        cl2.Reverse();
-                        gim.AddRange(cl2);
-                    }
-                    gim.Reverse();
-                    Texture2D texture = new Texture2D(width , height, TextureFormat.ARGB32, false);
-                    texture.SetPixels(gim.ToArray());
-                    texture.Apply();
-                    byte[] bytes = texture.EncodeToPNG();
-                    ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/DIS/");
-                    File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/DIS/" + FileName + ".png", bytes);
-                
+                    cl2.Reverse();
+                    gim.AddRange(cl2);
+                }
+                gim.Reverse();
+                Texture2D texture = new Texture2D(width, height, TextureFormat.ARGB32, false);
+                texture.SetPixels(gim.ToArray());
+                texture.Apply();
+                byte[] bytes = texture.EncodeToPNG();
+                ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/DIS/");
+                File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/DIS/" + FileName + ".png", bytes);
+
             }
             else
             {

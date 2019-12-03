@@ -383,14 +383,18 @@ namespace VS.Parser
             weaponMesh.triangles = meshTriangles.ToArray();
             weaponMesh.uv = meshTrianglesUV.ToArray();
             weaponMesh.boneWeights = meshWeights.ToArray();
+            weaponMesh.RecalculateNormals();
+            weaponMesh.RecalculateTangents();
+            weaponMesh.RecalculateBounds();
+            weaponMesh.Optimize();
 
             Shader shader = Shader.Find("Standard");
             Material mat = new Material(shader);
             mat.name = FileName + "_mat";
             mat.SetTexture("_MainTex", texture);
             mat.SetTextureScale("_MainTex", new Vector2(0.5f, 0.25f));
-            float x = (_idSmiMat - 1 > 4) ? (float)0.5 : 0;
-            float y = (_idSmiMat - 1 % 2) * (float)0.25;
+            float x = (_idSmiMat - 1 > 4) ? 0.5f : 0f;
+            float y = (_idSmiMat - 1 % 2) * 0.25f;
             mat.SetTextureOffset("_MainTex", new Vector2(x, y));
             mat.SetFloat("_Mode", 1);
             mat.SetFloat("_Cutoff", 0.5f);

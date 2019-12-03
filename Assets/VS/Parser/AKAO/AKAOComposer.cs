@@ -623,7 +623,7 @@ namespace VS.Parser.Akao
                                     {
                                         Debug.LogWarning(string.Concat("Perma Loop : ", buffer.BaseStream.Position, "   -|-   ", dest));
                                     }
-
+                                    /*
                                     if (condLoops.Contains(dest) == false)
                                     {
                                         condLoops.Add(dest);
@@ -641,8 +641,8 @@ namespace VS.Parser.Akao
                                         }
                                         delta = 0;
                                     }
+                                    */
 
-                                    /*
                                     // -----------------------------------------------------------
                                     curTrack.AddEvent(new EvEndTrack(STATUS_BYTE, cTrackId, delta));
                                     cTrackId++;
@@ -651,7 +651,7 @@ namespace VS.Parser.Akao
                                         curTrack = tracks[cTrackId];
                                     }
                                     delta = 0;
-                                    */
+
                                     break;
                                 case 0x07: // Perma Loop break with conditional.
                                     byte cond = buffer.ReadByte();
@@ -807,13 +807,15 @@ namespace VS.Parser.Akao
         {
             private uint _num;
             private double _denom;
-            private byte _clocks = 0x20;
-            private byte _quart = 0x08;
+            private byte _clocks;
+            private byte _quart;
 
             public EvTimeSign(byte STATUS_BYTE, uint num, uint denom)
             {
                 _num = num;
                 _denom = Math.Round(Math.Log((double)(denom / 0.69314718055994530941723212145818)));
+                _clocks = 0x20;
+                _quart = 0x08;
                 /*
                 deltaTime = 0x00;
                 midiStatusByte = 0xFF;

@@ -1,5 +1,4 @@
 ﻿//Minoru Akao
-using UnityEngine;
 
 namespace VS.Parser.Akao
 {
@@ -30,6 +29,7 @@ namespace VS.Parser.Akao
 
         internal uint unityKey;
         internal short fineTune;
+        internal bool isDrum = false;
 
         public AKAORegion()
         {
@@ -38,6 +38,7 @@ namespace VS.Parser.Akao
 
         public void FeedMelodic(byte[] b)
         {
+            isDrum = false;
             articulationId = b[0];
             lowRange = b[1];
             hiRange = b[2];
@@ -52,6 +53,7 @@ namespace VS.Parser.Akao
 
         public void FeedDrum(byte[] b, int key)
         {
+            isDrum = true;
             articulationId = b[0];
             relativeKey = b[1];
             unk1 = b[2];
@@ -64,7 +66,7 @@ namespace VS.Parser.Akao
             hiRange = lowRange;
             volume = (byte)(attenuation / 127);
 
-            //Debug.Log(string.Concat("AKAORegion : articulationId : ", articulationId, " relativeKey : ", relativeKey, "   note : ", lowRange, "   volume : ", volume, "  |  ", unk1, ", ", unk2, ", ", unk3, ", ", unk4));
+            //Debug.Log(string.Concat("AKAORegion Drum : articulationId : ", articulationId, " relativeKey : ", relativeKey, "   note : ", lowRange, "   attenuation : ", attenuation, "  |  ", unk1, ", ", unk2, ", ", unk3, ", ", unk4));
         }
     }
 }

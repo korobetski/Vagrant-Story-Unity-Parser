@@ -106,6 +106,18 @@ namespace VS.Data
     [Serializable]
     public class Armor
     {
+        public enum ArmorTypes { NONE = 0, SHIELD = 1, HELM = 2, ARMOR = 3, BOOTS = 4, GLOVE = 5, ACCESSORY = 6 }
+
+        public static ArmorTypes NONE = ArmorTypes.NONE;
+        public static ArmorTypes SHIELD = ArmorTypes.SHIELD;
+        public static ArmorTypes HELM = ArmorTypes.HELM;
+        public static ArmorTypes ARMOR = ArmorTypes.ARMOR;
+        public static ArmorTypes BOOTS = ArmorTypes.BOOTS;
+        public static ArmorTypes GLOVE = ArmorTypes.GLOVE;
+        public static ArmorTypes ACCESSORY = ArmorTypes.ACCESSORY;
+
+        public static ArmorTypes[] Types = new ArmorTypes[] { NONE, SHIELD, HELM, ARMOR, BOOTS, GLOVE, ACCESSORY };
+
         public static List<Armor> list = new List<Armor>();
         public static string JSONlist()
         {
@@ -116,6 +128,21 @@ namespace VS.Data
             }
             return string.Concat("[", string.Join(", ", slst), "]");
         }
+        public static string CSlist()
+        {
+            string[] slst = new string[list.Count];
+            for (int i = 0; i < list.Count; i++)
+            {
+                Armor b = list[i];
+                string sanitizedName = b._name.Replace(" ", "_");
+
+                slst[i] = string.Concat("public static Armor ", sanitizedName, " = new Armor(",
+                    "\"", b._name, "\", ", "\"", b._desc, "\", ", b._ID, ", ", b._WEP, ", ", b._ArmorType, ", ", b._STR, ", ", b._INT, ", ", b._AGI, ");");
+            }
+            return string.Concat(string.Join("\r\n", slst));
+        }
+
+
         [SerializeField]
         private string _name = "";
         [SerializeField]

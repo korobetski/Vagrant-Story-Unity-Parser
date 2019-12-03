@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 using VS.Format;
 
 //Minoru Akao
@@ -8,6 +7,7 @@ namespace VS.Parser.Akao
 {
     public class AKAOSample
     {
+        public int index = 0;
         public string name = "";
         public byte[] data;
         public int size;
@@ -22,12 +22,13 @@ namespace VS.Parser.Akao
         public uint loopType;
         public ushort loopStartMeasure;
         public ushort loopLengthMeasure;
-        public uint loopStart;
+        public uint loopStart = 0;
         public ulong loopLength;
 
         public float prev1 = 0;
         public float prev2 = 0;
-
+        public byte unityKey;
+        public sbyte fineTune;
 
         public AKAOSample(string n, byte[] dt, ulong off)
         {

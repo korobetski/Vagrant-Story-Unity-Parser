@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-//Minoru Akao
+﻿//Minoru Akao
 namespace VS.Parser.Akao
 {
     public class AKAOInstrument
@@ -9,8 +7,6 @@ namespace VS.Parser.Akao
 
         public string name = "";
         public AKAORegion[] regions;
-
-        private ushort _MIDIProgram = 0;
         private InstrumentType _type = InstrumentType.INSTR_MELODIC;
 
         public AKAOInstrument(InstrumentType type = InstrumentType.INSTR_MELODIC)

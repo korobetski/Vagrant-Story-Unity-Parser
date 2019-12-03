@@ -6,8 +6,8 @@ using VS.Format;
 using VS.Parser.Akao;
 using VS.Utils;
 
-//Minoru Akao
-//https://github.com/vgmtrans/vgmtrans/blob/master/src/main/formats/AkaoSeq.cpp
+
+// Minoru Akao
 
 // Akao in MUSIC folder contains music instructions like a Midi file, Akao in SOUND folder contains samples collection like .sfb / .sf2 / .dls files
 // Musics need to use a sample collection to give a sampled music sound or else a midi like sound will be created.
@@ -119,11 +119,12 @@ namespace VS.Parser
             switch (_type)
             {
                 case AKAOType.MUSIC:
+                    //https://github.com/vgmtrans/vgmtrans/blob/master/src/main/formats/AkaoSeq.cpp
                     // header datas
                     byte[] header = buffer.ReadBytes(4);// AKAO
                     ushort fileId = buffer.ReadUInt16();
                     ushort byteLen = buffer.ReadUInt16();
-                    ushort reverb = buffer.ReadUInt16(); // 0x0500  | Just on case 0x0400 (MUSIC000.DAT)
+                    ushort reverb = buffer.ReadUInt16(); // 0x0500  | Just on case 0x0400 (MUSIC000.DAT), maybe it refer to the WAVE0005.DAT sample collection
                     buffer.ReadBytes(6); // padding
 
                     uint unk1 = buffer.ReadUInt32();
@@ -143,11 +144,8 @@ namespace VS.Parser
                     long musInstrPtr = buffer.BaseStream.Position + jump - 2;
                     uint numTrack = ToolBox.GetNumPositiveBits(bnumt);
 
+
                     // kind of listing here, i don't know what it is.
-                    if (UseDebug)
-                    {
-                        //Debug.Log(string.Concat("Listing count : ", (jump - 2) / 2));
-                    }
                     for (uint i = 0; i < (jump - 2) / 2; i++)
                     {
                         byte[] b = buffer.ReadBytes(2);
@@ -158,17 +156,14 @@ namespace VS.Parser
 
                     if (UseDebug)
                     {
-                        Debug.Log("AKAO from : " + FileName + " FileSize = " + FileSize + "    |    reverb : " + reverb + " numTrack : " + numTrack + " sampleSet : " + sampleSet);
-                        Debug.Log("instruments at : " + ptr1 + "  Drums at : " + ptr2 + "   |    unk1 : " + unk1 + "  unk3 : " + unk3 + "   musInstrPtr : " + musInstrPtr);
+                        Debug.Log(string.Concat("AKAO from : ", FileName, " FileSize = ", FileSize, "    |    reverb : ", reverb, " numTrack : ", numTrack, " sampleSet : ", sampleSet,
+                            "\r\ninstruments at : ", ptr1, "  Drums at : ", ptr2, "   musInstrPtr : ", musInstrPtr, "   |  unk1 : ", unk1, "   unk3 : ", unk3));
                     }
 
 
+                    // music instuctions begin here, MIDI like format, we don't care yet, so let's jump
 
-                    // music instuctions begin here, MIDI like format
-                    if (buffer.BaseStream.Position != musInstrPtr)
-                    {
-                        buffer.BaseStream.Position = musInstrPtr;
-                    }
+
                     uint instrCount = 0;
                     // Instruments
                     if (ptr1 > 0x30)
@@ -238,21 +233,19 @@ namespace VS.Parser
                                 AKAORegion reg = new AKAORegion();
                                 reg.FeedMelodic(buffer.ReadBytes(8));
                                 instrument.regions[j] = reg;
+                                Debug.Log("reg.articulationId : " + reg.articulationId);
                             }
                             buffer.ReadBytes(8);// 0000 0000 0000 0000 padding
 
                             instruments[i] = instrument;
                         }
                     }
+
                     // Drum
                     if (ptr2 > 0x34)
                     {
                         if (buffer.BaseStream.Position != ptr2)
                         {
-                            if (UseDebug)
-                            {
-                                Debug.Log(buffer.BaseStream.Position + "  --  " + ptr2);
-                            }
                             buffer.BaseStream.Position = ptr2;
                         }
 
@@ -280,6 +273,7 @@ namespace VS.Parser
                                 AKAORegion dregion = new AKAORegion();
                                 dregion.FeedDrum(b, j);
                                 dr.Add(dregion);
+                                Debug.Log("dregion.articulationId : " + dregion.articulationId);
                             }
                         }
 
@@ -287,13 +281,28 @@ namespace VS.Parser
                         instruments[instrCount - 1] = drum;
                     }
 
-                    composer = new AKAOComposer(buffer, musInstrPtr, ptr1, instrCount, numTrack, FileName, UseDebug);
+                    composer = new AKAOComposer(buffer, musInstrPtr, ptr1, instrCount, numTrack, FileName, false);
 
-
+                    // AKAO from : WAVE0000 startingArticulationId = 0
+                    // AKAO from : WAVE0005 startingArticulationId = 32
+                    // AKAO from : WAVE0032 startingArticulationId = 32
+                    // All other            startingArticulationId = 64
+                    // AKAO from : WAVE0200 startingArticulationId = 128
 
                     // So we seek for the appropriate WAVE*.DAT in the SOUND folder
                     string[] hash = FilePath.Split("/"[0]);
                     hash[hash.Length - 2] = "SOUND";
+
+
+                    AKAO[] sampleCollections = new AKAO[3];
+
+                    // Program from 32 to 63
+                    hash[hash.Length - 1] = "WAVE0005.DAT"; // wave 005 or wave 032 ?
+                    AKAO SampleColl32 = new AKAO();
+                    SampleColl32.UseDebug = true;
+                    SampleColl32.Parse(String.Join("/", hash), AKAO.SOUND);
+                    sampleCollections[0] = SampleColl32;
+
                     string zz = "0";
                     if (sampleSet < 100)
                     {
@@ -306,39 +315,64 @@ namespace VS.Parser
                     hash[hash.Length - 1] = "WAVE" + zz + sampleSet + ".DAT";
                     string samplePath = String.Join("/", hash);
                     bool test = File.Exists(samplePath);
-                    if (UseDebug)
+
+                    // Program from 64 to 95 or 127
+                    AKAO SampleColl64 = new AKAO();
+                    SampleColl64.UseDebug = true;
+                    SampleColl64.Parse(samplePath, AKAO.SOUND);
+                    sampleCollections[1] = SampleColl64;
+
+                    // Additionnal Collection in case the SampleColl64 isn't 64 arts long, this one must be 64 arts long
+                    if (SampleColl64.articulations.Length < 64)
                     {
-                        Debug.Log("Seek for : " + samplePath + " -> " + test);
+                        hash[hash.Length - 1] = "WAVE0099.DAT";
+                        AKAO addiColl = new AKAO();
+                        addiColl.UseDebug = true;
+                        addiColl.Parse(String.Join("/", hash), AKAO.SOUND);
+                        sampleCollections[2] = addiColl;
                     }
 
-                    AKAO sampleParser = new AKAO();
-                    //sampleParser.UseDebug = true;
-                    sampleParser.Parse(samplePath, AKAO.SOUND);
-                    Synthetize(this, sampleParser);
+                    Synthetize(this, sampleCollections);
 
 
 
                     break;
                 case AKAOType.SOUND:
                     // Samples Collection
-                    // https://www.midi.org/specifications/category/dls-specifications
+
                     // header datas
                     header = buffer.ReadBytes(4);       // AKAO
                     ushort sampleId = buffer.ReadUInt16();
                     buffer.ReadBytes(10); // padding
 
-                    reverb = buffer.ReadUInt16(); // 0x0031 - 0x0051
+                    unk1 = buffer.ReadByte();
+                    unk3 = buffer.ReadByte();
                     buffer.ReadBytes(2); // padding
                     var sampleSize = buffer.ReadUInt32();
                     startingArticulationId = buffer.ReadUInt32();
                     var numArts = buffer.ReadUInt32();
+                    // mostly 32, sometimes 64, one case 48 (WAVE0071), one case 96 (WAVE0200)
+                    /* List of 64 arts
+                     * WAVE0044
+                     * WAVE0045
+                     * WAVE0046
+                     * WAVE0053
+                     * WAVE0054
+                     * WAVE0055
+                     * WAVE0064
+                     * WAVE0065
+                     * WAVE0068
+                     * WAVE0069
+                     * WAVE0091
+                     * WAVE0097
+                     * WAVE0099
+                     */
 
                     buffer.ReadBytes(32); // padding
 
                     if (UseDebug)
                     {
-                        Debug.Log("AKAO from : " + FileName + " len = " + FileSize);
-                        Debug.Log("ID : " + sampleId + " reverb : " + reverb + " sampleSize : " + sampleSize + " stArtId : " + startingArticulationId + " numArts : " + numArts);
+                        Debug.Log(string.Concat("AKAO from : ", FileName, " len = ", FileSize, "  ID : ", sampleId, " unk1 : ", unk1, " unk3 : ", unk3, " sampleSize : ", sampleSize, " stArtId : ", startingArticulationId, " numArts : ", numArts));
                     }
 
                     // Articulations section here
@@ -348,6 +382,7 @@ namespace VS.Parser
                         AKAOArticulation arti = new AKAOArticulation(buffer);
                         articulations[i] = arti;
                     }
+
                     // Samples section here
                     ulong samStart = (ulong)buffer.BaseStream.Position;
                     //Debug.Log(string.Concat("samStart : ", samStart));
@@ -360,14 +395,16 @@ namespace VS.Parser
                         {
                             if (samPtr.Count > 0)
                             {
-                                samEPtr.Add(buffer.BaseStream.Position - 16);
+                                samEPtr.Add(buffer.BaseStream.Position - 0x20); // samEPtr.Add(buffer.BaseStream.Position - 0x10);
                             }
-                            samPtr.Add(buffer.BaseStream.Position);
+                            samPtr.Add(buffer.BaseStream.Position - 0x10); // samPtr.Add(buffer.BaseStream.Position);
                         }
                     }
                     samEPtr.Add(buffer.BaseStream.Length);
+
                     // Let's loop again to get samples
                     int numSam = samPtr.Count;
+                    //Debug.Log("numSam : " + numSam);
                     samples = new AKAOSample[numSam];
                     for (int i = 0; i < numSam; i++)
                     {
@@ -375,7 +412,15 @@ namespace VS.Parser
                         int size = (int)(samEPtr[i] - samPtr[i]);
                         byte[] dt = buffer.ReadBytes(size);
                         AKAOSample sam = new AKAOSample(string.Concat("Sample #", (ushort)i), dt, (ulong)samPtr[i]);
+                        sam.index = i;
                         samples[i] = sam;
+
+                        /*
+                        WAV wavSam = sam.ConvertToWAV();
+                        wavSam.SetName(FileName + "_Sample_" + i);
+                        ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Sounds/SampleColl/");
+                        wavSam.WriteFile(Application.dataPath + "/../Assets/Resources/Sounds/SampleColl/" + FileName + "_Sample_"+i+".wav", wavSam.Write());
+                        */
                     }
                     // now to verify and associate each articulation with a sample index value
                     // for every sample of every instrument, we add sample_section offset, because those values
@@ -384,11 +429,12 @@ namespace VS.Parser
                     {
                         for (uint l = 0; l < samples.Length; l++)
                         {
-                            // 0x10 = empty space between samples
-                            if (articulations[i].sampleOff + samStart + 0x10 == samples[l].offset)
+                            //if (articulations[i].sampleOff + samStart + 0x10 == samples[l].offset)
+                            if (articulations[i].sampleOff + samStart == samples[l].offset)
                             {
                                 articulations[i].sampleNum = l;
                                 articulations[i].sample = samples[l];
+                                //Debug.Log("articulations["+i+"].sampleNum : " + l);
                                 break;
                             }
                         }
@@ -413,9 +459,11 @@ namespace VS.Parser
 
                     //Debug.Log(string.Concat("AKAO PROG : id : ", id, "  tp : ", tp, "  byteLen : ", byteLen));
                     int waveLen = (int)(limit - buffer.BaseStream.Position);
-                    if(waveLen >0) buffer.ReadBytes(waveLen);
-                    /*
-                    */
+                    if (waveLen > 0)
+                    {
+                        buffer.ReadBytes(waveLen);
+                    }
+
                     break;
                 case AKAOType.SAMPLE:
                     // similar to AKAOType.SOUND without articulations, we can output a WAV file
@@ -448,149 +496,145 @@ namespace VS.Parser
 
 
 
-        private void Synthetize(AKAO sequencer, AKAO sampler)
+        private void Synthetize(AKAO sequencer, AKAO[] sampleCollections)
         {
-            DLS dls = new DLS();
-            dls.SetName(FileName + ".dls");
-
             SF2 sf2 = new SF2();
+
+            List<AKAOSample> Samples = new List<AKAOSample>();
 
             if (sequencer.instruments != null)
             {
                 uint i = 0;
                 foreach (AKAOInstrument instrument in sequencer.instruments)
                 {
+                    sf2.AddPreset(instrument.name, (ushort)i, 0);
+                    sf2.AddPresetBag();
+                    sf2.AddPresetGenerator(SF2Generator.ReverbEffectsSend, new SF2GeneratorAmount { UAmount = (ushort)250 });
+                    sf2.AddPresetGenerator(SF2Generator.Instrument, new SF2GeneratorAmount { UAmount = (ushort)i });
+                    sf2.AddInstrument(instrument.name);
+
                     if (instrument.regions.Length > 0)
                     {
-                        uint instrId = (uint)(sequencer.startingArticulationId + i);
                         uint midiBank = 0x00000000;
                         if (instrument.IsDrum())
                         {
                             midiBank = DLS.F_INSTRUMENT_DRUMS;
                         }
-                        if (instrId < SMF.INSTRUMENTS.Length)
-                        {
-                            instrument.name = SMF.INSTRUMENTS[instrId];
-                        }
-                        Lins DSLInstrument = new Lins(midiBank, instrId, instrument.name);
 
                         foreach (AKAORegion region in instrument.regions)
                         {
-                            AKAOArticulation articulation;
+                            AKAOArticulation articulation = null;
+                            AKAO coll = sampleCollections[2];
                             //Debug.Log(string.Concat("region.articulationId : ", region.articulationId));
-                            if (!((region.articulationId - sampler.startingArticulationId) >= 0 && region.articulationId - sampler.startingArticulationId < 200))
+
+                            if (region.articulationId >= 32 && region.articulationId < 64)
                             {
-                                //Debug.LogWarning("Articulation #" + region.articulationId + " does not exist in the samp collection.");
-                                articulation = sampler.articulations[0];
-                            }
+                                coll = sampleCollections[0];
+                                articulation = coll.articulations[region.articulationId - coll.startingArticulationId];
 
-                            if (region.articulationId - sampler.startingArticulationId >= sampler.articulations.Length)
+                            }
+                            else if (region.articulationId >= 64 && region.articulationId < 128)
                             {
-                                //Debug.LogWarning("Articulation #" + region.articulationId + " referenced but not loaded");
-                                articulation = sampler.articulations[sampler.articulations.Length - 1];
+                                coll = sampleCollections[1];
+                                if (region.articulationId - coll.startingArticulationId < coll.articulations.Length)
+                                {
+                                    articulation = coll.articulations[region.articulationId - coll.startingArticulationId];
+                                }
+                                else
+                                {
+                                    //Debug.LogError("region.articulationId out of range : "+ region.articulationId);
+                                    // we check in additional collection
+                                    coll = sampleCollections[2];
+                                    articulation = coll.articulations[region.articulationId - coll.startingArticulationId];
+
+                                }
                             }
-                            else
-                            {
-                                articulation = sampler.articulations[region.articulationId - sampler.startingArticulationId];
-                            }
+                            //Debug.Log(string.Concat("articulation.sampleNum : ", articulation.sampleNum, "   coll start id : ", coll.startingArticulationId));
 
-                            region.articulation = articulation;
-                            region.sampleNum = articulation.sampleNum;
-
-                            if (instrument.IsDrum())
-                            {
-                                region.unityKey = (uint)articulation.unityKey + region.lowRange - region.relativeKey;
-                            }
-                            else
-                            {
-                                region.unityKey = articulation.unityKey;
-                            }
-
-                            short ft = articulation.fineTune;
-                            if (ft < 0)
-                            {
-                                ft += short.MaxValue;
-                            }
-
-                            // this gives us the pitch multiplier value ex. 1.05946
-                            double freq_multiplier = ((ft * 32) + 0x100000) / (double)0x100000;
-                            double cents = Mathf.Log((float)freq_multiplier) / Mathf.Log(2) * 1200;
-                            if (articulation.fineTune < 0)
-                            {
-                                cents -= 1200;
-                            }
-
-                            region.fineTune = (short)cents;
-
-
-
-                            // Making DLS
-                            Lrgn reg = new Lrgn(region.lowRange, region.hiRange, 0x00, 0x7F);
-                            CKwsmp smp = new CKwsmp((ushort)region.unityKey, region.fineTune, region.attenuation, 1);
-
-                            if (articulation.loopPt != 0)
-                            {
-                                smp.AddLoop(new Loop(1, articulation.loopPt, (uint)(sampler.samples[region.sampleNum].size - articulation.loopPt)));
-                            }
-
-                            reg.SetSample(smp);
 
 
                             if (articulation != null)
                             {
                                 articulation.BuildADSR();
-                                CKart2 iart = new CKart2();
-                                iart.AddPan(0x40);
-                                iart.AddADSR(articulation.A, articulation.D, articulation.S, articulation.R, articulation.AT, articulation.RT);
-                                reg.AddArticulation(iart);
+                                region.articulation = articulation;
+                                AKAOSample sample = coll.samples[articulation.sampleNum];
+
+                                if (instrument.IsDrum())
+                                {
+                                    region.unityKey = (uint)articulation.unityKey + region.lowRange - region.relativeKey;
+                                }
+                                else
+                                {
+                                    region.unityKey = articulation.unityKey;
+                                }
+
+                                short ft = articulation.fineTune;
+                                if (ft < 0)
+                                {
+                                    ft += short.MaxValue;
+                                }
+
+                                // this gives us the pitch multiplier value ex. 1.05946
+                                double freq_multiplier = ((ft * 32) + 0x100000) / (double)0x100000;
+                                double cents = Mathf.Log((float)freq_multiplier) / Mathf.Log(2) * 1200;
+                                if (articulation.fineTune < 0)
+                                {
+                                    cents -= 1200;
+                                }
+
+                                region.fineTune = (short)cents;
+                                sample.unityKey = (byte)region.unityKey;
+                                sample.fineTune = (sbyte)region.fineTune;
+                                sample.loopStart = (uint)articulation.loopPt;
+
+                                if (!Samples.Contains(sample))
+                                {
+                                    Samples.Add(sample);
+                                }
+
+                                int sampleIDX = Samples.IndexOf(sample);
+
+
+                                sf2.AddInstrumentBag();
+                                sf2.AddInstrumentGenerator(SF2Generator.KeyRange, new SF2GeneratorAmount { LowByte = region.lowRange, HighByte = region.hiRange });
+                                sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = 0, HighByte = 127 });
+                                sf2.AddInstrumentGenerator(SF2Generator.InitialAttenuation, new SF2GeneratorAmount { Amount = (short)(region.volume / 10) });
+                                sf2.AddInstrumentGenerator(SF2Generator.Pan, new SF2GeneratorAmount { UAmount = 0x00 });
+                                sf2.AddInstrumentGenerator(SF2Generator.SampleModes, new SF2GeneratorAmount { UAmount = (articulation.loopPt != 0) ? (ushort)1 : (ushort)0 });
+                                sf2.AddInstrumentGenerator(SF2Generator.OverridingRootKey, new SF2GeneratorAmount { UAmount = (ushort)region.unityKey });
+
+                                sf2.AddInstrumentGenerator(SF2Generator.AttackVolEnv, new SF2GeneratorAmount { Amount = (short)(short.MinValue + articulation.Ar) }); // articulation.A
+                                sf2.AddInstrumentGenerator(SF2Generator.DecayVolEnv, new SF2GeneratorAmount { Amount = (short)2415 }); // articulation.D
+                                sf2.AddInstrumentGenerator(SF2Generator.SustainVolEnv, new SF2GeneratorAmount { Amount = (short)0 }); // articulation.S
+                                sf2.AddInstrumentGenerator(SF2Generator.ReleaseVolEnv, new SF2GeneratorAmount { Amount = (short)-4350 }); // articulation.R
+
+                                sf2.AddInstrumentGenerator(SF2Generator.SampleID, new SF2GeneratorAmount { UAmount = (ushort)sampleIDX });
                             }
 
-
-                            reg.SetWaveLinkInfo(0, 0, 1, region.sampleNum);
-                            DSLInstrument.AddRegion(reg);
-
-
-                            sf2.AddInstrumentBag();
-                            sf2.AddInstrumentGenerator(SF2Generator.Pan, new SF2GeneratorAmount { UAmount = 0x40 });
-                            sf2.AddInstrumentGenerator(SF2Generator.AttackVolEnv, new SF2GeneratorAmount { UAmount = (ushort)articulation.A });
-                            sf2.AddInstrumentGenerator(SF2Generator.DecayVolEnv, new SF2GeneratorAmount { UAmount = (ushort)articulation.D });
-                            sf2.AddInstrumentGenerator(SF2Generator.SustainVolEnv, new SF2GeneratorAmount { UAmount = (ushort)articulation.S });
-                            sf2.AddInstrumentGenerator(SF2Generator.ReleaseVolEnv, new SF2GeneratorAmount { UAmount = (ushort)articulation.R });
                         }
 
-
-                        dls.AddInstrument(DSLInstrument);
-
-                        sf2.AddInstrument(instrument.name);
-                        sf2.AddInstrumentModulator();
-                        sf2.AddPreset(instrument.name, (ushort)i, 0);
-                        sf2.AddPresetModulator();
-                        sf2.AddPresetBag();
                     }
 
                     i++;
                 }
             }
 
-            if (sampler.samples != null)
+            if (Samples.Count > 0)
             {
-                foreach (AKAOSample AKAOsmp in sampler.samples)
+                foreach (AKAOSample AKAOsmp in Samples)
                 {
                     WAV nw = AKAOsmp.ConvertToWAV();
                     nw.SetName(AKAOsmp.name);
                     nw.Riff = false;
-                    dls.AddWave(nw);
 
                     short[] pcm = AKAOsmp.WAVDatas.ToArray();
-                    sf2.AddSample(pcm, AKAOsmp.name, false, 0, 44100, 0, 0);
+                    sf2.AddSample(pcm, AKAOsmp.name, (AKAOsmp.loopStart > 0), (uint)(AKAOsmp.loopStart * 1.75), 44100, AKAOsmp.unityKey, AKAOsmp.fineTune);
                 }
             }
 
-            ToolBox.DirExNorCreate("Assets/Resources/Sounds/DLS/");
-            dls.WriteFile("Assets/Resources/Sounds/DLS/" + FileName + ".dls");
-
             ToolBox.DirExNorCreate("Assets/Resources/Sounds/SF2/");
             sf2.Save("Assets/Resources/Sounds/SF2/" + FileName + ".sf2");
+
         }
     }
 }

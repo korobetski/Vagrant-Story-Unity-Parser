@@ -25,12 +25,16 @@ namespace VS.Format
             {
                 char[] chars = reader.ReadChars(4);
                 if (new string(chars) != "RIFF")
+                {
                     throw new InvalidDataException("RIFF header was not found at the start of the file.");
+                }
 
                 size = reader.ReadUInt32();
                 chars = reader.ReadChars(4);
                 if (new string(chars) != "sfbk")
+                {
                     throw new InvalidDataException("sfbk header was not found at the expected offset.");
+                }
 
                 InfoChunk = new InfoListChunk(this, reader);
                 SoundChunk = new SdtaListChunk(this, reader);
@@ -166,7 +170,10 @@ namespace VS.Format
         internal void UpdateSize()
         {
             if (InfoChunk == null || SoundChunk == null || HydraChunk == null)
+            {
                 return;
+            }
+
             size = 4
                 + InfoChunk.UpdateSize() + 8
                 + SoundChunk.UpdateSize() + 8

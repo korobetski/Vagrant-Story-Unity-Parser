@@ -42,7 +42,7 @@ namespace VS.Parser
                     cluts.AddRange(cl2);
                 }
                 cluts.Reverse();
-                Texture2D tex = new Texture2D(width*2, height, TextureFormat.ARGB32, false);
+                Texture2D tex = new Texture2D(width * 2, height, TextureFormat.ARGB32, false);
                 tex.SetPixels(cluts.ToArray());
                 tex.Apply();
                 byte[] bytes = tex.EncodeToPNG();
@@ -68,7 +68,7 @@ namespace VS.Parser
                     cluts.AddRange(cl2);
                 }
                 cluts.Reverse();
-                tex = new Texture2D(width*2, height, TextureFormat.ARGB32, false);
+                tex = new Texture2D(width * 2, height, TextureFormat.ARGB32, false);
                 tex.SetPixels(cluts.ToArray());
                 tex.Apply();
                 bytes = tex.EncodeToPNG();
@@ -79,31 +79,31 @@ namespace VS.Parser
 
 
 
-                buffer.BaseStream.Position = 0x46E48+0x20;
+                buffer.BaseStream.Position = 0x46E48 + 0x20;
                 width = 128;
                 height = 220;
-                    cluts = new List<Color>();
-                    for (uint x = 0; x < height; x++)
+                cluts = new List<Color>();
+                for (uint x = 0; x < height; x++)
+                {
+                    List<Color> cl2 = new List<Color>();
+                    for (uint y = 0; y < width; y++)
                     {
-                        List<Color> cl2 = new List<Color>();
-                        for (uint y = 0; y < width; y++)
-                        {
-                            byte b = buffer.ReadByte();
+                        byte b = buffer.ReadByte();
                         byte l = (byte)Mathf.RoundToInt(b / 16);
                         byte r = (byte)(b % 16);
                         cl2.Add(colors[r]);
                         cl2.Add(colors[l]);
                     }
-                        cl2.Reverse();
-                        cluts.AddRange(cl2);
-                    }
-                    cluts.Reverse();
-                    tex = new Texture2D(width*2, height, TextureFormat.ARGB32, false);
-                    tex.SetPixels(cluts.ToArray());
-                    tex.Apply();
-                    bytes = tex.EncodeToPNG();
-                    ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/Ex/");
-                    File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Ex/font.png", bytes);
+                    cl2.Reverse();
+                    cluts.AddRange(cl2);
+                }
+                cluts.Reverse();
+                tex = new Texture2D(width * 2, height, TextureFormat.ARGB32, false);
+                tex.SetPixels(cluts.ToArray());
+                tex.Apply();
+                bytes = tex.EncodeToPNG();
+                ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/Ex/");
+                File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Ex/font.png", bytes);
                 Debug.Log(buffer.BaseStream.Position);
 
                 // two pallets blocks with empty pixels
@@ -111,7 +111,7 @@ namespace VS.Parser
                 // icons
                 buffer.BaseStream.Position = 0x59B68;
                 Color[][] pallets = new Color[16][];
-                for(int i = 0; i < 16; i++)
+                for (int i = 0; i < 16; i++)
                 {
                     pallets[i] = new Color[16];
                     for (int j = 0; j < 16; j++)
@@ -141,12 +141,12 @@ namespace VS.Parser
                         cluts.AddRange(cl2);
                     }
                     cluts.Reverse();
-                    tex = new Texture2D(width*2, height, TextureFormat.ARGB32, false);
+                    tex = new Texture2D(width * 2, height, TextureFormat.ARGB32, false);
                     tex.SetPixels(cluts.ToArray());
                     tex.Apply();
                     bytes = tex.EncodeToPNG();
                     ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/Ex/");
-                    File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Ex/icons"+i+".png", bytes);
+                    File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Ex/icons" + i + ".png", bytes);
                 }
                 Debug.Log(buffer.BaseStream.Position);
 
@@ -157,7 +157,7 @@ namespace VS.Parser
                 {
                     colors[i] = ToolBox.BitColorConverter(buffer.ReadUInt16());
                 }
-                width = 64*3;
+                width = 64 * 3;
                 height = 240;
                 cluts = new List<Color>();
                 for (uint x = 0; x < height; x++)
@@ -182,7 +182,7 @@ namespace VS.Parser
             else if (FileName == "ENDING")
             {
                 buffer.BaseStream.Position = 0x76F0;
-                
+
                 Color[] colors = new Color[16];
                 for (int i = 0; i < 16; ++i)
                 {
@@ -199,7 +199,7 @@ namespace VS.Parser
                     for (uint y = 0; y < width; y++)
                     {
                         byte b = buffer.ReadByte();
-                        
+
                         byte l = (byte)Mathf.RoundToInt(b / 16);
                         byte r = (byte)(b % 16);
                         cl2.Add(colors[r]);
@@ -209,7 +209,7 @@ namespace VS.Parser
                     cluts.AddRange(cl2);
                 }
                 cluts.Reverse();
-                Texture2D tex = new Texture2D(width *2, height, TextureFormat.ARGB32, false);
+                Texture2D tex = new Texture2D(width * 2, height, TextureFormat.ARGB32, false);
                 tex.SetPixels(cluts.ToArray());
                 tex.Apply();
                 byte[] bytes = tex.EncodeToPNG();
@@ -248,7 +248,7 @@ namespace VS.Parser
                     tex.Apply();
                     bytes = tex.EncodeToPNG();
                     ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/Ex/");
-                    File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Ex/Ending_Illus_"+j+".png", bytes);
+                    File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Ex/Ending_Illus_" + j + ".png", bytes);
                     Debug.Log(buffer.BaseStream.Position);
                 }
 
@@ -281,7 +281,7 @@ namespace VS.Parser
                     cluts.AddRange(cl2);
                 }
                 cluts.Reverse();
-                tex = new Texture2D(width*2, height, TextureFormat.ARGB32, false);
+                tex = new Texture2D(width * 2, height, TextureFormat.ARGB32, false);
                 tex.SetPixels(cluts.ToArray());
                 tex.Apply();
                 bytes = tex.EncodeToPNG();
@@ -290,7 +290,7 @@ namespace VS.Parser
                 Debug.Log(buffer.BaseStream.Position);
 
 
-                buffer.BaseStream.Position += 6096+32;
+                buffer.BaseStream.Position += 6096 + 32;
 
                 colors = new Color[16];
                 for (int i = 0; i < 16; ++i)
@@ -309,19 +309,19 @@ namespace VS.Parser
                     for (uint y = 0; y < width; y++)
                     {
                         byte b = buffer.ReadByte();
-                        
+
                         byte l = (byte)Mathf.RoundToInt(b / 16);
                         byte r = (byte)(b % 16);
                         cl2.Add(colors[r]);
                         cl2.Add(colors[l]);
-                        
+
                         //cl2.Add(new Color32(b,b,b,255));
                     }
                     cl2.Reverse();
                     cluts.AddRange(cl2);
                 }
                 cluts.Reverse();
-                tex = new Texture2D(width*2, height, TextureFormat.ARGB32, false);
+                tex = new Texture2D(width * 2, height, TextureFormat.ARGB32, false);
                 tex.SetPixels(cluts.ToArray());
                 tex.Apply();
                 bytes = tex.EncodeToPNG();
@@ -341,7 +341,7 @@ namespace VS.Parser
                     for (uint y = 0; y < width; y++)
                     {
                         byte b = buffer.ReadByte();
-                        cl2.Add(new Color32(b,b,b,255));
+                        cl2.Add(new Color32(b, b, b, 255));
                     }
                     cl2.Reverse();
                     cluts.AddRange(cl2);
@@ -352,7 +352,7 @@ namespace VS.Parser
                 tex.Apply();
                 byte[] bytes = tex.EncodeToPNG();
                 ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/Ex/");
-                File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Ex/"+FileName+".png", bytes);
+                File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Ex/" + FileName + ".png", bytes);
             }
 
 

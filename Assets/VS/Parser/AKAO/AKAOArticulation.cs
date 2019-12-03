@@ -18,6 +18,15 @@ namespace VS.Parser.Akao
         internal uint sampleNum;
         internal AKAOSample sample;
 
+        public ushort Am;
+        public ushort Ar;
+        public ushort Dr;
+        public ushort Sl;
+        public ushort Rm;
+        public ushort Rr;
+        public ushort Sm;
+        public ushort Sd;
+        public ushort Sr;
         internal int A = 0;             //in seconds
         internal ushort AT = 0;         // 0 = No Transform, 1 = concave Transform
         internal int D = 0;             //in seconds
@@ -29,9 +38,9 @@ namespace VS.Parser.Akao
         public AKAOArticulation(BinaryReader buffer)
         {
             sampleOff = buffer.ReadUInt32();
-            loopPt = buffer.ReadUInt32();
+            loopPt = buffer.ReadUInt32() - sampleOff;
             fineTune = buffer.ReadInt16();
-            unityKey = buffer.ReadUInt16();
+            unityKey = (ushort)buffer.ReadInt16();
             ADSR1 = buffer.ReadUInt16();
             ADSR2 = buffer.ReadUInt16();
 
@@ -41,15 +50,15 @@ namespace VS.Parser.Akao
 
         internal bool BuildADSR()
         {
-            ushort Am = (ushort)((ADSR1 & 0x8000) >> 15);  // if 1, then Exponential, else linear
-            ushort Ar = (ushort)((ADSR1 & 0x7F00) >> 8);
-            ushort Dr = (ushort)((ADSR1 & 0x00F0) >> 4);
-            ushort Sl = (ushort)(ADSR1 & 0x000F);
-            ushort Rm = (ushort)((ADSR2 & 0x0020) >> 5);
-            ushort Rr = (ushort)(ADSR2 & 0x001F);
-            ushort Sm = (ushort)((ADSR2 & 0x8000) >> 15);
-            ushort Sd = (ushort)((ADSR2 & 0x4000) >> 14);
-            ushort Sr = (ushort)((ADSR2 >> 6) & 0x7F);
+            Am = (ushort)((ADSR1 & 0x8000) >> 15);  // if 1, then Exponential, else linear
+            Ar = (ushort)((ADSR1 & 0x7F00) >> 8);
+            Dr = (ushort)((ADSR1 & 0x00F0) >> 4);
+            Sl = (ushort)(ADSR1 & 0x000F);
+            Rm = (ushort)((ADSR2 & 0x0020) >> 5);
+            Rr = (ushort)(ADSR2 & 0x001F);
+            Sm = (ushort)((ADSR2 & 0x8000) >> 15);
+            Sd = (ushort)((ADSR2 & 0x4000) >> 14);
+            Sr = (ushort)((ADSR2 >> 6) & 0x7F);
 
             // Make sure all the ADSR values are within the valid ranges
             if (((Am & ~0x01) != 0) || ((Ar & ~0x7F) != 0) || ((Dr & ~0x0F) != 0) || ((Sl & ~0x0F) != 0) ||
@@ -60,7 +69,7 @@ namespace VS.Parser.Akao
 
                 return false;
             }
-            //Debug.Log("ADSR parameters (Am : " + Am + ", Ar : " + Ar + ", Dr : " + Dr + ", Sl : " + Sl + ", Rm : " + Rm + ", Rr : " + Rr + ", Sm : " + Sm + ", Sd : " + Sd + ", Sr : " + Sr + ")");
+            Debug.Log("ADSR parameters (Am : " + Am + ", Ar : " + Ar + ", Dr : " + Dr + ", Sl : " + Sl + ", Rm : " + Rm + ", Rr : " + Rr + ", Sm : " + Sm + ", Sd : " + Sd + ", Sr : " + Sr + ")");
 
             //ComputeADSR(Am, Ar, Dr, Sl, Rm, Rr, Sm, Sd, Sr);  Need to fix this
             // Setting arbitrary values

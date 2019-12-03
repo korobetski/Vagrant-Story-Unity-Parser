@@ -88,7 +88,7 @@ namespace VS.Entity
 
         private byte AlphaFromGrayscale(Color32 cr)
         {
-            return (byte)Mathf.Round(cr.r+cr.g+cr.b/3);
+            return (byte)Mathf.Round(cr.r + cr.g + cr.b / 3);
         }
     }
 }

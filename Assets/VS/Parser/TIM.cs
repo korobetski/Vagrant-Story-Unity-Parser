@@ -36,7 +36,7 @@ namespace VS.Parser
             }
 
             width = 256;
-            height = Mathf.FloorToInt((FileSize - 512-20) / width);
+            height = Mathf.FloorToInt((FileSize - 512 - 20) / width);
 
             List<Color> cluts = new List<Color>();
             for (uint x = 0; x < height; x++)
@@ -69,42 +69,42 @@ namespace VS.Parser
             PreParse(filePath);
             // i don't know how to decode this for the moment
 
-            /*
-            ushort timH = buffer.ReadUInt16();
-            ushort timTag = buffer.ReadUInt16();
-            byte[] b = buffer.ReadBytes(12);
-            width = buffer.ReadUInt16();
-            height = buffer.ReadUInt16();
-            
+            buffer.ReadBytes(20);
+
             Color[] col = new Color[256];
             for (int i = 0; i < 256; ++i)
             {
                 col[i] = ToolBox.BitColorConverter(buffer.ReadUInt16());
             }
-            
-            width = 256;
-            height = Mathf.FloorToInt((FileSize -512- 24) / width/2);
 
+            width = 128;
+            int height = 15;
+            int numBlocks = (int)(FileSize - buffer.BaseStream.Position) / (width * height);
             List<Color> cluts = new List<Color>();
-            for (uint x = 0; x < height; x++)
+            for (int i = 0; i < numBlocks; i++)
             {
-                List<Color> cl2 = new List<Color>();
-                for (uint y = 0; y < width; y++)
+                for (uint x = 0; x < height; x++)
                 {
-                    cl2.Add(ToolBox.BitColorConverter(buffer.ReadUInt16()));
+                    List<Color> cl2 = new List<Color>();
+                    for (uint y = 0; y < width; y++)
+                    {
+                        byte b = buffer.ReadByte();
+                        cl2.Add(col[b]);
+                        //cl2.Add(new Color32(b, b, b, 255));
+                    }
+                    cl2.Reverse();
+                    cluts.AddRange(cl2);
                 }
-                //cl2.Reverse();
-                cluts.AddRange(cl2);
+                cluts.Reverse();
             }
-            //cluts.Reverse();
-            Texture2D tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
+            Texture2D tex = new Texture2D(width, height * numBlocks, TextureFormat.ARGB32, false);
             tex.SetPixels(cluts.ToArray());
             tex.Apply();
 
             byte[] bytes = tex.EncodeToPNG();
             ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/ILLUST/");
             File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/ILLUST/" + FileName + ".png", bytes);
-            */
+
         }
 
         public void ParseBG(string filePath)
@@ -235,13 +235,17 @@ namespace VS.Parser
                 }
             }
             List<int> cluts = new List<int>();
-            for (uint x = 0; x < width; x++)
+            for (uint x = 0; x < height; x++)
             {
-                for (uint y = 0; y < height; y++)
+                List<int> cl2 = new List<int>();
+                for (uint y = 0; y < width; y++)
                 {
-                    cluts.Add(buffer.ReadByte());
+                    cl2.Add(buffer.ReadByte());
                 }
+                //cl2.Reverse();
+                cluts.AddRange(cl2);
             }
+            //cluts.Reverse();
 
             textures = new List<Texture2D>();
             for (int h = 0; h < numPallets; h++)
@@ -267,6 +271,7 @@ namespace VS.Parser
                 tex.Apply();
                 textures.Add(tex);
             }
+            textures.Add(textures[0]);
         }
         public void ParseSHP(BinaryReader buffer)
         {
@@ -291,13 +296,17 @@ namespace VS.Parser
                 }
             }
             List<int> cluts = new List<int>();
-            for (uint x = 0; x < width; x++)
+            for (uint x = 0; x < height; x++)
             {
-                for (uint y = 0; y < height; y++)
+                List<int> cl2 = new List<int>();
+                for (uint y = 0; y < width; y++)
                 {
-                    cluts.Add(buffer.ReadByte());
+                    cl2.Add(buffer.ReadByte());
                 }
+                cl2.Reverse();
+                cluts.AddRange(cl2);
             }
+            cluts.Reverse();
 
             textures = new List<Texture2D>();
             for (int h = 0; h < numPallets; h++)
@@ -344,6 +353,7 @@ namespace VS.Parser
             tex.Compress(true);
             return tex;
         }
+
         public Texture2D DrawPack(bool CreatePNG = false)
         {
             Texture2D tex = new Texture2D(width * 2, height * 4, TextureFormat.ARGB32, false);

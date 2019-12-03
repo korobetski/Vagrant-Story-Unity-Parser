@@ -234,9 +234,10 @@ namespace VS.Parser
                 }
 
                 // section 3 ??
-                //Debug.Log("lenSubSection03 ptr : " + buffer.BaseStream.Position+"   lenSubSection03 : " + lenSubSection03);
+                //
                 if (lenSubSection03 > 0)
                 {
+                    Debug.Log("lenSubSection03 ptr : " + buffer.BaseStream.Position + "   lenSubSection03 : " + lenSubSection03);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection03;
                 }
 
@@ -284,39 +285,12 @@ namespace VS.Parser
 
                     lights = new List<GameObject>();
 
+                    string lightsDebug = "";
                     for (uint i = 0; i < numLights; i++)
                     {
-                        List<Vector4> vv = new List<Vector4>();
-                        List<Vector4> cols = new List<Vector4>();
-                        Color main = new Color();
-                        for (uint j = 0; j < 5; j++)
-                        {
-                            Vector4 v = new Vector4(buffer.ReadSByte(), buffer.ReadByte(), buffer.ReadSByte(), buffer.ReadByte());
-                            if (UseDebug)
-                            {
-                                //Debug.Log(i + "," + j + " -> " + v);
-                            }
-
-                            vv.Add(v);
-                        }
-                        for (uint j = 0; j < 3; j++)
-                        {
-                            Vector4 c = new Vector4(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte());
-                            if (UseDebug)
-                            {
-                                //Debug.Log(i + "," + j + " -> " + c);
-                            }
-
-                            cols.Add(c);
-                            if (c.x != mc.r && c.y != mc.g && c.z != mc.b)
-                            {
-                                main = new Color(c.x / 255, c.y / 255, c.z / 255, 1);
-                            }
-                        }
-                        if (UseDebug)
-                        {
-                            //Debug.Log(i + " -> " + "##----------------");
-                        }
+                        byte[] bytes = buffer.ReadBytes(20);
+                        byte[] bytes2 = buffer.ReadBytes(12);
+                        lightsDebug += string.Concat("Light # ", i, "  :  ", BitConverter.ToString(bytes), "  |  ", BitConverter.ToString(bytes2), "\r\n");
                         /*
                         GameObject lgo = new GameObject("Point Light");
                         lgo.transform.position = new Vector3(vv[0].x / 16, 1, vv[0].z / 16);
@@ -335,80 +309,98 @@ namespace VS.Parser
 
                     if (UseDebug)
                     {
+                        Debug.Log(lightsDebug);
+                    }
+
+                    if (UseDebug)
+                    {
                         Debug.Log("buffer.BaseStream.Position  :  " + buffer.BaseStream.Position);
                     }
 
                     buffer.BaseStream.Position = lightPtr + lenLightingSection;
-                    Debug.Log("buffer.BaseStream.Position  :  " + buffer.BaseStream.Position);
                 }
 
                 if (lenSubSection06 > 0)
                 {
+                    Debug.Log("SubSection06 ptr : " + buffer.BaseStream.Position + "   lenSubSection06 : " + lenSubSection06);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection06;
                 }
 
                 if (lenSubSection07 > 0)
                 {
+                    Debug.Log("SubSection07 ptr : " + buffer.BaseStream.Position + "   lenSubSection07 : " + lenSubSection07);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection07;
                 }
 
                 if (lenSubSection08 > 0)
                 {
+                    Debug.Log("SubSection08 ptr : " + buffer.BaseStream.Position + "   lenSubSection08 : " + lenSubSection08);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection08;
                 }
 
                 if (lenSubSection09 > 0)
                 {
+                    Debug.Log("SubSection09 ptr : " + buffer.BaseStream.Position + "   lenSubSection09 : " + lenSubSection09);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection09;
                 }
 
                 if (lenSubSection0A > 0)
                 {
+                    Debug.Log("SubSection0A ptr : " + buffer.BaseStream.Position + "   lenSubSection0A : " + lenSubSection0A);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0A;
                 }
 
                 if (lenSubSection0B > 0)
                 {
+                    Debug.Log("SubSection0B ptr : " + buffer.BaseStream.Position + "   lenSubSection0B : " + lenSubSection0B);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0B;
                 }
 
                 if (lenTextureEffectsSection > 0)
                 {
+                    Debug.Log("TextureEffectsSection ptr : " + buffer.BaseStream.Position + "   lenTextureEffectsSection : " + lenTextureEffectsSection);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenTextureEffectsSection;
                 }
 
                 if (lenSubSection0D > 0)
                 {
+                    Debug.Log("SubSection0D ptr : " + buffer.BaseStream.Position + "   lenSubSection0D : " + lenSubSection0D);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0D;
                 }
 
                 if (lenSubSection0E > 0)
                 {
+                    Debug.Log("SubSection0E ptr : " + buffer.BaseStream.Position + "   lenSubSection0E : " + lenSubSection0E);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0E;
                 }
 
                 if (lenSubSection0F > 0)
                 {
+                    Debug.Log("SubSection0F ptr : " + buffer.BaseStream.Position + "   lenSubSection0F : " + lenSubSection0F);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0F;
                 }
 
                 if (lenSubSection10 > 0)
                 {
+                    Debug.Log("SubSection10 ptr : " + buffer.BaseStream.Position + "   lenSubSection10 : " + lenSubSection10);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection10;
                 }
 
                 if (lenSubSection11 > 0)
                 {
+                    Debug.Log("SubSection11 ptr : " + buffer.BaseStream.Position + "   lenSubSection11 : " + lenSubSection11);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection11;
                 }
 
                 if (lenSubSection12 > 0)
                 {
+                    Debug.Log("SubSection12 ptr : " + buffer.BaseStream.Position + "   lenSubSection12 : " + lenSubSection12);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection12;
                 }
 
                 if (lenSubSection13 > 0)
                 {
+                    Debug.Log("SubSection13 ptr : " + buffer.BaseStream.Position + "   lenSubSection13 : " + lenSubSection13);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection13;
                 }
 
@@ -434,85 +426,88 @@ namespace VS.Parser
 
                 if (lenSubSection15 > 0)
                 {
+                    Debug.Log("SubSection15 ptr : " + buffer.BaseStream.Position + "   lenSubSection15 : " + lenSubSection15);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection15;
                 }
 
                 if (lenSubSection16 > 0)
                 {
+                    Debug.Log("SubSection16 ptr : " + buffer.BaseStream.Position + "   lenSubSection16 : " + lenSubSection16);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection16;
                 }
 
                 if (lenSubSection17 > 0)
                 {
+                    Debug.Log("SubSection17 ptr : " + buffer.BaseStream.Position + "   lenSubSection17 : " + lenSubSection17);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection17;
                 }
 
                 if (lenSubSection18 > 0)
                 {
+                    Debug.Log("SubSection18 ptr : " + buffer.BaseStream.Position + "   lenSubSection18 : " + lenSubSection18);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection18;
                 }
             }
 
             // Cleared section
-            if (UseDebug)
-            {
-                Debug.Log("Cleared section : ");
-            }
-
             if (buffer.BaseStream.Position != ptrClearedSection)
             {
                 buffer.BaseStream.Position = ptrClearedSection;
             }
-
-            // Script section
             if (UseDebug)
             {
-                Debug.Log("Script section : ");
+                Debug.Log("Cleared section : " + buffer.BaseStream.Position);
             }
 
+
+            // Script section
             if (buffer.BaseStream.Position != ptrScriptSection)
             {
                 buffer.BaseStream.Position = ptrScriptSection;
             }
+            if (UseDebug)
+            {
+                Debug.Log("Script section : " + buffer.BaseStream.Position);
+            }
+
             // See Opcode.cs
 
 
             // Door section
-            if (UseDebug)
-            {
-                Debug.Log("Door section : ");
-            }
 
             if (buffer.BaseStream.Position != ptrDoorSection)
             {
                 buffer.BaseStream.Position = ptrDoorSection;
             }
-
+            if (UseDebug)
+            {
+                Debug.Log("Door section : " + buffer.BaseStream.Position);
+            }
             if (lenDoorSection > 0)
             {
             }
 
             // Ennemy section
-            if (UseDebug)
-            {
-                Debug.Log("Ennemy section : ");
-            }
-
             if (buffer.BaseStream.Position != ptrEnemySection)
             {
                 buffer.BaseStream.Position = ptrEnemySection;
             }
-
-            // Treasure section
             if (UseDebug)
             {
-                Debug.Log("Treasure section : ");
+                Debug.Log("Ennemy section : " + buffer.BaseStream.Position);
             }
 
+
+            // Treasure section
             if (buffer.BaseStream.Position != ptrTreasureSection)
             {
                 buffer.BaseStream.Position = ptrTreasureSection;
             }
+            if (UseDebug)
+            {
+                Debug.Log("Treasure section : " + buffer.BaseStream.Position);
+            }
+
 
             buffer.Close();
 

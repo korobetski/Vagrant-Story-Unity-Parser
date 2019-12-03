@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using VS.Data;
 using VS.Utils;
@@ -19,23 +17,23 @@ namespace VS.Parser
         public void Explore(string filePath)
         {
             PreParse(filePath);
-            
-                List<byte> bname = new List<byte>();
-                while (buffer.BaseStream.Position < buffer.BaseStream.Length)
+
+            List<byte> bname = new List<byte>();
+            while (buffer.BaseStream.Position < buffer.BaseStream.Length)
+            {
+                byte b = buffer.ReadByte();
+                if (b == 0xE7)
                 {
-                    byte b = buffer.ReadByte();
-                    if (b == 0xE7)
-                    {
-                        string inam = L10n.Translate(bname.ToArray());
-                        Debug.Log(string.Concat(inam));
-                        bname = new List<byte>();
-                    }
-                    else
-                    {
-                        bname.Add(b);
-                    }
+                    string inam = L10n.Translate(bname.ToArray());
+                    Debug.Log(string.Concat(inam));
+                    bname = new List<byte>();
                 }
-                
+                else
+                {
+                    bname.Add(b);
+                }
+            }
+
         }
 
         public void Parse(string filePath)
@@ -86,7 +84,7 @@ namespace VS.Parser
                         Monster.list[(int)i].desc = inam;
                         if (monsterDescs.Count == monsterNames.Count)
                         {
-                                break;
+                            break;
                         }
                         bname = new List<byte>();
                         i++;
@@ -104,6 +102,7 @@ namespace VS.Parser
             }
         }
 
+
         public List<string>[] BuildItems(string itemNamePath, string itemDescPath)
         {
             List<string> itemNames = new List<string>();
@@ -118,6 +117,9 @@ namespace VS.Parser
                 if (b == 0xE7)
                 {
                     string inam = L10n.Translate(bname.ToArray());
+                    inam = inam.Replace("0", "");
+                    inam = inam.Replace("\r", "");
+                    inam = inam.Replace("\n", "");
                     if (inam != "untitled")
                     {
                         Debug.Log(string.Concat(itemNames.Count, " : ", inam));
@@ -154,6 +156,8 @@ namespace VS.Parser
                 if (b == 0xE7)
                 {
                     string idesc = L10n.Translate(bname.ToArray());
+                    idesc = idesc.Replace("\r", "");
+                    idesc = idesc.Replace("\n", "");
                     if (idesc != "")
                     {
                         Debug.Log(string.Concat(itemDescs.Count, " : ", idesc));

@@ -1,7 +1,5 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using System;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace VS.Data
 {
@@ -37,9 +35,9 @@ namespace VS.Data
             this.desc = desc;
         }
 
-        public string ToString()
+        public new string ToString()
         {
-            return string.Concat("Monster #", id, " - ", name, " - ", desc, " - ", shp1, " - ", shp2 );
+            return string.Concat("Monster #", id, " - ", name, " - ", desc, " - ", shp1, " - ", shp2);
         }
 
         public string ToJSON()

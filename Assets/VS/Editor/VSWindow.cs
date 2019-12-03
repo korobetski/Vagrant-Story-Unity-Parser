@@ -3,9 +3,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using VS.Core;
-using VS.Format;
 using VS.Parser;
-using VS.Utils;
 
 public class VSWindow : EditorWindow
 {
@@ -186,14 +184,14 @@ public class VSWindow : EditorWindow
                 }
                 else
                 {
-                        SHP parser = new SHP();
-                        //parser.UseDebug = true;
-                        parser.Parse(file);
-                        //parser.buildPrefab();
+                    SHP parser = new SHP();
+                    //parser.UseDebug = true;
+                    parser.Parse(file);
+                    //parser.buildPrefab();
                 }
                 fileParsed++;
             }
-            
+
             /*
             SHP parser = new SHP();
             //parser.UseDebug = true;
@@ -221,7 +219,7 @@ public class VSWindow : EditorWindow
             excp.Add("Z055U04.ZUD");
             excp.Add("Z055U05.ZUD");
             excp.Add("Z234U16.ZUD");
-            
+
             foreach (string file in files)
             {
                 string[] h = file.Split("/"[0]);
@@ -244,7 +242,7 @@ public class VSWindow : EditorWindow
 
                 fileParsed++;
             }
-            
+
             /*
             ZUD parser = new ZUD();
             parser.UseDebug = true;
@@ -277,13 +275,13 @@ public class VSWindow : EditorWindow
             /*
             MPD parser = new MPD();
             parser.UseDebug = true;
-            parser.Parse(VSPath + "MAP/MAP009.MPD");
+            parser.Parse(VSPath + "MAP/MAP000.MPD");
             parser.BuildPrefab();
             */
             EditorUtility.ClearProgressBar();
         }
 
-        
+
         bool LoadAKAOTrigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE*.DAT"));
         if (LoadAKAOTrigger && VSPath != "")
         {
@@ -296,7 +294,7 @@ public class VSWindow : EditorWindow
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
                 AKAO parser = new AKAO();
-                //parser.UseDebug = true;
+                parser.UseDebug = true;
                 parser.Parse(file, AKAO.SOUND);
                 fileParsed++;
             }
@@ -307,14 +305,15 @@ public class VSWindow : EditorWindow
 
             EditorUtility.ClearProgressBar();
         }
-        /*
+
+
         bool LoadAKAO2Trigger = GUILayout.Button(new GUIContent("Load Akao MUSIC/MUSIC*.DAT"));
         if (LoadAKAO2Trigger && VSPath != "")
         {
 
             string[] files = Directory.GetFiles(VSPath + "MUSIC/", "*.DAT");
             float fileToParse = files.Length;
-
+            /*
             float fileParsed = 0;
             foreach (string file in files)
             {
@@ -330,19 +329,19 @@ public class VSWindow : EditorWindow
                 }
                 fileParsed++;
             }
+            */
 
-            
-            //AKAO parser = new AKAO();
-            //parser.UseDebug = true;
-            //parser.Parse(VSPath + "MUSIC/MUSIC004.DAT", AKAO.MUSIC);
-            //if (parser.FileSize > 4)
-            //{
-                //parser.composer.OutputMidiFile();
-            //}
-            
+            AKAO parser = new AKAO();
+            parser.UseDebug = true;
+            parser.Parse(VSPath + "MUSIC/MUSIC001.DAT", AKAO.MUSIC);
+            if (parser.FileSize > 4)
+            {
+                parser.composer.OutputMidiFile();
+            }
+
             EditorUtility.ClearProgressBar();
         }
-        */
+
         bool LoadEFFECTTrigger = GUILayout.Button(new GUIContent("Load EFFECT/E0*.P, E0*.FBC, E0*.FBT"));
         if (LoadEFFECTTrigger && VSPath != "")
         {
@@ -491,7 +490,7 @@ public class VSWindow : EditorWindow
 
             EditorUtility.ClearProgressBar();
         }
-        /*
+
         bool LoadILLUSTTrigger = GUILayout.Button(new GUIContent("ENDING/ILLUST*.BIN"));
         if (LoadILLUSTTrigger && VSPath != "")
         {
@@ -513,8 +512,8 @@ public class VSWindow : EditorWindow
 
             EditorUtility.ClearProgressBar();
         }
-        */
-        
+
+
         bool LoadEXPLOTrigger = GUILayout.Button(new GUIContent("Explore..."));
         if (LoadEXPLOTrigger && VSPath != "")
         {
@@ -522,29 +521,17 @@ public class VSWindow : EditorWindow
             //parser.Explore(VSPath + "SLES_027.55"); // spell and skills
             // "BATTLE/INITBTL.PRG" // Fandango
             //parser.Explore(VSPath + "BATTLE/BOG.DAT");
-
-
-            //SF2 sf2 = new SF2(Application.dataPath + "/Resources/Sounds/SF2/Akao Seq.sf2");
-            //Debug.Log("IBAGSubChunk : " + sf2.HydraChunk.IBAGSubChunk);
-            //Debug.Log("IGENSubChunk : " + sf2.HydraChunk.IGENSubChunk);
-            //Debug.Log("IMODSubChunk : " + sf2.HydraChunk.IMODSubChunk);
-            //Debug.Log("INSTSubChunk : " + sf2.HydraChunk.INSTSubChunk);
-            //Debug.Log("PBAGSubChunk : " + sf2.HydraChunk.PBAGSubChunk);
-            //Debug.Log("PGENSubChunk : " + sf2.HydraChunk.PGENSubChunk);
-            //Debug.Log("PHDRSubChunk : " + sf2.HydraChunk.PHDRSubChunk);
-            //Debug.Log("PMODSubChunk : " + sf2.HydraChunk.PMODSubChunk);
-            //Debug.Log("SHDRSubChunk : " + sf2.HydraChunk.SHDRSubChunk);
             /*
             string[] files = Directory.GetFiles(VSPath + "MENU/", "*.PRG");
             ToolBox.FeedDatabases(files);
             */
-
-            PRG parser = new PRG();
-            //parser.Explore(VSPath + "SLES_027.55"); // spell and skills
+            BIN parser = new BIN();
+            parser.Explore(VSPath + "SLES_027.55"); // spell and skills
+            //PRG parser = new PRG();
             //parser.Parse(VSPath + "TITLE/TITLE.PRG"); // spell and skills
             //parser.Parse(VSPath + "ENDING/ENDING.PRG");
-            parser.Parse(VSPath + "BATTLE/BATTLE.PRG");
-            parser.Parse(VSPath + "BATTLE/INITBTL.PRG");
+            //parser.Parse(VSPath + "BATTLE/BATTLE.PRG");
+            //parser.Parse(VSPath + "BATTLE/INITBTL.PRG");
         }
 
     }

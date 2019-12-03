@@ -384,13 +384,17 @@ namespace VS.Format
         internal SMPLSubChunk(SF2 inSf2, BinaryReader reader) : base(inSf2, reader)
         {
             for (int i = 0; i < Size / sizeof(short); i++)
+            {
                 samples.Add(reader.ReadInt16());
+            }
         }
         internal override void Write(BinaryWriter writer)
         {
             base.Write(writer);
             foreach (short s in samples)
+            {
                 writer.Write(s);
+            }
         }
 
         // Returns index of the start of the sample
@@ -407,7 +411,9 @@ namespace VS.Format
                 // In case (loopPos + i) is greater than the sample length
                 uint max = (uint)pcm16.Length - loopPos;
                 for (uint i = 0; i < 8; i++)
+                {
                     samples.Add(pcm16[loopPos + (i % max)]);
+                }
             }
 
             // Write 46 empty samples
@@ -430,13 +436,17 @@ namespace VS.Format
         internal PHDRSubChunk(SF2 inSf2, BinaryReader reader) : base(inSf2, reader)
         {
             for (int i = 0; i < Size / SF2PresetHeader.Size; i++)
+            {
                 presets.Add(new SF2PresetHeader(inSf2, reader));
+            }
         }
         internal override void Write(BinaryWriter writer)
         {
             base.Write(writer);
             for (int i = 0; i < Count; i++)
+            {
                 presets[i].Write(writer);
+            }
         }
 
         internal void AddPreset(SF2PresetHeader preset)
@@ -458,13 +468,17 @@ namespace VS.Format
         internal INSTSubChunk(SF2 inSf2, BinaryReader reader) : base(inSf2, reader)
         {
             for (int i = 0; i < Size / SF2Instrument.Size; i++)
+            {
                 instruments.Add(new SF2Instrument(inSf2, reader));
+            }
         }
         internal override void Write(BinaryWriter writer)
         {
             base.Write(writer);
             for (int i = 0; i < Count; i++)
+            {
                 instruments[i].Write(writer);
+            }
         }
 
         internal uint AddInstrument(SF2Instrument instrument)
@@ -487,13 +501,17 @@ namespace VS.Format
         internal BAGSubChunk(SF2 inSf2, BinaryReader reader) : base(inSf2, reader)
         {
             for (int i = 0; i < Size / SF2Bag.Size; i++)
+            {
                 bags.Add(new SF2Bag(inSf2, reader));
+            }
         }
         internal override void Write(BinaryWriter writer)
         {
             base.Write(writer);
             for (int i = 0; i < Count; i++)
+            {
                 bags[i].Write(writer);
+            }
         }
 
         internal void AddBag(SF2Bag bag)
@@ -516,13 +534,17 @@ namespace VS.Format
         internal MODSubChunk(SF2 inSf2, BinaryReader reader) : base(inSf2, reader)
         {
             for (int i = 0; i < Size / SF2ModulatorList.Size; i++)
+            {
                 modulators.Add(new SF2ModulatorList(inSf2, reader));
+            }
         }
         internal override void Write(BinaryWriter writer)
         {
             base.Write(writer);
             for (int i = 0; i < Count; i++)
+            {
                 modulators[i].Write(writer);
+            }
         }
 
         internal void AddModulator(SF2ModulatorList modulator)
@@ -545,13 +567,17 @@ namespace VS.Format
         internal GENSubChunk(SF2 inSf2, BinaryReader reader) : base(inSf2, reader)
         {
             for (int i = 0; i < Size / SF2GeneratorList.Size; i++)
+            {
                 generators.Add(new SF2GeneratorList(inSf2, reader));
+            }
         }
         internal override void Write(BinaryWriter writer)
         {
             base.Write(writer);
             for (int i = 0; i < Count; i++)
+            {
                 generators[i].Write(writer);
+            }
         }
 
         internal void AddGenerator(SF2GeneratorList generator)
@@ -574,13 +600,17 @@ namespace VS.Format
         internal SHDRSubChunk(SF2 inSf2, BinaryReader reader) : base(inSf2, reader)
         {
             for (int i = 0; i < Size / SF2SampleHeader.Size; i++)
+            {
                 samples.Add(new SF2SampleHeader(inSf2, reader));
+            }
         }
         internal override void Write(BinaryWriter writer)
         {
             base.Write(writer);
             for (int i = 0; i < Count; i++)
+            {
                 samples[i].Write(writer);
+            }
         }
 
         internal uint AddSample(SF2SampleHeader sample)
@@ -608,7 +638,9 @@ namespace VS.Format
             get
             {
                 if (subChunks.Find(s => s.ChunkName == "isng") is HeaderSubChunk chunk)
+                {
                     return chunk.Field;
+                }
                 else
                 {
                     subChunks.Add(new HeaderSubChunk(sf2, "isng") { Field = defaultEngine });
@@ -618,9 +650,13 @@ namespace VS.Format
             set
             {
                 if (subChunks.Find(s => s.ChunkName == "isng") is HeaderSubChunk chunk)
+                {
                     chunk.Field = value;
+                }
                 else
+                {
                     subChunks.Add(new HeaderSubChunk(sf2, "isng") { Field = value });
+                }
             }
         }
         const string defaultBank = "General MIDI";
@@ -629,7 +665,9 @@ namespace VS.Format
             get
             {
                 if (subChunks.Find(s => s.ChunkName == "INAM") is HeaderSubChunk chunk)
+                {
                     return chunk.Field;
+                }
                 else
                 {
                     subChunks.Add(new HeaderSubChunk(sf2, "INAM") { Field = defaultBank });
@@ -639,9 +677,13 @@ namespace VS.Format
             set
             {
                 if (subChunks.Find(s => s.ChunkName == "INAM") is HeaderSubChunk chunk)
+                {
                     chunk.Field = value;
+                }
                 else
+                {
                     subChunks.Add(new HeaderSubChunk(sf2, "INAM") { Field = value });
+                }
             }
         }
         public string ROM
@@ -649,16 +691,24 @@ namespace VS.Format
             get
             {
                 if (subChunks.Find(s => s.ChunkName == "irom") is HeaderSubChunk chunk)
+                {
                     return chunk.Field;
+                }
                 else
+                {
                     return string.Empty;
+                }
             }
             set
             {
                 if (subChunks.Find(s => s.ChunkName == "irom") is HeaderSubChunk chunk)
+                {
                     chunk.Field = value;
+                }
                 else
+                {
                     subChunks.Add(new HeaderSubChunk(sf2, "irom") { Field = value });
+                }
             }
         }
         public SF2VersionTag ROMVersion
@@ -666,16 +716,24 @@ namespace VS.Format
             get
             {
                 if (subChunks.Find(s => s.ChunkName == "iver") is VersionSubChunk chunk)
+                {
                     return chunk.Version;
+                }
                 else
+                {
                     return null;
+                }
             }
             set
             {
                 if (subChunks.Find(s => s.ChunkName == "iver") is VersionSubChunk chunk)
+                {
                     chunk.Version = value;
+                }
                 else
+                {
                     subChunks.Add(new VersionSubChunk(sf2, "iver") { Version = value });
+                }
             }
         }
         public string Date
@@ -683,16 +741,24 @@ namespace VS.Format
             get
             {
                 if (subChunks.Find(s => s.ChunkName == "ICRD") is HeaderSubChunk chunk)
+                {
                     return chunk.Field;
+                }
                 else
+                {
                     return string.Empty;
+                }
             }
             set
             {
                 if (subChunks.Find(s => s.ChunkName == "ICRD") is HeaderSubChunk chunk)
+                {
                     chunk.Field = value;
+                }
                 else
+                {
                     subChunks.Add(new HeaderSubChunk(sf2, "ICRD") { Field = value });
+                }
             }
         }
         public string Designer
@@ -700,16 +766,24 @@ namespace VS.Format
             get
             {
                 if (subChunks.Find(s => s.ChunkName == "IENG") is HeaderSubChunk chunk)
+                {
                     return chunk.Field;
+                }
                 else
+                {
                     return string.Empty;
+                }
             }
             set
             {
                 if (subChunks.Find(s => s.ChunkName == "IENG") is HeaderSubChunk chunk)
+                {
                     chunk.Field = value;
+                }
                 else
+                {
                     subChunks.Add(new HeaderSubChunk(sf2, "IENG") { Field = value });
+                }
             }
         }
         public string Products
@@ -717,16 +791,24 @@ namespace VS.Format
             get
             {
                 if (subChunks.Find(s => s.ChunkName == "IPRD") is HeaderSubChunk chunk)
+                {
                     return chunk.Field;
+                }
                 else
+                {
                     return string.Empty;
+                }
             }
             set
             {
                 if (subChunks.Find(s => s.ChunkName == "IPRD") is HeaderSubChunk chunk)
+                {
                     chunk.Field = value;
+                }
                 else
+                {
                     subChunks.Add(new HeaderSubChunk(sf2, "IPRD") { Field = value });
+                }
             }
         }
         public string Copyright
@@ -734,16 +816,24 @@ namespace VS.Format
             get
             {
                 if (subChunks.Find(s => s.ChunkName == "ICOP") is HeaderSubChunk icop)
+                {
                     return icop.Field;
+                }
                 else
+                {
                     return string.Empty;
+                }
             }
             set
             {
                 if (subChunks.Find(s => s.ChunkName == "ICOP") is HeaderSubChunk chunk)
+                {
                     chunk.Field = value;
+                }
                 else
+                {
                     subChunks.Add(new HeaderSubChunk(sf2, "ICOP") { Field = value });
+                }
             }
         }
         const int commentMaxSize = 0x10000;
@@ -752,16 +842,24 @@ namespace VS.Format
             get
             {
                 if (subChunks.Find(s => s.ChunkName == "ICMT") is HeaderSubChunk chunk)
+                {
                     return chunk.Field;
+                }
                 else
+                {
                     return string.Empty;
+                }
             }
             set
             {
                 if (subChunks.Find(s => s.ChunkName == "ICMT") is HeaderSubChunk chunk)
+                {
                     chunk.Field = value;
+                }
                 else
+                {
                     subChunks.Add(new HeaderSubChunk(sf2, "ICMT", commentMaxSize) { Field = value });
+                }
             }
         }
         public string Tools
@@ -769,19 +867,27 @@ namespace VS.Format
             get
             {
                 if (subChunks.Find(s => s.ChunkName == "ISFT") is HeaderSubChunk chunk)
+                {
                     return chunk.Field;
+                }
                 else
+                {
                     return string.Empty;
+                }
             }
             set
             {
                 if (subChunks.Find(s => s.ChunkName == "ISFT") is HeaderSubChunk chunk)
+                {
                     chunk.Field = value;
+                }
                 else
+                {
                     subChunks.Add(new HeaderSubChunk(sf2, "ISFT") { Field = value });
+                }
             }
         }
-        
+
         internal InfoListChunk(SF2 inSf2) : base(inSf2, "INFO")
         {
             // Mandatory sub-chunks
@@ -821,14 +927,19 @@ namespace VS.Format
         {
             base.Write(writer);
             foreach (var sub in subChunks)
+            {
                 sub.Write(writer);
+            }
         }
 
         internal override uint UpdateSize()
         {
             Size = 4;
             foreach (var sub in subChunks)
+            {
                 Size += sub.Size + 8;
+            }
+
             return Size;
         }
 

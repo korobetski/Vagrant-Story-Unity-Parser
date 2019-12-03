@@ -297,7 +297,11 @@ namespace VS.Parser
 
 
             uint akaoNum = buffer.ReadUInt32();
-            if (UseDebug) Debug.Log(string.Concat("akaoNum : ", akaoNum));
+            if (UseDebug)
+            {
+                Debug.Log(string.Concat("akaoNum : ", akaoNum));
+            }
+
             uint[] akaoFramesPtr = new uint[akaoNum];
             // one pointer for AKAO header, a second for AKAO datas
             for (uint j = 0; j < akaoNum; j++)
@@ -357,7 +361,10 @@ namespace VS.Parser
                 buffer.BaseStream.Position = buffer.BaseStream.Position + (magicSize - 12);
             }
 
-            if (UseDebug) Debug.Log(string.Concat("buffer.BaseStream.Position : ", buffer.BaseStream.Position, "   buffer.BaseStream.Length : ", buffer.BaseStream.Length));
+            if (UseDebug)
+            {
+                Debug.Log(string.Concat("buffer.BaseStream.Position : ", buffer.BaseStream.Position, "   buffer.BaseStream.Length : ", buffer.BaseStream.Length));
+            }
 
             if (buffer.BaseStream.Position + 8 < buffer.BaseStream.Length)
             {
@@ -439,7 +446,8 @@ namespace VS.Parser
                         float u = faces[i].uv[j].x / tim.width;
                         float v = faces[i].uv[j].y / tim.height;
                         faces[i].uv[j] = (new Vector2(u, v));
-                    } else
+                    }
+                    else
                     {
                         faces[i].uv[j] = Vector2.zero;
                     }
@@ -604,7 +612,8 @@ namespace VS.Parser
 #endif
                 texture.wrapMode = TextureWrapMode.Repeat;
                 texture.Compress(true);
-            } else
+            }
+            else
             {
                 texture = new Texture2D(128, 128);
             }

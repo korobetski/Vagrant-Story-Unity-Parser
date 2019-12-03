@@ -1,14 +1,8 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
-using VS.Core;
 using VS.Data;
-using VS.Parser;
-using VS.Utils;
 
 public class Bestiary : MonoBehaviour
 {
@@ -29,7 +23,7 @@ public class Bestiary : MonoBehaviour
         json = json.Replace("},", "}§");
         string[] jsons = json.Split("§"[0]);
         Monster[] monsters = new Monster[jsons.Length];
-        for(int i = 0; i< jsons.Length; i++)
+        for (int i = 0; i < jsons.Length; i++)
         {
             //Debug.Log(jsons[i]);
             monsters[i] = JsonUtility.FromJson<Monster>(jsons[i]);
@@ -49,7 +43,7 @@ public class Bestiary : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
-        string path = string.Concat("Prefabs/Models/", BitConverter.ToString(new byte[]{monsters[monsterId].shp1 }));
+        string path = string.Concat("Prefabs/Models/", BitConverter.ToString(new byte[] { monsters[monsterId].shp1 }));
         GameObject prefab = Resources.Load<GameObject>(path);
 
         GameObject shpGO = Instantiate(prefab);
@@ -57,7 +51,7 @@ public class Bestiary : MonoBehaviour
         shpGO.transform.parent = container.transform;
         shpGO.transform.localPosition = Vector3.zero;
         shpGO.transform.localRotation = new Quaternion(0, -180, 0, 0);
-        shpGO.transform.localScale = Vector3.one*75;
+        shpGO.transform.localScale = Vector3.one * 75;
 
 
         //Monster[] monsters = JsonHelper.FromJson<Monster>(json);
@@ -67,6 +61,6 @@ public class Bestiary : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 }

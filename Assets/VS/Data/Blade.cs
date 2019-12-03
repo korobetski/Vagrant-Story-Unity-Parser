@@ -28,6 +28,20 @@ namespace VS.Data
             }
             return string.Concat("[", string.Join(", ", slst), "]");
         }
+        public static string CSlist()
+        {
+            string[] slst = new string[list.Count];
+            for (int i = 0; i < list.Count; i++)
+            {
+                Blade b = list[i];
+                string sanitizedName = b._name.Replace(" ", "_");
+
+                slst[i] = string.Concat("public static Blade ", sanitizedName, " = new Blade(",
+                    "\"", b._name, "\", ", "\"", b._desc, "\", ", b._ID, ", ", b._WEP, ", ", b._BladeType, ", ", b._DamageType, ", ",
+                    b._RISK, ", ", b._STR, ", ", b._INT, ", ", b._AGI, ", ", b._Range, ", ", b._Damage, ");");
+            }
+            return string.Concat(string.Join("\r\n", slst));
+        }
 
         public static Blade GetBladeByWEP(byte WEPID)
         {
@@ -76,6 +90,7 @@ namespace VS.Data
                 _WEP = value;
                 Blade db = GetBladeByWEP(_WEP);
                 _name = db.Name;
+                _desc = db.Desc;
                 _ID = db.ID;
                 _BladeType = db.TypeOfBlade;
                 _DamageType = db.DamageType;
