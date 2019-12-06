@@ -1219,13 +1219,16 @@ namespace VS.Parser.Akao
                 midiStatusByte = 0xFF;
                 midiArg1 = 0x03;
 
+                /*
                 byte[] bytes = Encoding.ASCII.GetBytes(trackName);
                 VLQ nameVlq = new VLQ((uint)bytes.Length);
                 List<byte> sizeNDatas = new List<byte>();
                 sizeNDatas.AddRange(nameVlq.Bytes);
                 sizeNDatas.AddRange(bytes);
                 tail = sizeNDatas.ToArray();
-                
+                */
+
+                tail = new XString(trackName).Bytes.ToArray();
             }
         }
 

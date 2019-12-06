@@ -117,13 +117,13 @@ public class MiniMapsViewver : MonoBehaviour
                 {
                     roomNameTF.text = "";
                     selectedRoom.GetComponent<MeshRenderer>().material = (Material)Resources.Load("Prefabs/ARMMaterial", typeof(Material));
-                    selectedRoom.GetComponent<LineRenderer>().material = (Material)Resources.Load("Prefabs/ARMLineMaterial", typeof(Material));
+                    selectedRoom.GetComponentInChildren<LineRenderer>().material = (Material)Resources.Load("Prefabs/ARMLineMaterial", typeof(Material));
                 }
                 GameObject room = hit.transform.gameObject;
                 selectedRoom = room;
                 roomNameTF.text = room.name;
                 room.GetComponent<MeshRenderer>().material = (Material)Resources.Load("Prefabs/ARMMaterialSelected", typeof(Material));
-                room.GetComponent<LineRenderer>().material = (Material)Resources.Load("Prefabs/ARMLineMaterialSelected", typeof(Material));
+                room.GetComponentInChildren<LineRenderer>().material = (Material)Resources.Load("Prefabs/ARMLineMaterialSelected", typeof(Material));
 
 
                 MPDList = ToolBox.GetZNDRoomList(room.GetComponent<ARMRoom>().zoneNumber);
