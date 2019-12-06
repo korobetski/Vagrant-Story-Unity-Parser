@@ -242,10 +242,10 @@ namespace VS.Parser
                 {
                     cl2.Add(buffer.ReadByte());
                 }
-                //cl2.Reverse();
+                cl2.Reverse();
                 cluts.AddRange(cl2);
             }
-            //cluts.Reverse();
+            cluts.Reverse();
 
             textures = new List<Texture2D>();
             for (int h = 0; h < numPallets; h++)

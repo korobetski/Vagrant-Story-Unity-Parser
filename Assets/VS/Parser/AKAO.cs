@@ -144,21 +144,22 @@ namespace VS.Parser
                     long musInstrPtr = buffer.BaseStream.Position + jump - 2;
                     uint numTrack = ToolBox.GetNumPositiveBits(bnumt);
 
-
-                    // kind of listing here, i don't know what it is.
-                    for (uint i = 0; i < (jump - 2) / 2; i++)
-                    {
-                        byte[] b = buffer.ReadBytes(2);
-                        //Debug.Log(b[0] + "   ->   " + b[1]);
-                    }
-
-
-
                     if (UseDebug)
                     {
                         Debug.Log(string.Concat("AKAO from : ", FileName, " FileSize = ", FileSize, "    |    reverb : ", reverb, " numTrack : ", numTrack, " sampleSet : ", sampleSet,
                             "\r\ninstruments at : ", ptr1, "  Drums at : ", ptr2, "   musInstrPtr : ", musInstrPtr, "   |  unk1 : ", unk1, "   unk3 : ", unk3));
                     }
+
+
+                    // kind of listing here, i don't know what it is. seems to be relative to tracks
+                    if (UseDebug) Debug.Log((jump - 2) / 2);
+                    for (uint i = 0; i < (jump - 2) / 2; i++)
+                    {
+                        byte[] b = buffer.ReadBytes(2);
+                        if (UseDebug) Debug.Log(b[0] + "   ->   " + b[1]);
+                    }
+
+
 
 
                     // music instuctions begin here, MIDI like format, we don't care yet, so let's jump
@@ -233,7 +234,7 @@ namespace VS.Parser
                                 AKAORegion reg = new AKAORegion();
                                 reg.FeedMelodic(buffer.ReadBytes(8));
                                 instrument.regions[j] = reg;
-                                Debug.Log("reg.articulationId : " + reg.articulationId);
+                                //Debug.Log("reg.articulationId : " + reg.articulationId);
                             }
                             buffer.ReadBytes(8);// 0000 0000 0000 0000 padding
 
@@ -273,7 +274,7 @@ namespace VS.Parser
                                 AKAORegion dregion = new AKAORegion();
                                 dregion.FeedDrum(b, j);
                                 dr.Add(dregion);
-                                Debug.Log("dregion.articulationId : " + dregion.articulationId);
+                                //Debug.Log("dregion.articulationId : " + dregion.articulationId);
                             }
                         }
 
@@ -299,7 +300,7 @@ namespace VS.Parser
                     // Program from 32 to 63
                     hash[hash.Length - 1] = "WAVE0005.DAT"; // wave 005 or wave 032 ?
                     AKAO SampleColl32 = new AKAO();
-                    SampleColl32.UseDebug = true;
+                    //SampleColl32.UseDebug = true;
                     SampleColl32.Parse(String.Join("/", hash), AKAO.SOUND);
                     sampleCollections[0] = SampleColl32;
 
@@ -318,7 +319,7 @@ namespace VS.Parser
 
                     // Program from 64 to 95 or 127
                     AKAO SampleColl64 = new AKAO();
-                    SampleColl64.UseDebug = true;
+                    //SampleColl64.UseDebug = true;
                     SampleColl64.Parse(samplePath, AKAO.SOUND);
                     sampleCollections[1] = SampleColl64;
 
@@ -327,7 +328,7 @@ namespace VS.Parser
                     {
                         hash[hash.Length - 1] = "WAVE0099.DAT";
                         AKAO addiColl = new AKAO();
-                        addiColl.UseDebug = true;
+                        //addiColl.UseDebug = true;
                         addiColl.Parse(String.Join("/", hash), AKAO.SOUND);
                         sampleCollections[2] = addiColl;
                     }
@@ -434,6 +435,7 @@ namespace VS.Parser
                             {
                                 articulations[i].sampleNum = l;
                                 articulations[i].sample = samples[l];
+                                samples[l].loopStart = articulations[i].loopPt;
                                 //Debug.Log("articulations["+i+"].sampleNum : " + l);
                                 break;
                             }
@@ -583,9 +585,8 @@ namespace VS.Parser
                                 }
 
                                 region.fineTune = (short)cents;
+
                                 sample.unityKey = (byte)region.unityKey;
-                                sample.fineTune = (sbyte)region.fineTune;
-                                sample.loopStart = (uint)articulation.loopPt;
 
                                 if (!Samples.Contains(sample))
                                 {
@@ -594,7 +595,7 @@ namespace VS.Parser
 
                                 int sampleIDX = Samples.IndexOf(sample);
 
-
+                                // http://linuxmao.org/SoundFont+specification+SF2
                                 sf2.AddInstrumentBag();
                                 sf2.AddInstrumentGenerator(SF2Generator.KeyRange, new SF2GeneratorAmount { LowByte = region.lowRange, HighByte = region.hiRange });
                                 sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = 0, HighByte = 127 });
@@ -603,11 +604,41 @@ namespace VS.Parser
                                 sf2.AddInstrumentGenerator(SF2Generator.SampleModes, new SF2GeneratorAmount { UAmount = (articulation.loopPt != 0) ? (ushort)1 : (ushort)0 });
                                 sf2.AddInstrumentGenerator(SF2Generator.OverridingRootKey, new SF2GeneratorAmount { UAmount = (ushort)region.unityKey });
 
-                                sf2.AddInstrumentGenerator(SF2Generator.AttackVolEnv, new SF2GeneratorAmount { Amount = (short)(short.MinValue + articulation.Ar) }); // articulation.A
-                                sf2.AddInstrumentGenerator(SF2Generator.DecayVolEnv, new SF2GeneratorAmount { Amount = (short)2415 }); // articulation.D
-                                sf2.AddInstrumentGenerator(SF2Generator.SustainVolEnv, new SF2GeneratorAmount { Amount = (short)0 }); // articulation.S
-                                sf2.AddInstrumentGenerator(SF2Generator.ReleaseVolEnv, new SF2GeneratorAmount { Amount = (short)-4350 }); // articulation.R
-
+                                sf2.AddInstrumentGenerator(SF2Generator.DelayVolEnv, new SF2GeneratorAmount { Amount = (short)short.MinValue });
+                                /* En timecents absolu, c'est la durée, depuis la fin du délai de l'enveloppe de volume jusqu'au point où la valeur de l'enveloppe de volume atteint son apogée.
+                                Une valeur de 0 indique 1 seconde. Une valeur négative indique un temps inférieur à une seconde, une valeur positive un temps supérieur à une seconde.
+                                Le nombre le plus négatif (-32768) indique conventionnellement une attaque instantanée.
+                                Ex : un temps d'attaque de 10 ms serait 1200log2 (.01) = -7973.
+                                En musique, le logarithme binaire intervient dans la formule permettant de déterminer la valeur en cents d’un intervalle.
+                                Un cent, ou centième de demi-ton au tempérament égal, vaut 1200 fois le logarithme binaire du rapport de fréquence des sons concernés.
+                                546 * 60 ~= short.MaxValue */
+                                sf2.AddInstrumentGenerator(SF2Generator.AttackVolEnv, new SF2GeneratorAmount { Amount = (short)(short.MinValue + articulation.Ar*500) });
+                                sf2.AddInstrumentGenerator(SF2Generator.HoldVolEnv, new SF2GeneratorAmount { Amount = (short)0 });
+                                /* C'est le temps, en timecents absolus, pour une variation de 100% de la valeur de l'enveloppe du volume pendant la phase de décroissance.
+                                Pour l'enveloppe de volume, la décroissance tend linéairement vers le niveau de maintien, ce qui provoque un changement de dB constant pour chaque unité de temps.
+                                Si le niveau de maintien = -100dB, le temps de décroissance de l'enveloppe de volume = temps de la phase de décroissance.
+                                Une valeur de 0 indique 1 seconde de temps de décroissance pour un niveau zéro. Une valeur négative indique un temps inférieur à une seconde,
+                                une valeur positive un temps supérieur à une seconde.
+                                Ex : un temps de décroissance de 10 msec serait 1200log2 (.01) = -7973.*/
+                                sf2.AddInstrumentGenerator(SF2Generator.DecayVolEnv, new SF2GeneratorAmount { Amount = (short)(articulation.Dr * 128) });
+                                /* C'est le taux de la diminution, exprimé en centibels, pour laquelle l'enveloppe de volume décroît au cours de la phase de décroissance.
+                                Pour l'enveloppe de volume, le niveau d'atténuation du sustain est mieux exprimé en centibels. Une valeur de 0 indique que le niveau est maximum.
+                                Une valeur positive indique une décroissance au niveau correspondant. Les valeurs inférieures à zéro doivent être interprétés comme zéro;
+                                conventionnellement 1000 indique une atténuation complète.
+                                Ex : un niveau de soutien qui correspond à une valeur absolue de 12 dB en dessous du pic serait 120.*/
+                                sf2.AddInstrumentGenerator(SF2Generator.SustainVolEnv, new SF2GeneratorAmount { Amount = (short)(articulation.Sr*2) });
+                                /* C'est la durée, en timecents absolu, pour une variation de 100% de la valeur de l'enveloppe du volume pendant la phase de libération (release).
+                                Pour l'enveloppe de volume, la phase de libération tend linéairement vers zéro depuis la niveau en cours,
+                                ce qui provoque un changement en dB constant pour chaque unité de temps.
+                                Si le niveau actuel est maximum, la durée du release de l'enveloppe de volume sera le temps de libération jusqu'à ce que 100 dB d'atténuation soit atteint.
+                                Une valeur de 0 indique 1 seconde de temps de décroissance pour finir complètement. Une valeur négative indique un temps inférieur à une seconde,
+                                une valeur positive un temps de plus d'une seconde.
+                                Ex : un temps de libération de 10 msec serait 1200log2 (.01) = -7973. */
+                                sf2.AddInstrumentGenerator(SF2Generator.ReleaseVolEnv, new SF2GeneratorAmount { Amount = (short)(short.MinValue + articulation.Rr * 1024) });
+                                /* Décalage de la hauteur, en cents, qui sera appliqué à la note.
+                                Il est additionnel à coarseTune. Une valeur positive indique que le son est reproduit à une hauteur plus élevée, une valeur négative indique une hauteur inférieure.
+                                Ex : une valeur finetune = -5 provoquera un son joué cinq cents plus bas. */
+                                sf2.AddInstrumentGenerator(SF2Generator.FineTune, new SF2GeneratorAmount { Amount = (short)region.fineTune });
                                 sf2.AddInstrumentGenerator(SF2Generator.SampleID, new SF2GeneratorAmount { UAmount = (ushort)sampleIDX });
                             }
 
@@ -628,7 +659,7 @@ namespace VS.Parser
                     nw.Riff = false;
 
                     short[] pcm = AKAOsmp.WAVDatas.ToArray();
-                    sf2.AddSample(pcm, AKAOsmp.name, (AKAOsmp.loopStart > 0), (uint)(AKAOsmp.loopStart * 1.75), 44100, AKAOsmp.unityKey, AKAOsmp.fineTune);
+                    sf2.AddSample(pcm, AKAOsmp.name, (AKAOsmp.loopStart > 0), (uint)(AKAOsmp.loopStart), 44100, AKAOsmp.unityKey, 0);
                 }
             }
 

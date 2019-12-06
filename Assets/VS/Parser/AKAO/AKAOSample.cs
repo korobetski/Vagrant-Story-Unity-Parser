@@ -28,7 +28,6 @@ namespace VS.Parser.Akao
         public float prev1 = 0;
         public float prev2 = 0;
         public byte unityKey;
-        public sbyte fineTune;
 
         public AKAOSample(string n, byte[] dt, ulong off)
         {
@@ -65,7 +64,6 @@ namespace VS.Parser.Akao
 
                 if (theBlock.flagLoop)
                 {
-                    loopStart = (k * 16);
                     loopLength = (ulong)(size - k * 16);
                 }
                 if (theBlock.flagEnd > 0 && theBlock.flagLooping)
@@ -77,7 +75,10 @@ namespace VS.Parser.Akao
                 {
                     theBlock.brr[l - 2] = data[k * 16 + l];
                 }
-
+                if (loopStart >= NumBlocks*16 && loopStart < (NumBlocks+1)*16 )
+                {
+                    loopStart = (uint)decomp.Count;
+                }
                 decomp.AddRange(new short[28]);
                 if (data[k * 16] != 0xFF && data[k * 16 + 1] != 0xFF)
                 {

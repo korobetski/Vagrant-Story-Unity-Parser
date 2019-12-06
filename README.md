@@ -17,4 +17,6 @@ Discord channel here : discord.gg/dXvJNVD
 
 <img src="https://github.com/korobetski/Vagrant-Story-Unity-Parser/raw/master/wireframe.png"/>
 
+<img src="https://github.com/korobetski/Vagrant-Story-Unity-Parser/raw/master/minimap.png"/>
+
 <img src="https://github.com/korobetski/Vagrant-Story-Unity-Parser/raw/master/vs_parser.png"/>

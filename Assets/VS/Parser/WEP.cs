@@ -392,9 +392,9 @@ namespace VS.Parser
             Material mat = new Material(shader);
             mat.name = FileName + "_mat";
             mat.SetTexture("_MainTex", texture);
-            mat.SetTextureScale("_MainTex", new Vector2(0.5f, 0.25f));
+            mat.SetTextureScale("_MainTex", new Vector2(0.5f, -0.25f));
             float x = (_idSmiMat - 1 > 4) ? 0.5f : 0f;
-            float y = (_idSmiMat - 1 % 2) * 0.25f;
+            float y = (_idSmiMat - 1 % 2) * -0.25f;
             mat.SetTextureOffset("_MainTex", new Vector2(x, y));
             mat.SetFloat("_Mode", 1);
             mat.SetFloat("_Cutoff", 0.5f);

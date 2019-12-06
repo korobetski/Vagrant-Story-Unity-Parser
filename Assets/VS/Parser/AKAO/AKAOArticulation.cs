@@ -69,7 +69,7 @@ namespace VS.Parser.Akao
 
                 return false;
             }
-            Debug.Log("ADSR parameters (Am : " + Am + ", Ar : " + Ar + ", Dr : " + Dr + ", Sl : " + Sl + ", Rm : " + Rm + ", Rr : " + Rr + ", Sm : " + Sm + ", Sd : " + Sd + ", Sr : " + Sr + ")");
+            //Debug.Log("ADSR parameters (Am : " + Am + ", Ar : " + Ar + ", Dr : " + Dr + ", Sl : " + Sl + ", Rm : " + Rm + ", Rr : " + Rr + ", Sm : " + Sm + ", Sd : " + Sd + ", Sr : " + Sr + ")");
 
             //ComputeADSR(Am, Ar, Dr, Sl, Rm, Rr, Sm, Sd, Sr);  Need to fix this
             // Setting arbitrary values

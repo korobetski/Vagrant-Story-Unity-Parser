@@ -54,6 +54,7 @@ namespace VS.Parser
                     vertex.position = new Vector3(x, y, z);
                     rooms[i].vertices.Add(vertex);
                 }
+
                 rooms[i].numTriangles = buffer.ReadUInt32();
                 rooms[i].triangles = new List<VSFace>();
                 for (int j = 0; j < rooms[i].numTriangles; j++)
@@ -106,16 +107,12 @@ namespace VS.Parser
                     buffer.ReadInt16();
                     rooms[i].wallLines.Add(line);
                 }
-                rooms[i].numDoors = buffer.ReadUInt32();
-                rooms[i].doors = new List<VSDoor>();
-                for (int j = 0; j < rooms[i].numDoors; j++)
+                rooms[i].numMark = buffer.ReadUInt32();
+                rooms[i].markers = new List<byte[]>();
+
+                for (int j = 0; j < rooms[i].numMark; j++)
                 {
-                    VSDoor door = new VSDoor();
-                    door.vid = buffer.ReadByte();
-                    door.exit = buffer.ReadByte();
-                    door.info = (DoorInfo)buffer.ReadByte();
-                    door.lid = buffer.ReadByte();
-                    rooms[i].doors.Add(door);
+                    rooms[i].markers.Add(buffer.ReadBytes(4));
                 }
             }
 
@@ -227,8 +224,8 @@ namespace VS.Parser
                     ARMRoom dataScript = meshGo.AddComponent<ARMRoom>();
                     dataScript.mapNumber = rooms[i].mapNumber;
                     dataScript.zoneNumber = rooms[i].zoneNumber;
-                    dataScript.doors = rooms[i].doors.ToArray();
 
+                    /*
                     LineRenderer lines = meshGo.AddComponent<LineRenderer>();
                     lines.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                     lines.receiveShadows = false;
@@ -251,8 +248,142 @@ namespace VS.Parser
                         linePos[rooms[i].numFloorLines * 2 + j * 2] = rooms[i].wallLines[j].points[0].position;
                         linePos[rooms[i].numFloorLines * 2 + j * 2 + 1] = rooms[i].wallLines[j].points[1].position;
                     }
-
                     lines.SetPositions(linePos);
+                    */
+
+
+                    // Ugly script but nicer render, no choice since line component only work with continued lines.
+                    GameObject linesContainer = new GameObject("Lines");
+                    linesContainer.transform.parent = meshGo.transform;
+                    for (int j = 0; j < rooms[i].numFloorLines; j++)
+                    {
+                        GameObject lineGo = new GameObject("Floor Line " + j);
+                        lineGo.transform.parent = linesContainer.transform;
+                        LineRenderer lines = lineGo.AddComponent<LineRenderer>();
+                        lines.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                        lines.receiveShadows = false;
+                        lines.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+                        lines.material = linesMaterial;
+                        lines.startWidth = 0.4f;
+                        lines.endWidth = 0.4f;
+                        lines.positionCount = 2;
+                        lines.useWorldSpace = false;
+                        lines.SetPositions(new Vector3[] { rooms[i].floorLines[j].points[0].position , rooms[i].floorLines[j].points[1].position });
+                    }
+                    for (int j = 0; j < rooms[i].numWallLines; j++)
+                    {
+                        GameObject lineGo = new GameObject("Wall Line " + j);
+                        lineGo.transform.parent = linesContainer.transform;
+                        LineRenderer lines = lineGo.AddComponent<LineRenderer>();
+                        lines.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                        lines.receiveShadows = false;
+                        lines.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+                        lines.material = linesMaterial;
+                        lines.startWidth = 0.2f;
+                        lines.endWidth = 0.2f;
+                        lines.positionCount = 2;
+                        lines.useWorldSpace = false;
+                        lines.SetPositions(new Vector3[] { rooms[i].wallLines[j].points[0].position, rooms[i].wallLines[j].points[1].position });
+                    }
+
+                    /*
+                    GameObject vertContainer = new GameObject("Vertices");
+                    vertContainer.transform.parent = meshGo.transform;
+                    for (int j = 0; j < rooms[i].vertices.Count; j++)
+                    {
+                        GameObject vertice = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        vertice.transform.position = rooms[i].vertices[j].position;
+                        vertice.transform.localScale = Vector3.one/10;
+                        vertice.transform.parent = vertContainer.transform;
+                    }
+                    */
+
+
+                    for (int j = 0; j < rooms[i].numMark; j++)
+                    {
+                        GameObject markerGO = new GameObject();
+                        ARMMarker mark = markerGO.AddComponent<ARMMarker>();
+                        mark.SetDatas(rooms[i].markers[j]);
+
+                        Material mat = null; //(Material)Resources.Load("Prefabs/ARMMaterial", typeof(Material));
+
+                        if (mark.info == ARMMarker.MarkerType.door)
+                        {
+                            markerGO = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                            if (mark.lockId > 0)
+                            {
+                                markerGO.name = "Locked Door";
+                                mat = (Material)Resources.Load("Prefabs/ARMRed", typeof(Material));
+                            } else
+                            {
+                                markerGO.name = "Door";
+                                mat = (Material)Resources.Load("Prefabs/ARMWhite", typeof(Material));
+                            }
+                        }
+                        if (mark.info == ARMMarker.MarkerType.center)
+                        {
+                            markerGO.name = "Room Center";
+                            // center of the room, usefull to place Ashley's position for an ingame map
+                        }
+
+                        if (mark.info == ARMMarker.MarkerType.unk12)
+                        {
+                            markerGO = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                            markerGO.name = "unk12";
+                            mat = (Material)Resources.Load("Prefabs/ARMRed", typeof(Material));
+                        }
+
+                        
+
+                        if (mark.info == ARMMarker.MarkerType.exit)
+                        {
+                            markerGO = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                            markerGO.name = "Zone Exit";
+                            mat = (Material)Resources.Load("Prefabs/ARMRed", typeof(Material));
+                        }
+                        if (mark.info == ARMMarker.MarkerType.save || mark.info == ARMMarker.MarkerType.workshop || mark.info == ARMMarker.MarkerType.reserve)
+                        {
+                            // these markers are also used as room center
+                            markerGO = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                            if (mark.info == ARMMarker.MarkerType.save)
+                            {
+                                markerGO.name = "Save";
+                                mat = (Material)Resources.Load("Prefabs/ARMLineMaterial", typeof(Material));
+                            } else if (mark.info == ARMMarker.MarkerType.reserve)
+                            {
+                                markerGO.name = "Reserve & Save";
+                                mat = (Material)Resources.Load("Prefabs/ARMLineMaterialSelected", typeof(Material));
+                            }
+                            else
+                            {
+                                markerGO.name = "Workshop";
+                                mat = (Material)Resources.Load("Prefabs/ARMWhite", typeof(Material));
+                            }
+                        }
+
+                        if (mark.info == ARMMarker.MarkerType.container)
+                        {
+                            markerGO = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                            markerGO.name = "Container";
+                            mat = (Material)Resources.Load("Prefabs/ARMWhite", typeof(Material));
+                        }
+
+
+                        // One more time ... because we erased this by changing the GO
+                        if (markerGO.GetComponent<ARMMarker>() == null)
+                        {
+                            mark = markerGO.AddComponent<ARMMarker>();
+                            mark.SetDatas(rooms[i].markers[j]);
+                        }
+
+                        if (markerGO.GetComponent<MeshRenderer>() != null)
+                        {
+                            markerGO.GetComponent<MeshRenderer>().material = mat;
+                        }
+                        markerGO.transform.position = rooms[i].vertices[(int)mark.vertexId].position;
+                        markerGO.transform.localScale = Vector3.one;
+                        markerGO.transform.parent = meshGo.transform;
+                    }
 
                     MeshFilter mf = meshGo.AddComponent<MeshFilter>();
                     mf.mesh = roomMesh;
@@ -379,13 +510,13 @@ namespace VS.Parser
         public uint numQuads = 0;
         public uint numFloorLines = 0;
         public uint numWallLines = 0;
-        public uint numDoors = 0;
+        public uint numMark = 0;
         public List<VSVertex> vertices = new List<VSVertex>();
         public List<VSFace> triangles = new List<VSFace>();
         public List<VSFace> quads = new List<VSFace>();
         public List<VSLine> floorLines = new List<VSLine>();
         public List<VSLine> wallLines = new List<VSLine>();
-        public List<VSDoor> doors = new List<VSDoor>();
+        public List<byte[]> markers = new List<byte[]>();
         public string name = "";
 
         public VSRoom() { }

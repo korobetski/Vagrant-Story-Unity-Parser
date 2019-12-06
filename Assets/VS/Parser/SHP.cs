@@ -634,6 +634,7 @@ namespace VS.Parser
             mat.EnableKeyword("_ALPHATEST_ON");
             mat.DisableKeyword("_ALPHABLEND_ON");
             mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            mat.SetTextureScale("_MainTex", new Vector2(1, -1));
 
             material = mat;
 

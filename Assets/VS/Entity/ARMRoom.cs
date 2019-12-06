@@ -6,12 +6,5 @@ namespace VS.Entity
     {
         public uint zoneNumber;
         public uint mapNumber;
-        [SerializeField]
-        public VSDoor[] doors;
-
-        public ARMRoom()
-        {
-
-        }
     }
 }

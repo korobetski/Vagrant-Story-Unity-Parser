@@ -90,7 +90,7 @@ public class VSWindow : EditorWindow
                 ARM parser = new ARM();
                 //parser.UseDebug = true;
                 parser.Parse(file);
-                parser.BuildPrefab();
+                parser.BuildPrefab(true);
                 fileParsed++;
             }
             EditorUtility.ClearProgressBar();
@@ -168,19 +168,22 @@ public class VSWindow : EditorWindow
                     // But somthings wrong when parsing, so we try to use the mesh of 37.SHP Simple Golem
                     SHP parser = new SHP();
                     parser.Parse(VSPath + "OBJ/65.SHP");
+                    parser.BuildPrefab(false);
+                    /*
                     AssetDatabase.CopyAsset("Assets/Resources/Prefabs/Models/37.prefab", "Assets/Resources/Prefabs/Models/65.prefab");
                     GameObject golemPrefab = AssetDatabase.LoadAssetAtPath("Assets/Resources/Prefabs/Models/65.prefab", typeof(GameObject)) as GameObject;
 
                     AssetDatabase.AddObjectToAsset(parser.texture, "Assets/Resources/Prefabs/Models/65.prefab");
                     golemPrefab.GetComponentInChildren<SkinnedMeshRenderer>().sharedMaterial.mainTexture = parser.texture;
                     AssetDatabase.SaveAssets();
+                    */
                 }
                 else if (!excp.Contains(filename))
                 {
                     SHP parser = new SHP();
                     //parser.UseDebug = true;
                     parser.Parse(file);
-                    parser.BuildPrefab();
+                    parser.BuildPrefab(true);
                 }
                 else
                 {
@@ -313,7 +316,7 @@ public class VSWindow : EditorWindow
 
             string[] files = Directory.GetFiles(VSPath + "MUSIC/", "*.DAT");
             float fileToParse = files.Length;
-            /*
+            
             float fileParsed = 0;
             foreach (string file in files)
             {
@@ -329,16 +332,16 @@ public class VSWindow : EditorWindow
                 }
                 fileParsed++;
             }
-            */
-
+            
+            /*
             AKAO parser = new AKAO();
             parser.UseDebug = true;
-            parser.Parse(VSPath + "MUSIC/MUSIC001.DAT", AKAO.MUSIC);
+            parser.Parse(VSPath + "MUSIC/MUSIC002.DAT", AKAO.MUSIC);
             if (parser.FileSize > 4)
             {
                 parser.composer.OutputMidiFile();
             }
-
+            */
             EditorUtility.ClearProgressBar();
         }
 
