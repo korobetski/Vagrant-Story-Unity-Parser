@@ -13,6 +13,11 @@ MPD =
 ZUD +
 AKAO +
 
+
+There is a dependency for AKAO conversion to WAV, just copy my forked version of Unity-Midi in Assets Folder : https://github.com/korobetski/unity-midi/tree/master/Assets/UnityMidi
+
+
+
 Discord channel here : discord.gg/dXvJNVD
 
 <img src="https://github.com/korobetski/Vagrant-Story-Unity-Parser/raw/master/wireframe.png"/>
