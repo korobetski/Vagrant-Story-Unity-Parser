@@ -5,13 +5,15 @@ namespace VS.Parser.Akao
     public class AKAORegion
     {
         public byte articulationId;
-        public byte lowRange;
-        public byte hiRange;
+        public byte lowRange = 0;
+        public byte hiRange = 127; // 179
+        public byte lowVel = 0;
+        public byte hiVel = 127;
         public byte unk1;
         public byte unk2;
         public byte unk3;
         public byte unk4;
-        public byte volume;
+        public byte volume = 127;
         public byte attenuation = 0xF7;  // default to no attenuation
         public ushort relativeKey;
         public byte pan = 0x40;  // default to center pan
@@ -19,13 +21,6 @@ namespace VS.Parser.Akao
         public AKAOArticulation articulation;
         public AKAOSample sample;
         public uint sampleNum;
-        /*
-        internal double attack_time;
-        internal double decay_time;
-        internal double sustain_time;
-        internal int sustain_level;
-        internal double release_time;
-        */
 
         internal uint unityKey;
         internal short fineTune;
@@ -33,7 +28,6 @@ namespace VS.Parser.Akao
 
         public AKAORegion()
         {
-
         }
 
         public void FeedMelodic(byte[] b)
@@ -42,13 +36,11 @@ namespace VS.Parser.Akao
             articulationId = b[0];
             lowRange = b[1];
             hiRange = b[2];
-            unk1 = b[3];
-            unk2 = b[4];
+            lowVel = b[3];
+            hiVel = b[4];
             unk3 = b[5];
             unk4 = b[6];
             volume = b[7];
-
-            //Debug.Log(string.Concat("AKAORegion : articulationId : ", articulationId, "   lowRange : ", lowRange, "   hiRange : ", hiRange, "   volume : ", volume, "  |  ", unk1, ", ", unk2, ", ", unk3, ", ", unk4));
         }
 
         public void FeedDrum(byte[] b, int key)
@@ -56,8 +48,8 @@ namespace VS.Parser.Akao
             isDrum = true;
             articulationId = b[0];
             relativeKey = b[1];
-            unk1 = b[2];
-            unk2 = b[3];
+            lowVel = b[2];
+            hiVel = b[3];
             unk3 = b[4];
             unk4 = b[5];
             attenuation = b[6];
@@ -65,8 +57,22 @@ namespace VS.Parser.Akao
             lowRange = (byte)key;
             hiRange = lowRange;
             volume = (byte)(attenuation / 127);
+        }
 
-            //Debug.Log(string.Concat("AKAORegion Drum : articulationId : ", articulationId, " relativeKey : ", relativeKey, "   note : ", lowRange, "   attenuation : ", attenuation, "  |  ", unk1, ", ", unk2, ", ", unk3, ", ", unk4));
+        public override string ToString()
+        {
+            string str = "";
+            if (isDrum)
+            {
+                str = string.Concat("AKAORegion Drum : articulationId : ", articulationId, " relativeKey : ", relativeKey, "   note : ", lowRange,
+                    "   attenuation : ", attenuation, "  |  ", lowVel, ", ", hiVel, ", ", unk3, ", ", unk4);
+            }
+            else
+            {
+                str = string.Concat("AKAORegion : articulationId : ", articulationId, "   lowRange : ", lowRange, "   hiRange : ", hiRange,
+                    "   volume : ", volume, "  |  ", lowVel, ", ", hiVel, ", ", unk3, ", ", unk4);
+            }
+            return str;
         }
     }
 }

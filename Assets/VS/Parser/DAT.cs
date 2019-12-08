@@ -1,16 +1,8 @@
-﻿using UnityEngine;
-
-public class DAT : MonoBehaviour
+﻿namespace VS.Parser
 {
-    // Start is called before the first frame update
-    void Start()
+    public class DAT : FileParser
     {
-
+        // SE/SEP00002.DAT maybe special effect particles definition ?
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
 }

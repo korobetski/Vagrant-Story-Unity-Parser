@@ -19,6 +19,9 @@ namespace VS.Entity
         [SerializeField]
         public Vector3[] ZUDInfos;
 
+        [SerializeField]
+        public ZNDMonster[] monsters;
+
 
         public ZNDDatas()
         {

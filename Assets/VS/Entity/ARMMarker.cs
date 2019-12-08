@@ -5,7 +5,7 @@ namespace VS.Entity
 {
 
     [Serializable]
-    public class ARMMarker:MonoBehaviour
+    public class ARMMarker : MonoBehaviour
     {
         public enum MarkerType { door = 0, center = 1, save = 2, exit = 4, workshop = 8, container = 10, unk12 = 12, reserve = 18 };
 

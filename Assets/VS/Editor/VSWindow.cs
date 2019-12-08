@@ -8,8 +8,12 @@ using VS.Parser;
 public class VSWindow : EditorWindow
 {
     private string VSPath = "";
+    private string FilePath = "";
     private VSPConfig conf;
 
+    bool midTrigger = true;
+    bool sf2Trigger = true;
+    bool dlsTrigger = false;
 
     [MenuItem("Window/Vagrant Story")]
     public static void ShowWindow()
@@ -48,7 +52,7 @@ public class VSWindow : EditorWindow
         if (VSPathTrigger)
         {
             string path = EditorUtility.OpenFolderPanel("Path to Vagrant Story CD", "", "");
-            VSPath = path;
+            VSPath = path + "/";
         }
 
         GUILayoutOption[] options3 = { GUILayout.Width(200), GUILayout.MaxWidth(400) };
@@ -61,20 +65,62 @@ public class VSWindow : EditorWindow
         }
 
         GUILayout.Label("Vagrant Story Version : " + conf.VS_Version);
-        GUILayout.Label("Batch imports", EditorStyles.boldLabel);
-        bool LoadSYDTrigger = GUILayout.Button(new GUIContent("Load MENU DataBase.SYD"));
-        if (LoadSYDTrigger && VSPath != "")
+        GUILayout.Space(10f);
+
+        GUILayout.Label("| One File import", EditorStyles.boldLabel);
+        FilePath = EditorGUILayout.TextField("File path (VS Path relativ) :", FilePath, options);
+        bool filePathTrigger = GUILayout.Button(new GUIContent("..."), options2);
+        if (filePathTrigger)
         {
-            BuildDatabase();
+            string path = EditorUtility.OpenFilePanel("Path to File", VSPath, "");
+            FilePath = path.Replace(VSPath, "");
+        }
+        bool fileLoadTrigger = GUILayout.Button(new GUIContent("Load"), options3);
+        if (fileLoadTrigger && VSPath != "" && FilePath != "")
+        {
+            string[] hash = FilePath.Split("/"[0]);
+
+            switch (hash[0])
+            {
+                case "BATTLE":
+                    // BATTLE.PRG
+                    // BOG.DAT
+                    // INITBTL.PRG
+                    // SYSTEM.DAT
+                    break;
+                case "BG":
+                    // 001OP01A.FAR & TIM
+                    // 002OP01A.FAR & TIM
+                    // 007OP01A.FAR & TIM
+                    // 008OP01A.FAR & TIM
+                    break;
+                case "EFFECT":
+                    // EFFPURGE.BIN maybe the PLG for E000.P
+                    // E*.P
+                    // E*.FBC
+                    // E*.FBT
+                    // PLG*.BIN lot of empty
+                    break;
+                case "ENDING":
+                    // ENDING.PRG
+                    // ENDING.XA
+                    // ILLUST06.BIN -> ILLUST16.BIN
+                    // NULL.DAT
+                    break;
+                case "MUSIC":
+                    ParseAKAO(VSPath + FilePath, AKAO.MUSIC, true);
+                    break;
+                case "SOUND":
+                    ParseAKAO(VSPath + FilePath, AKAO.SOUND, true);
+                    break;
+            }
         }
 
-        bool LoadITEMTrigger = GUILayout.Button(new GUIContent("Load MENU ITEM*.BIN"));
-        if (LoadITEMTrigger && VSPath != "")
-        {
-            BIN itemDB = new BIN();
-            itemDB.BuildItems(VSPath + "MENU/ITEMNAME.BIN", VSPath + "MENU/ITEMHELP.BIN");
-        }
 
+
+        GUILayout.Label("| Batch imports", EditorStyles.boldLabel);
+        GUILayout.BeginVertical();
+        GUILayout.Label("3D Model Formats : ");
         bool LoadARMTrigger = GUILayout.Button(new GUIContent("Load MiniMaps.ARM"));
         if (LoadARMTrigger && VSPath != "")
         {
@@ -254,7 +300,6 @@ public class VSWindow : EditorWindow
             EditorUtility.ClearProgressBar();
         }
 
-
         bool LoadMPDTrigger = GUILayout.Button(new GUIContent("Load Map Datas.MPD"));
         if (LoadMPDTrigger && VSPath != "")
         {
@@ -284,68 +329,7 @@ public class VSWindow : EditorWindow
             EditorUtility.ClearProgressBar();
         }
 
-
-        bool LoadAKAOTrigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE*.DAT"));
-        if (LoadAKAOTrigger && VSPath != "")
-        {
-            string[] files = Directory.GetFiles(VSPath + "SOUND/", "*.DAT");
-            float fileToParse = files.Length;
-            float fileParsed = 0;
-            foreach (string file in files)
-            {
-                string[] h = file.Split("/"[0]);
-                string filename = h[h.Length - 1];
-                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                AKAO parser = new AKAO();
-                parser.UseDebug = true;
-                parser.Parse(file, AKAO.SOUND);
-                fileParsed++;
-            }
-
-            //AKAO parser = new AKAO();
-            //parser.UseDebug = true;
-            //parser.Parse(VSPath + "SOUND/WAVE0088.DAT", AKAO.SOUND);
-
-            EditorUtility.ClearProgressBar();
-        }
-
-
-        bool LoadAKAO2Trigger = GUILayout.Button(new GUIContent("Load Akao MUSIC/MUSIC*.DAT"));
-        if (LoadAKAO2Trigger && VSPath != "")
-        {
-
-            string[] files = Directory.GetFiles(VSPath + "MUSIC/", "*.DAT");
-            float fileToParse = files.Length;
-            
-            float fileParsed = 0;
-            foreach (string file in files)
-            {
-                string[] h = file.Split("/"[0]);
-                string filename = h[h.Length - 1];
-                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                AKAO parser = new AKAO();
-                //parser.UseDebug = true;
-                parser.Parse(file, AKAO.MUSIC);
-                if (parser.FileSize > 4)
-                {
-                    parser.composer.OutputMidiFile();
-                }
-                fileParsed++;
-            }
-            
-            /*
-            AKAO parser = new AKAO();
-            parser.UseDebug = true;
-            parser.Parse(VSPath + "MUSIC/MUSIC002.DAT", AKAO.MUSIC);
-            if (parser.FileSize > 4)
-            {
-                parser.composer.OutputMidiFile();
-            }
-            */
-            EditorUtility.ClearProgressBar();
-        }
-
-        bool LoadEFFECTTrigger = GUILayout.Button(new GUIContent("Load EFFECT/E0*.P, E0*.FBC, E0*.FBT"));
+        bool LoadEFFECTTrigger = GUILayout.Button(new GUIContent("Load EFFECT/E0*.P, E0*.FBC, E0*.FBT (Only Texture right now)"));
         if (LoadEFFECTTrigger && VSPath != "")
         {
 
@@ -367,27 +351,10 @@ public class VSWindow : EditorWindow
 
             EditorUtility.ClearProgressBar();
         }
+        GUILayout.EndVertical();
 
-        bool LoadEVENTTrigger = GUILayout.Button(new GUIContent("Load EVENT/*.EVT"));
-        if (LoadEVENTTrigger && VSPath != "")
-        {
-
-            string[] files = Directory.GetFiles(VSPath + "EVENT/", "*.EVT");
-            float fileToParse = files.Length;
-
-            float fileParsed = 0;
-            foreach (string file in files)
-            {
-                string[] h = file.Split("/"[0]);
-                string filename = h[h.Length - 1];
-                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                EVT evt = new EVT(file);
-                fileParsed++;
-            }
-
-
-            EditorUtility.ClearProgressBar();
-        }
+        GUILayout.BeginVertical();
+        GUILayout.Label("Texture Formats : ");
 
         bool LoadGIMTrigger = GUILayout.Button(new GUIContent("Load GIM/*.GIM"));
         if (LoadGIMTrigger && VSPath != "")
@@ -453,26 +420,6 @@ public class VSWindow : EditorWindow
             EditorUtility.ClearProgressBar();
         }
 
-        bool LoadHFTrigger = GUILayout.Button(new GUIContent("Load InGame Help SMALL/*.HF"));
-        if (LoadHFTrigger && VSPath != "")
-        {
-            string[] files = Directory.GetFiles(VSPath + "SMALL/", "*.HF0");
-            float fileToParse = files.Length;
-
-            float fileParsed = 0;
-            foreach (string file in files)
-            {
-                string[] h = file.Split("/"[0]);
-                string filename = h[h.Length - 1];
-                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                HF0 parser = new HF0();
-                parser.Parse(file);
-                fileParsed++;
-            }
-
-
-            EditorUtility.ClearProgressBar();
-        }
         bool LoadTIMTrigger = GUILayout.Button(new GUIContent("BG/*.TIM"));
         if (LoadTIMTrigger && VSPath != "")
         {
@@ -494,7 +441,7 @@ public class VSWindow : EditorWindow
             EditorUtility.ClearProgressBar();
         }
 
-        bool LoadILLUSTTrigger = GUILayout.Button(new GUIContent("ENDING/ILLUST*.BIN"));
+        bool LoadILLUSTTrigger = GUILayout.Button(new GUIContent("ENDING/ILLUST*.BIN (Not Working Yet)"));
         if (LoadILLUSTTrigger && VSPath != "")
         {
             // not working yet
@@ -515,6 +462,117 @@ public class VSWindow : EditorWindow
 
             EditorUtility.ClearProgressBar();
         }
+        GUILayout.EndVertical();
+
+
+        GUILayout.BeginVertical();
+        GUILayout.Label("Audio Formats : ");
+
+        /*
+        bool LoadAKAOTrigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE*.DAT"));
+        if (LoadAKAOTrigger && VSPath != "")
+        {
+            string[] files = Directory.GetFiles(VSPath + "SOUND/", "*.DAT");
+            float fileToParse = files.Length;
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                AKAO parser = new AKAO();
+                parser.UseDebug = true;
+                parser.Parse(file, AKAO.SOUND);
+                fileParsed++;
+            }
+
+            //AKAO parser = new AKAO();
+            //parser.UseDebug = true;
+            //parser.Parse(VSPath + "SOUND/WAVE0088.DAT", AKAO.SOUND);
+
+            EditorUtility.ClearProgressBar();
+        }
+        */
+        midTrigger = GUILayout.Toggle(midTrigger, new GUIContent("output a MIDI file ?"));
+        sf2Trigger = GUILayout.Toggle(sf2Trigger, new GUIContent("output a SF2 (soundfont) file ?"));
+        dlsTrigger = GUILayout.Toggle(dlsTrigger, new GUIContent("output a DLS (soundfont) file ?"));
+        bool LoadAKAO2Trigger = GUILayout.Button(new GUIContent("Load Akao MUSIC/MUSIC*.DAT"));
+        if (LoadAKAO2Trigger && VSPath != "")
+        {
+
+            string[] files = Directory.GetFiles(VSPath + "MUSIC/", "*.DAT");
+            float fileToParse = files.Length;
+
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                ParseAKAO(file, AKAO.MUSIC, false);
+                fileParsed++;
+            }
+            EditorUtility.ClearProgressBar();
+        }
+        GUILayout.EndVertical();
+
+        GUILayout.BeginVertical();
+        GUILayout.Label("Data Formats : ");
+        bool LoadSYDTrigger = GUILayout.Button(new GUIContent("Load MENU DataBase.SYD"));
+        if (LoadSYDTrigger && VSPath != "")
+        {
+            BuildDatabase();
+        }
+
+        bool LoadITEMTrigger = GUILayout.Button(new GUIContent("Load MENU ITEM*.BIN"));
+        if (LoadITEMTrigger && VSPath != "")
+        {
+            BIN itemDB = new BIN();
+            itemDB.BuildItems(VSPath + "MENU/ITEMNAME.BIN", VSPath + "MENU/ITEMHELP.BIN");
+        }
+
+        bool LoadEVENTTrigger = GUILayout.Button(new GUIContent("Load EVENT/*.EVT"));
+        if (LoadEVENTTrigger && VSPath != "")
+        {
+
+            string[] files = Directory.GetFiles(VSPath + "EVENT/", "*.EVT");
+            float fileToParse = files.Length;
+
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                EVT evt = new EVT(file);
+                fileParsed++;
+            }
+
+
+            EditorUtility.ClearProgressBar();
+        }
+
+        bool LoadHFTrigger = GUILayout.Button(new GUIContent("Load InGame Help SMALL/*.HF"));
+        if (LoadHFTrigger && VSPath != "")
+        {
+            string[] files = Directory.GetFiles(VSPath + "SMALL/", "*.HF0");
+            float fileToParse = files.Length;
+
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                HF0 parser = new HF0();
+                parser.Parse(file);
+                fileParsed++;
+            }
+
+
+            EditorUtility.ClearProgressBar();
+        }
+        GUILayout.EndVertical();
 
 
         bool LoadEXPLOTrigger = GUILayout.Button(new GUIContent("Explore..."));
@@ -553,5 +611,19 @@ public class VSWindow : EditorWindow
             //parser.UseDebug = true;
             parser.Parse(file, texts);
         }
+    }
+
+    private void ParseAKAO(string path, AKAO.AKAOType type, bool UseDebug)
+    {
+        AKAO parser = new AKAO();
+        parser.UseDebug = UseDebug;
+        parser.bSF2 = sf2Trigger;
+        parser.bDLS = dlsTrigger;
+        parser.Parse(path, type);
+        if (type == AKAO.AKAOType.MUSIC && parser.FileSize > 4 && midTrigger)
+        {
+            parser.composer.OutputMidiFile();
+        }
+
     }
 }

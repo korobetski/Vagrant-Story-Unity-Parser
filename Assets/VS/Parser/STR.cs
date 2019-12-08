@@ -1,8 +1,4 @@
-﻿using UnityEngine;
-
-
-
-namespace VS.Parser
+﻿namespace VS.Parser
 {
     public class STR
     {

@@ -18,6 +18,7 @@ namespace VS.Parser
         /// <param name="path">Target the EFFECT/E0*.P</param>
         public EFFECT(string path)
         {
+            // it seems to be linked with EFFECT/PLG*.BIN
             VSPConfig cf = Memory.LoadConfig();
 
             baseFx = new P(path);

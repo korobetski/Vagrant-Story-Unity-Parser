@@ -3,7 +3,7 @@
 public class FileParser
 {
     private string _filePath;
-    private string _fileName;
+    private string _fileName = "";
     private string _ext;
     private long _fileSize;
     public FileStream fileStream;

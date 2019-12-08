@@ -70,12 +70,14 @@ namespace VS.Format
             if (bLoop)
             {
                 end = start + len + 8;
-                loopStart = start + loopPos; loopEnd = start + len;
+                loopStart = start + loopPos;
+                loopEnd = start + len;
             }
             else
             {
                 end = start + len;
-                loopStart = 0; loopEnd = 0;
+                loopStart = 0;
+                loopEnd = 0;
             }
 
             return AddSampleHeader(name, start, end, loopStart, loopEnd, sampleRate, originalKey, pitchCorrection);

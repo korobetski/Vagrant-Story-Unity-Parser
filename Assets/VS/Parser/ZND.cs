@@ -14,6 +14,7 @@ namespace VS.Parser
         public Vector3[] MPDInfos;
         public Vector3[] ZUDInfos;
         public ZNDDatas datas;
+
         private FrameBuffer timfb;
         private VSTIM[] tims;
         private List<Texture2D> textures;
@@ -96,6 +97,10 @@ namespace VS.Parser
                 ZUDInfos[i] = new Vector3(id, value);
             }
 
+            datas = new ZNDDatas();
+            datas.monsters = new ZNDMonster[numEnemies];
+
+
             // TODO enemy class & parse
             long loopbase = buffer.BaseStream.Position;
             for (int i = 0; i < numEnemies; i++)
@@ -104,34 +109,7 @@ namespace VS.Parser
                 {
                     buffer.BaseStream.Position = (loopbase + numEnemies * 464);
                 }
-                /*
-                VSEnemy mob = new VSEnemy();
-                mob.unkn1 = buffer.ReadUInt16();
-                mob.loc = buffer.ReadByte();
-                mob.unkn2 = buffer.ReadByte();
-                byte[] bn = buffer.ReadBytes(18);
-                string sname = "";
-                foreach (byte b in bn)
-                {
-                    sname = sname + VSHelper.charset(b);
-                }
-                mob.stats.HP = buffer.ReadUInt16();
-                mob.stats.MP = buffer.ReadUInt16();
-                mob.stats.STR = buffer.ReadByte();
-                mob.stats.INT = buffer.ReadByte();
-                mob.stats.AGI = buffer.ReadByte();
-                buffer.BaseStream.Position = (loopbase + numEnemies * 460);
-                uint id = buffer.ReadUInt32();
-                mob.name = sname;
-                if (debugger)
-                {
-                    Debug.Log("--------------");
-                    Debug.Log("Enemy : unkn1 = " + mob.unkn1 + "  - unkn2 = " + mob.unkn2 + "  - loc = " + mob.loc);
-                    Debug.Log(sname);
-                    Debug.Log("Enemy : id = " + id);
-                    Debug.Log("--------------");
-                }
-                */
+                datas.monsters[i] = new ZNDMonster(buffer.ReadBytes(464));
             }
 
 
@@ -166,7 +144,6 @@ namespace VS.Parser
 
             buffer.Close();
 
-            datas = new ZNDDatas();
             datas.filePath = FilePath;
             datas.tims = tims;
             datas.MPDInfos = MPDInfos;

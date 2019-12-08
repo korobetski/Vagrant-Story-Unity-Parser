@@ -268,7 +268,7 @@ namespace VS.Parser
                         lines.endWidth = 0.4f;
                         lines.positionCount = 2;
                         lines.useWorldSpace = false;
-                        lines.SetPositions(new Vector3[] { rooms[i].floorLines[j].points[0].position , rooms[i].floorLines[j].points[1].position });
+                        lines.SetPositions(new Vector3[] { rooms[i].floorLines[j].points[0].position, rooms[i].floorLines[j].points[1].position });
                     }
                     for (int j = 0; j < rooms[i].numWallLines; j++)
                     {
@@ -314,7 +314,8 @@ namespace VS.Parser
                             {
                                 markerGO.name = "Locked Door";
                                 mat = (Material)Resources.Load("Prefabs/ARMRed", typeof(Material));
-                            } else
+                            }
+                            else
                             {
                                 markerGO.name = "Door";
                                 mat = (Material)Resources.Load("Prefabs/ARMWhite", typeof(Material));
@@ -333,7 +334,7 @@ namespace VS.Parser
                             mat = (Material)Resources.Load("Prefabs/ARMRed", typeof(Material));
                         }
 
-                        
+
 
                         if (mark.info == ARMMarker.MarkerType.exit)
                         {
@@ -349,7 +350,8 @@ namespace VS.Parser
                             {
                                 markerGO.name = "Save";
                                 mat = (Material)Resources.Load("Prefabs/ARMLineMaterial", typeof(Material));
-                            } else if (mark.info == ARMMarker.MarkerType.reserve)
+                            }
+                            else if (mark.info == ARMMarker.MarkerType.reserve)
                             {
                                 markerGO.name = "Reserve & Save";
                                 mat = (Material)Resources.Load("Prefabs/ARMLineMaterialSelected", typeof(Material));

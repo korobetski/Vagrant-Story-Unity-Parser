@@ -1,8 +1,12 @@
-﻿using System;
+﻿using AudioSynthesis.Bank;
+using AudioSynthesis.Sequencer;
+using AudioSynthesis.Synthesis;
+using AudioSynthesis.Wave;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using UnityEngine;
+using UnityMidi;
 using VS.Format;
 using VS.Utils;
 
@@ -13,8 +17,11 @@ namespace VS.Parser.Akao
 {
     public class AKAOComposer
     {
-        //public static readonly ushort[] delta_time_table = { 0xC0, 0x60, 0x30, 0x18, 0x0C, 0x6, 0x3, 0x20, 0x10, 0x8, 0x4, 0x0, 0xA0A0, 0xA0A0 };
-        public static readonly ushort[] delta_time_table = { 0xC0, 0x60, 0x30, 0x18, 0x0C, 0x6, 0x3, 0x20, 0x10, 0x8, 0x5, 0x0, 0xA0A0, 0xA0A0 };
+        public static readonly ushort[] delta_time_table = { 0xC0, 0x60, 0x30, 0x18, 0x0C, 0x6, 0x3, 0x20, 0x10, 0x8, 0x4, 0x0, 0xA0A0, 0xA0A0 };
+        public static bool UseDebug = false;
+
+        public List<uint> A1Calls;
+        public List<uint> progIDs;
 
         private BinaryReader buffer;
         private string name;
@@ -23,14 +30,12 @@ namespace VS.Parser.Akao
         private uint numTrack;
         private uint numInstr;
         private AKAOTrack[] tracks;
-
-        List<uint> progIDs;
-
-
         private uint velocity = 127;
         private int quarterNote = 0x30;
 
-        public static bool UseDebug = false;
+
+
+
 
         public AKAOComposer(BinaryReader buffer, long start, long end, uint NI, uint NT, string name, bool UseDebug = false)
         {
@@ -42,6 +47,8 @@ namespace VS.Parser.Akao
 
             this.start = start;
             this.end = end;
+
+            A1Calls = new List<uint>();
 
             buffer.BaseStream.Position = start;
             SetTracks();
@@ -86,6 +93,45 @@ namespace VS.Parser.Akao
                     fs.WriteByte(midiByte[i]);
                 }
                 fs.Close();
+            }
+
+            if (File.Exists("Assets/Resources/Sounds/SF2/" + name + ".sf2"))
+            {
+                // so we try to build a sampled audio file.
+
+                int channel = 2;
+                int sampleRate = 44100;
+                int bufferSize = 1024;
+
+                Synthesizer synthesizer = new Synthesizer(sampleRate, channel, bufferSize, 1);
+                MidiFileSequencer sequencer = new MidiFileSequencer(synthesizer);
+                synthesizer.LoadBank(new PatchBank(new AssetResouce("Resources/Sounds/SF2/" + name + ".sf2")));
+                sequencer.LoadMidi(new AssetResouce("Resources/Sounds/" + name + ".mid"));
+
+                ToolBox.DirExNorCreate("Assets/Resources/Sounds/WAV/");
+                File.Create("Assets/Resources/Sounds/WAV/" + name + ".tmp").Close();
+                File.Create("Assets/Resources/Sounds/WAV/" + name + ".wav").Close();
+
+                AssetResouce temp = new AssetResouce("Resources/Sounds/WAV/" + name + ".tmp");
+
+                WaveFileWriter wavManager = new WaveFileWriter(sampleRate, 2, 16, temp, new AssetResouce("Resources/Sounds/WAV/" + name + ".wav"));
+
+
+                sequencer.Play();
+                while (sequencer.CurrentTime < sequencer.EndTime)
+                {
+                    //Debug.Log(sequencer.CurrentTime+"  -  "+ sequencer.EndTime);
+                    int newMSize = (int)(synthesizer.MicroBufferSize * sequencer.PlaySpeed);
+                    bool reachEnd = (sequencer.CurrentTime + newMSize >= sequencer.EndTime) ? true : false;
+                    sequencer.FillMidiEventQueue();
+                    synthesizer.GetNext();
+                    wavManager.Write(synthesizer.WorkingBuffer);
+                    if (reachEnd)
+                    {
+                        break;
+                    }
+                }
+                wavManager.Close();
             }
         }
 
@@ -168,14 +214,14 @@ namespace VS.Parser.Akao
 
                     if (STATUS_BYTE < 0x83) // Note On
                     {
-                        
+
                         if (playingNote)
                         {
                             curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
                             delta = 0;
                             playingNote = false;
                         }
-                        
+
 
                         uint relativeKey = (uint)i;
                         uint baseKey = octave * 12;
@@ -193,6 +239,7 @@ namespace VS.Parser.Akao
                     }
                     else // Rest
                     {
+
                         if (playingNote == true)
                         {
                             curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
@@ -207,21 +254,21 @@ namespace VS.Parser.Akao
                 }
                 else if ((STATUS_BYTE >= 0xF0) && (STATUS_BYTE <= 0xFB)) // Alternate Note On ?
                 {
-                    
+
                     if (playingNote)
                     {
                         curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
                         delta = 0;
                         playingNote = false;
                     }
-                    
+
 
                     uint relativeKey = (uint)STATUS_BYTE - 0xF0;
                     uint baseKey = octave * 12;
                     uint key = baseKey + relativeKey;
                     uint time = buffer.ReadByte();
 
-                    curTrack.AddEvent(new EvNoteOn(STATUS_BYTE, channel, key, velocity, delta));
+                    curTrack.AddEvent(new EvNoteOn(STATUS_BYTE, channel, key, velocity, delta, true));
                     delta = (ushort)time;
                     prevKey = key;
                     playingNote = true;
@@ -251,11 +298,21 @@ namespace VS.Parser.Akao
                             }
 
                             break;
-                        case 0xA1:// Program Change, using General Midi fallback instead of samples ?
-                            byte prog = buffer.ReadByte();
-                            if (!progIDs.Contains(prog)) progIDs.Add(prog);
-                            curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
-                            curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, (byte)(prog + numInstr))); //  + numInstr
+                        case 0xA1:// Program Change, using General Midi fallback instead of samples ? articulation id ?
+                            // (in MUSIC000 this instruction call prog 74, in regions the last artId is 73; so maybe we need to create a new instrument with default values)
+                            byte prog = (byte)(buffer.ReadByte() + numInstr); //  + numInstr
+                            if (!A1Calls.Contains(prog))
+                            {
+                                A1Calls.Add(prog);
+                            }
+
+                            if (!progIDs.Contains(prog))
+                            {
+                                progIDs.Add(prog);
+                            }
+                            //curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
+                            //Debug.Log("0xA1 Program Change : "+prog);
+                            curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, (byte)(prog), delta));
                             if (curTrack.name == "AKAOTrack")
                             {
                                 curTrack.name = string.Concat("Track ", SMF.INSTRUMENTS[prog]);
@@ -291,7 +348,9 @@ namespace VS.Parser.Akao
                             break;
                         case 0xA8:// Expression
                             uint expression = buffer.ReadByte();
-                            curTrack.AddEvent(new EvExpr(STATUS_BYTE, channel, expression));
+                            // maybe we shouldn't reset delta
+                            curTrack.AddEvent(new EvExpr(STATUS_BYTE, channel, expression, delta));
+                            delta = 0;
                             break;
                         case 0xA9:// Expression Slide
                             uint duration = buffer.ReadByte();
@@ -729,9 +788,12 @@ namespace VS.Parser.Akao
                                     break;
                                 case 0x14: // Bank Change
                                     byte bank = buffer.ReadByte();
-                                    if (!progIDs.Contains(bank)) progIDs.Add(bank);
-                                    curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 1, delta));
-                                    curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, bank));
+                                    if (!progIDs.Contains(bank))
+                                    {
+                                        progIDs.Add(bank);
+                                    }
+                                    //curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 1, delta));
+                                    curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, bank, delta));
                                     if (curTrack.name == "AKAOTrack")
                                     {
                                         curTrack.name = string.Concat("Track ", SMF.INSTRUMENTS[bank]);
@@ -800,7 +862,8 @@ namespace VS.Parser.Akao
                 if (events.Count > 0)
                 {
                     ev.absTime = events[events.Count - 1].absTime + ev.deltaTime;
-                } else
+                }
+                else
                 {
                     ev.absTime = ev.deltaTime;
                 }
@@ -1116,7 +1179,7 @@ namespace VS.Parser.Akao
             */
             private uint velocity;
 
-            public EvNoteOn(byte STATUS_BYTE, uint channel, uint key, uint velocity, uint t = 0x00)
+            public EvNoteOn(byte STATUS_BYTE, uint channel, uint key, uint velocity, uint t = 0x00, bool alt = false)
             {
                 //Debug.Log("EvNoteOn : " + channel + " k : " + key +" vel : "+ velocity + "  t : " + t);
                 this.key = key;
@@ -1129,7 +1192,7 @@ namespace VS.Parser.Akao
 
                 if (AKAOComposer.UseDebug)
                 {
-                    Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  ->  EvNoteOn : ", key, "   velocity : ", velocity, "   channel : ", channel, "    delta : ", t));
+                    Debug.LogWarning(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  ->  EvNoteOn ", alt ? "(Alt)" : "", " : ", key, "   velocity : ", velocity, "   channel : ", channel, "    delta : ", t));
                 }
             }
         }
@@ -1214,7 +1277,7 @@ namespace VS.Parser.Akao
 
             public EvTrackName(string trackName)
             {
-                
+
                 deltaTime = 0x00;
                 midiStatusByte = 0xFF;
                 midiArg1 = 0x03;
@@ -1232,7 +1295,7 @@ namespace VS.Parser.Akao
             }
         }
 
-    private class EvEndTrack : AKAOEvent
+        private class EvEndTrack : AKAOEvent
         {
             public EvEndTrack(byte STATUS_BYTE, uint trackId, uint delta = 0x00, bool bigEnd = false)
             {

@@ -8,6 +8,7 @@ namespace VS.Parser.Akao
 {
     public class AKAOArticulation
     {
+        public uint id;
         public uint sampleOff;
         public uint loopPt;
         public short fineTune;
@@ -35,18 +36,24 @@ namespace VS.Parser.Akao
         internal int R = 0;             //in seconds
         internal ushort RT = 0;         // 0 = No Transform, 1 = concave Transform
 
-        public AKAOArticulation(BinaryReader buffer)
+        public AKAOArticulation(BinaryReader buffer, uint _id)
         {
+            id = _id;
             sampleOff = buffer.ReadUInt32();
             loopPt = buffer.ReadUInt32() - sampleOff;
             fineTune = buffer.ReadInt16();
             unityKey = (ushort)buffer.ReadInt16();
             ADSR1 = buffer.ReadUInt16();
             ADSR2 = buffer.ReadUInt16();
-
-
-            //Debug.Log(string.Concat("AKAOArticulation =>  offset :", sampleOff, "  loopPt : ", loopPt, "  fineTune : ", fineTune, "  unityKey : ", unityKey, "  adr1 : ", ADSR1, "  adr2 : ", ADSR2));
         }
+
+        public override string ToString()
+        {
+            string str = string.Concat("AKAOArticulation # ", id, " =>  offset :", sampleOff, "  loopPt : ", loopPt,
+                "  fineTune : ", fineTune, "  unityKey : ", unityKey, "  adr1 : ", ADSR1, "  adr2 : ", ADSR2);
+            return str;
+        }
+
 
         internal bool BuildADSR()
         {
