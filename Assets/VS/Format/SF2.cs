@@ -58,6 +58,25 @@ namespace VS.Format
             }
         }
 
+        public MemoryStream MemorySave()
+        {
+            MemoryStream mem = new MemoryStream();
+            using (var writer = new BinaryWriter(mem, Encoding.ASCII))
+            {
+                AddTerminals();
+
+                writer.Write("RIFF".ToCharArray());
+                writer.Write(size);
+                writer.Write("sfbk".ToCharArray());
+
+                InfoChunk.Write(writer);
+                SoundChunk.Write(writer);
+                HydraChunk.Write(writer);
+            }
+
+            return mem;
+        }
+
 
         // Returns sample index
         public uint AddSample(short[] pcm16, string name, bool bLoop, uint loopPos, uint sampleRate, byte originalKey, sbyte pitchCorrection)

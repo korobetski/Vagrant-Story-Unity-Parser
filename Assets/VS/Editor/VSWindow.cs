@@ -14,6 +14,7 @@ public class VSWindow : EditorWindow
     bool midTrigger = true;
     bool sf2Trigger = true;
     bool dlsTrigger = false;
+    bool wavTrigger = false;
 
     [MenuItem("Window/Vagrant Story")]
     public static void ShowWindow()
@@ -495,7 +496,8 @@ public class VSWindow : EditorWindow
         */
         midTrigger = GUILayout.Toggle(midTrigger, new GUIContent("output a MIDI file ?"));
         sf2Trigger = GUILayout.Toggle(sf2Trigger, new GUIContent("output a SF2 (soundfont) file ?"));
-        dlsTrigger = GUILayout.Toggle(dlsTrigger, new GUIContent("output a DLS (soundfont) file ?"));
+        dlsTrigger = GUILayout.Toggle(dlsTrigger, new GUIContent("output a DLS (soundfont) file ? (Not working well yet)"));
+        wavTrigger = GUILayout.Toggle(wavTrigger, new GUIContent("output a WAV file ? ( /_!_\\ heavy files)"));
         bool LoadAKAO2Trigger = GUILayout.Button(new GUIContent("Load Akao MUSIC/MUSIC*.DAT"));
         if (LoadAKAO2Trigger && VSPath != "")
         {
@@ -617,13 +619,10 @@ public class VSWindow : EditorWindow
     {
         AKAO parser = new AKAO();
         parser.UseDebug = UseDebug;
+        parser.bMID = midTrigger;
         parser.bSF2 = sf2Trigger;
         parser.bDLS = dlsTrigger;
+        parser.bWAV = wavTrigger;
         parser.Parse(path, type);
-        if (type == AKAO.AKAOType.MUSIC && parser.FileSize > 4 && midTrigger)
-        {
-            parser.composer.OutputMidiFile();
-        }
-
     }
 }

@@ -16,8 +16,8 @@ public class MiniMapsViewver : MonoBehaviour
     private GameObject selectedRoom;
     private string selectedRoomFilePath;
 
-    private float orthographicSizeMin = 2f;
-    private float orthographicSizeMax = 8f;
+    //private float orthographicSizeMin = 2f;
+    //private float orthographicSizeMax = 8f;
     private int idRot = 0;
     private VSPConfig conf;
 

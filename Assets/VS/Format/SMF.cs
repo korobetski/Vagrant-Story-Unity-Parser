@@ -148,7 +148,7 @@
             "Telephone Ring",
             "Helicopter",
             "Applause",
-            "Gunshot",
+            "Gunshot"
         };
 
 

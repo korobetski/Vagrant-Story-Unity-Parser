@@ -217,7 +217,7 @@ namespace VS.Data
 
         public override string ToString()
         {
-            return "Grip : " + _name + " Gems : " + _gemSlots + " [STR:" + _STR + "|INT:" + _INT + "|AGI:" + _AGI + "]";
+            return "Grip : " + _name + " Description : " + _desc+" Gems : " + _gemSlots + " [STR:" + _STR + "|INT:" + _INT + "|AGI:" + _AGI + "]";
         }
 
         public Grip(string name = "grip", uint _gs = 0, int _str = 0, int _int = 0, int _agi = 0, int blunt = 0, int edged = 0, int piercing = 0, uint type = 0)

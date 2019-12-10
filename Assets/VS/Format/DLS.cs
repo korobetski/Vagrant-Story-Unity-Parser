@@ -16,7 +16,7 @@ namespace VS.Format
         /*
            Articulation connection graph definitions
         */
-
+#pragma warning disable 414
         /* Generic Sources */
         public static readonly ushort CONN_SRC_NONE = 0x0000;           // No Source
         private static readonly int CONN_SRC_LFO = 0x0001;              // Low Frequency Oscillator

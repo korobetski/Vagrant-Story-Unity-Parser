@@ -7,10 +7,11 @@ using VS.Parser.Akao;
 using VS.Utils;
 
 
-// Minoru Akao
+// Minoru Akao Audio Script Format (Sequencer, SoundFont and more)
 
 // Akao in MUSIC folder contains music instructions like a Midi file, Akao in SOUND folder contains samples collection like .sfb / .sf2 / .dls files
-// Musics need to use a sample collection to give a sampled music sound or else a midi like sound will be created.
+
+// 123
 namespace VS.Parser
 {
 
@@ -47,8 +48,10 @@ namespace VS.Parser
         public AKAOComposer composer;
 
         public uint startingArticulationId;
+        public bool bMID;
         public bool bSF2;
         public bool bDLS;
+        public bool bWAV;
 
         public void Parse(string filePath, AKAOType type, long limit = long.MaxValue)
         {
@@ -129,12 +132,19 @@ namespace VS.Parser
                     ushort reverb = buffer.ReadUInt16(); // 0x0500  | Just on case 0x0400 (MUSIC000.DAT), maybe it refer to the WAVE0005.DAT sample collection
                     buffer.ReadBytes(6); // padding
 
-                    uint unk1 = buffer.ReadUInt32();
+                    uint unk1 = buffer.ReadUInt32(); // never > 127, maybe a general volume ? or something like that
                     uint sampleSet = buffer.ReadUInt32(); // ID of the WAVE*.DAT in the SOUND folder
                     buffer.ReadBytes(8); // padding
 
                     int bnumt = buffer.ReadInt32();
-                    short unk3 = buffer.ReadInt16();
+                    short unk3 = buffer.ReadInt16(); // (0, -1, 255 or 16383) from MUSIC050 to MUSIC101 => unk3 != 0
+                    // when != 0 it seems like it's not a "music" but more like a sounds store for maps ambiance or monsters
+                    // when != 0, in most of case there is no instruments set nor a drum (excp 68, 69) and Unknowns AKAO events occur a lot.
+                    // in these cases you really feal that it doesn't really make sence to out a midi file and less a wav...
+                    // when != 0 => sampleSet 17 to 25
+                    // Case 255 (66 to 73, 82, 83, 96, 97)
+                    // Case 16383 (78 to 81, 88 to 91)
+                    // Case -1 all others from 50 to 101
                     buffer.ReadBytes(10); // padding
 
                     int ptr1 = buffer.ReadUInt16() + 0x30; // instruments pointer
@@ -146,7 +156,7 @@ namespace VS.Parser
                     long musInstrPtr = buffer.BaseStream.Position + jump - 2;
                     uint numTrack = ToolBox.GetNumPositiveBits(bnumt);
 
-                    if (UseDebug)
+                    if (true)
                     {
                         Debug.Log(string.Concat("AKAO from : ", FileName, " FileSize = ", FileSize, "    |    reverb : ", reverb, " numTrack : ", numTrack, " sampleSet : ", sampleSet,
                             "\r\ninstruments at : ", ptr1, "  Drums at : ", ptr2, "   musInstrPtr : ", musInstrPtr, "   |  unk1 : ", unk1, "   unk3 : ", unk3));
@@ -160,7 +170,7 @@ namespace VS.Parser
                         byte[] b = buffer.ReadBytes(2);
                         if (UseDebug)
                         {
-                            Debug.Log(b[0] + "   ->   " + b[1]);
+                            //Debug.Log(b[0] + "   ->   " + b[1]);
                         }
                     }
 
@@ -336,10 +346,10 @@ namespace VS.Parser
                     sampleCollections[1] = SampleColl64;
 
                     // Additionnal Collection in case the SampleColl64 isn't 64 arts long, this one must be 64 arts long
-
+                    // Maybe drums samples are located in WAVE0200.DAT
                     if (SampleColl64.articulations.Length < 64)
                     {
-                        hash[hash.Length - 1] = "WAVE0099.DAT";
+                        hash[hash.Length - 1] = "WAVE0071.DAT";
                         AKAO addiColl = new AKAO();
                         addiColl.UseDebug = UseDebug;
                         addiColl.Parse(String.Join("/", hash), AKAO.SOUND);
@@ -360,7 +370,8 @@ namespace VS.Parser
                         end = buffer.BaseStream.Length;
                     }
 
-                    composer = new AKAOComposer(buffer, musInstrPtr, end, instrCount, numTrack, FileName, false);
+                    composer = new AKAOComposer(buffer, musInstrPtr, end, instrCount, numTrack, FileName, true);
+
                     if (composer.A1Calls.Count > 0)
                     {
                         // we need to add new instruments with an unique region
@@ -373,13 +384,23 @@ namespace VS.Parser
                             AKAORegion defaultRegion = new AKAORegion();
                             defaultRegion.articulationId = (byte)iid;
                             A1Instrument.regions[0] = defaultRegion;
+                            if (instruments == null)
+                            {
+                                instruments = new List<AKAOInstrument>();
+                            }
                             instruments.Add(A1Instrument);
                         }
                     }
-
-                    Synthetize(this, sampleCollections);
-
-
+                    SF2 sf2 = null;
+                    if (bWAV || bSF2 || bDLS)
+                    {
+                        sf2 = SoundFundry(this, sampleCollections);
+                    }
+                    if (bMID || bWAV)
+                    {
+                        if (unk3 != 0) bWAV = false; // we don't want 1Gb crap .wav
+                        composer.Synthetize(bMID, bWAV, sf2);
+                    }
 
                     break;
                 case AKAOType.SOUND:
@@ -464,12 +485,13 @@ namespace VS.Parser
                         sam.index = i;
                         samples[i] = sam;
 
-                        /*
-                        WAV wavSam = sam.ConvertToWAV();
-                        wavSam.SetName(FileName + "_Sample_" + i);
-                        ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Sounds/SampleColl/");
-                        wavSam.WriteFile(Application.dataPath + "/../Assets/Resources/Sounds/SampleColl/" + FileName + "_Sample_"+i+".wav", wavSam.Write());
-                        */
+                        if (UseDebug && bWAV)
+                        {
+                            WAV wavSam = sam.ConvertToWAV();
+                            wavSam.SetName(FileName + "_Sample_" + i);
+                            ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Sounds/SampleColl/");
+                            wavSam.WriteFile(Application.dataPath + "/../Assets/Resources/Sounds/SampleColl/" + FileName + "_Sample_" + i + ".wav", wavSam.Write());
+                        }
 
                     }
                     // now to verify and associate each articulation with a sample index value
@@ -547,7 +569,7 @@ namespace VS.Parser
 
 
 
-        private void Synthetize(AKAO sequencer, AKAO[] sampleCollections)
+        private SF2 SoundFundry(AKAO sequencer, AKAO[] sampleCollections)
         {
             DLS dls = new DLS();
             dls.SetName(FileName + ".dls");
@@ -587,177 +609,185 @@ namespace VS.Parser
                 uint i = 0;
                 foreach (AKAOInstrument instrument in sequencer.instruments)
                 {
-
-                    sf2.AddPreset(instrument.name, (ushort)instrument.program, 0);
-                    sf2.AddPresetBag();
-                    sf2.AddPresetGenerator(SF2Generator.ReverbEffectsSend, new SF2GeneratorAmount { UAmount = (ushort)250 });
-                    sf2.AddPresetGenerator(SF2Generator.Instrument, new SF2GeneratorAmount { UAmount = (ushort)i });
-                    sf2.AddInstrument(instrument.name);
-                    i++;
-
-                    if (instrument.regions.Length > 0)
+                    if (instrument.IsDrum() && !composer.DrumKitOn)
+                    {
+                        continue;
+                    } else if (composer.progIDs.Contains(instrument.program) || composer.A1Calls.Contains(instrument.program) || (instrument.IsDrum() && composer.DrumKitOn))
                     {
                         uint midiBank = 0x00000000;
                         if (instrument.IsDrum())
                         {
                             midiBank = DLS.F_INSTRUMENT_DRUMS;
-                        }
-                        Lins DSLInstrument = new Lins(midiBank, instrument.program, instrument.name);
-
-                        foreach (AKAORegion region in instrument.regions)
+                            sf2.AddPreset(instrument.name, 0, 128);
+                        } else
                         {
-                            AKAOArticulation articulation = null;
-                            AKAO coll = sampleCollections[2];
-                            //Debug.Log(string.Concat("region.articulationId : ", region.articulationId));
-
-                            if (region.articulationId >= 0 && region.articulationId < 32)
-                            {
-                                // trick for MUSIC024.DAT
-                                coll = sampleCollections[1];
-                                articulation = coll.articulations[region.articulationId];
-                            }
-                            else if (region.articulationId >= 32 && region.articulationId < 64)
-                            {
-                                coll = sampleCollections[0];
-                                articulation = coll.articulations[region.articulationId - coll.startingArticulationId];
-                            }
-                            else if (region.articulationId >= 64 && region.articulationId < 128)
-                            {
-                                coll = sampleCollections[1];
-                                if (region.articulationId - coll.startingArticulationId < coll.articulations.Length)
-                                {
-                                    articulation = coll.articulations[region.articulationId - coll.startingArticulationId];
-                                }
-                                else
-                                {
-                                    Debug.LogError("region.articulationId out of range : " + region.articulationId);
-                                    // we check in additional collection
-
-                                    coll = sampleCollections[2];
-                                    articulation = coll.articulations[region.articulationId - coll.startingArticulationId];
-
-                                }
-                            }
-                            if (UseDebug)
-                            {
-                                Debug.Log(string.Concat("Instrument ", i, "  ", instrument.name, "  |  Region articulation found in ", coll.FileName));
-                            }
-                            //Debug.Log(string.Concat("articulation.sampleNum : ", articulation.sampleNum, "   coll start id : ", coll.startingArticulationId));
-
-
-
-                            if (articulation != null)
-                            {
-                                articulation.BuildADSR();
-                                region.articulation = articulation;
-                                AKAOSample sample = coll.samples[articulation.sampleNum];
-
-                                if (instrument.IsDrum())
-                                {
-                                    //region.unityKey = (uint)articulation.unityKey + region.lowRange - region.relativeKey;
-                                    region.unityKey = (uint)articulation.unityKey + region.lowRange - region.relativeKey;
-                                }
-                                else
-                                {
-                                    region.unityKey = articulation.unityKey;
-                                }
-
-                                short ft = articulation.fineTune;
-                                if (ft < 0)
-                                {
-                                    ft += short.MaxValue;
-                                }
-
-                                // this gives us the pitch multiplier value ex. 1.05946
-                                double freq_multiplier = ((ft * 32) + 0x100000) / (double)0x100000;
-                                double cents = Mathf.Log((float)freq_multiplier) / Mathf.Log(2) * 1200;
-                                if (articulation.fineTune < 0)
-                                {
-                                    cents -= 1200;
-                                }
-
-                                region.fineTune = (short)cents;
-                                sample.loopStart = articulation.loopPt;
-                                sample.unityKey = (byte)region.unityKey;
-
-                                if (!Samples.Contains(sample))
-                                {
-                                    Samples.Add(sample);
-                                }
-
-                                int sampleIDX = Samples.IndexOf(sample);
-
-
-                                // Making DLS
-                                Lrgn reg = new Lrgn(region.lowRange, region.hiRange, 0x00, 0x7F);
-                                CKwsmp smp = new CKwsmp((ushort)region.unityKey, region.fineTune, region.attenuation, 1);
-                                if (articulation.loopPt != 0)
-                                {
-                                    smp.AddLoop(new Loop(1, (uint)(articulation.loopPt * 1.75f), (uint)(sample.size * 1.75f - articulation.loopPt * 1.75f)));
-                                }
-                                reg.SetSample(smp);
-                                CKart2 iart = new CKart2();
-                                iart.AddPan(0x40);
-                                iart.AddADSR(articulation.A, articulation.D, articulation.S, articulation.R, articulation.AT, articulation.RT);
-                                reg.AddArticulation(iart);
-                                reg.SetWaveLinkInfo(0, 0, 1, region.sampleNum);
-                                DSLInstrument.AddRegion(reg);
-
-                                // http://linuxmao.org/SoundFont+specification+SF2
-                                sf2.AddInstrumentBag();
-                                sf2.AddInstrumentGenerator(SF2Generator.KeyRange, new SF2GeneratorAmount { LowByte = region.lowRange, HighByte = region.hiRange });
-                                sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = region.lowVel, HighByte = region.hiVel });
-                                //sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = 0, HighByte = 127 });
-                                /* C'est l'atténuation, en centibels, pour laquelle une note est atténuée en dessous de la valeur maximum prévue.
-                                Si = 0, il n'y a aucune atténuation, la note sera jouée au maximum prévu.
-                                Ex : 60 indique que la note sera jouée à 6 dB en-dessous du maximum prévu pour la note.
-                                Max value = 1440 */
-                                //sf2.AddInstrumentGenerator(SF2Generator.InitialAttenuation, new SF2GeneratorAmount { Amount = (short)((127 - region.volume) * 10) });
-                                sf2.AddInstrumentGenerator(SF2Generator.Pan, new SF2GeneratorAmount { UAmount = 0x00 });
-                                sf2.AddInstrumentGenerator(SF2Generator.SampleModes, new SF2GeneratorAmount { UAmount = (articulation.loopPt != 0) ? (ushort)1 : (ushort)0 });
-                                sf2.AddInstrumentGenerator(SF2Generator.OverridingRootKey, new SF2GeneratorAmount { UAmount = (ushort)region.unityKey });
-
-                                sf2.AddInstrumentGenerator(SF2Generator.DelayVolEnv, new SF2GeneratorAmount { Amount = (short)short.MinValue });
-                                /* En timecents absolu, c'est la durée, depuis la fin du délai de l'enveloppe de volume jusqu'au point où la valeur de l'enveloppe de volume atteint son apogée.
-                                Une valeur de 0 indique 1 seconde. Une valeur négative indique un temps inférieur à une seconde, une valeur positive un temps supérieur à une seconde.
-                                Le nombre le plus négatif (-32768) indique conventionnellement une attaque instantanée.
-                                Ex : un temps d'attaque de 10 ms serait 1200log2 (.01) = -7973.
-                                En musique, le logarithme binaire intervient dans la formule permettant de déterminer la valeur en cents d’un intervalle.
-                                Un cent, ou centième de demi-ton au tempérament égal, vaut 1200 fois le logarithme binaire du rapport de fréquence des sons concernés.
-                                546 * 60 ~= short.MaxValue */
-                                sf2.AddInstrumentGenerator(SF2Generator.AttackVolEnv, new SF2GeneratorAmount { Amount = (short)(short.MinValue + articulation.Ar * 500) });
-                                sf2.AddInstrumentGenerator(SF2Generator.HoldVolEnv, new SF2GeneratorAmount { Amount = (short)0 });
-                                /* C'est le temps, en timecents absolus, pour une variation de 100% de la valeur de l'enveloppe du volume pendant la phase de décroissance.
-                                Pour l'enveloppe de volume, la décroissance tend linéairement vers le niveau de maintien, ce qui provoque un changement de dB constant pour chaque unité de temps.
-                                Si le niveau de maintien = -100dB, le temps de décroissance de l'enveloppe de volume = temps de la phase de décroissance.
-                                Une valeur de 0 indique 1 seconde de temps de décroissance pour un niveau zéro. Une valeur négative indique un temps inférieur à une seconde,
-                                une valeur positive un temps supérieur à une seconde.
-                                Ex : un temps de décroissance de 10 msec serait 1200log2 (.01) = -7973.*/
-                                sf2.AddInstrumentGenerator(SF2Generator.DecayVolEnv, new SF2GeneratorAmount { Amount = (short)(articulation.Dr * 128) });
-                                /* C'est le taux de la diminution, exprimé en centibels, pour laquelle l'enveloppe de volume décroît au cours de la phase de décroissance.
-                                Pour l'enveloppe de volume, le niveau d'atténuation du sustain est mieux exprimé en centibels. Une valeur de 0 indique que le niveau est maximum.
-                                Une valeur positive indique une décroissance au niveau correspondant. Les valeurs inférieures à zéro doivent être interprétés comme zéro;
-                                conventionnellement 1000 indique une atténuation complète.
-                                Ex : un niveau de soutien qui correspond à une valeur absolue de 12 dB en dessous du pic serait 120.*/
-                                sf2.AddInstrumentGenerator(SF2Generator.SustainVolEnv, new SF2GeneratorAmount { Amount = (short)(articulation.Sr * 2) });
-                                /* C'est la durée, en timecents absolu, pour une variation de 100% de la valeur de l'enveloppe du volume pendant la phase de libération (release).
-                                Pour l'enveloppe de volume, la phase de libération tend linéairement vers zéro depuis la niveau en cours,
-                                ce qui provoque un changement en dB constant pour chaque unité de temps.
-                                Si le niveau actuel est maximum, la durée du release de l'enveloppe de volume sera le temps de libération jusqu'à ce que 100 dB d'atténuation soit atteint.
-                                Une valeur de 0 indique 1 seconde de temps de décroissance pour finir complètement. Une valeur négative indique un temps inférieur à une seconde,
-                                une valeur positive un temps de plus d'une seconde.
-                                Ex : un temps de libération de 10 msec serait 1200log2 (.01) = -7973. */
-                                sf2.AddInstrumentGenerator(SF2Generator.ReleaseVolEnv, new SF2GeneratorAmount { Amount = (short)(short.MinValue + articulation.Rr * 1024) });
-                                /* Décalage de la hauteur, en cents, qui sera appliqué à la note.
-                                Il est additionnel à coarseTune. Une valeur positive indique que le son est reproduit à une hauteur plus élevée, une valeur négative indique une hauteur inférieure.
-                                Ex : une valeur finetune = -5 provoquera un son joué cinq cents plus bas. */
-                                sf2.AddInstrumentGenerator(SF2Generator.FineTune, new SF2GeneratorAmount { Amount = (short)region.fineTune });
-                                sf2.AddInstrumentGenerator(SF2Generator.SampleID, new SF2GeneratorAmount { UAmount = (ushort)sampleIDX });
-                            }
-
+                            sf2.AddPreset(instrument.name, (ushort)instrument.program, 0);
                         }
 
-                        dls.AddInstrument(DSLInstrument);
+                        sf2.AddPresetBag();
+                        sf2.AddPresetGenerator(SF2Generator.ReverbEffectsSend, new SF2GeneratorAmount { UAmount = (ushort)250 });
+                        sf2.AddPresetGenerator(SF2Generator.Instrument, new SF2GeneratorAmount { UAmount = (ushort)i });
+                        sf2.AddInstrument(instrument.name);
+                        i++;
+
+                        if (instrument.regions.Length > 0)
+                        {
+                            Lins DSLInstrument = new Lins(midiBank, instrument.program, instrument.name);
+
+                            foreach (AKAORegion region in instrument.regions)
+                            {
+                                AKAOArticulation articulation = null;
+                                AKAO coll = sampleCollections[2];
+                                //Debug.Log(string.Concat("region.articulationId : ", region.articulationId));
+
+                                if (region.articulationId >= 0 && region.articulationId < 32)
+                                {
+                                    // trick for MUSIC024.DAT
+                                    coll = sampleCollections[1];
+                                    articulation = coll.articulations[region.articulationId];
+                                }
+                                else if (region.articulationId >= 32 && region.articulationId < 64)
+                                {
+                                    coll = sampleCollections[0];
+                                    articulation = coll.articulations[region.articulationId - coll.startingArticulationId];
+                                }
+                                else if (region.articulationId >= 64 && region.articulationId < 128)
+                                {
+                                    coll = sampleCollections[1];
+                                    if (region.articulationId - coll.startingArticulationId < coll.articulations.Length)
+                                    {
+                                        articulation = coll.articulations[region.articulationId - coll.startingArticulationId];
+                                    }
+                                    else
+                                    {
+                                        //Debug.LogError("region.articulationId out of range : " + region.articulationId);
+                                        // we check in additional collection
+                                        coll = sampleCollections[2];
+                                        articulation = coll.articulations[region.articulationId - coll.startingArticulationId];
+
+                                    }
+                                }
+                                if (UseDebug)
+                                {
+                                    Debug.Log(string.Concat("Instrument ", i, "  ", instrument.name, "  |  Region articulation found in ", coll.FileName));
+                                }
+                                //Debug.Log(string.Concat("articulation.sampleNum : ", articulation.sampleNum, "   coll start id : ", coll.startingArticulationId));
+
+
+
+                                if (articulation != null)
+                                {
+                                    articulation.BuildADSR();
+                                    region.articulation = articulation;
+                                    AKAOSample sample = coll.samples[articulation.sampleNum];
+
+                                    if (instrument.IsDrum())
+                                    {
+                                        region.unityKey = (uint)articulation.unityKey + region.lowRange - region.relativeKey; // maybe
+                                    }
+                                    else
+                                    {
+                                        region.unityKey = articulation.unityKey;
+                                    }
+
+                                    short ft = articulation.fineTune;
+                                    if (ft < 0)
+                                    {
+                                        ft += short.MaxValue;
+                                    }
+
+                                    // this gives us the pitch multiplier value ex. 1.05946
+                                    double freq_multiplier = ((ft * 32) + 0x100000) / (double)0x100000;
+                                    double cents = Mathf.Log((float)freq_multiplier) / Mathf.Log(2) * 1200;
+                                    if (articulation.fineTune < 0)
+                                    {
+                                        cents -= 1200;
+                                    }
+
+                                    region.fineTune = (short)cents;
+                                    sample.loopStart = articulation.loopPt;
+                                    sample.unityKey = (byte)region.unityKey;
+
+                                    if (!Samples.Contains(sample))
+                                    {
+                                        Samples.Add(sample);
+                                    }
+
+                                    int sampleIDX = Samples.IndexOf(sample);
+
+
+                                    // Making DLS
+                                    Lrgn reg = new Lrgn(region.lowRange, region.hiRange, 0x00, 0x7F);
+                                    CKwsmp smp = new CKwsmp((ushort)region.unityKey, region.fineTune, region.attenuation, 1);
+                                    if (articulation.loopPt != 0)
+                                    {
+                                        smp.AddLoop(new Loop(1, (uint)(articulation.loopPt * 1.75f), (uint)(sample.size * 1.75f - articulation.loopPt * 1.75f)));
+                                    }
+                                    reg.SetSample(smp);
+                                    CKart2 iart = new CKart2();
+                                    iart.AddPan(0x40);
+                                    iart.AddADSR(articulation.A, articulation.D, articulation.S, articulation.R, articulation.AT, articulation.RT);
+                                    reg.AddArticulation(iart);
+                                    reg.SetWaveLinkInfo(0, 0, 1, region.sampleNum);
+                                    DSLInstrument.AddRegion(reg);
+
+                                    // http://linuxmao.org/SoundFont+specification+SF2
+                                    sf2.AddInstrumentBag();
+                                    sf2.AddInstrumentGenerator(SF2Generator.KeyRange, new SF2GeneratorAmount { LowByte = region.lowRange, HighByte = region.hiRange });
+                                    sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = region.lowVel, HighByte = region.hiVel }); // not sure
+                                                                                                                                                                    //sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = 0, HighByte = 127 });
+                                    /* C'est l'atténuation, en centibels, pour laquelle une note est atténuée en dessous de la valeur maximum prévue.
+                                    Si = 0, il n'y a aucune atténuation, la note sera jouée au maximum prévu.
+                                    Ex : 60 indique que la note sera jouée à 6 dB en-dessous du maximum prévu pour la note.
+                                    Max value = 1440 */
+                                    //sf2.AddInstrumentGenerator(SF2Generator.InitialAttenuation, new SF2GeneratorAmount { Amount = (short)((127 - region.volume) * 10) });
+                                    sf2.AddInstrumentGenerator(SF2Generator.Pan, new SF2GeneratorAmount { UAmount = 0x00 });
+                                    sf2.AddInstrumentGenerator(SF2Generator.SampleModes, new SF2GeneratorAmount { UAmount = (articulation.loopPt != 0) ? (ushort)1 : (ushort)0 });
+                                    sf2.AddInstrumentGenerator(SF2Generator.OverridingRootKey, new SF2GeneratorAmount { UAmount = (ushort)region.unityKey });
+
+                                    sf2.AddInstrumentGenerator(SF2Generator.DelayVolEnv, new SF2GeneratorAmount { Amount = (short)short.MinValue });
+                                    /* En timecents absolu, c'est la durée, depuis la fin du délai de l'enveloppe de volume jusqu'au point où la valeur de l'enveloppe de volume atteint son apogée.
+                                    Une valeur de 0 indique 1 seconde. Une valeur négative indique un temps inférieur à une seconde, une valeur positive un temps supérieur à une seconde.
+                                    Le nombre le plus négatif (-32768) indique conventionnellement une attaque instantanée.
+                                    Ex : un temps d'attaque de 10 ms serait 1200log2 (.01) = -7973.
+                                    En musique, le logarithme binaire intervient dans la formule permettant de déterminer la valeur en cents d’un intervalle.
+                                    Un cent, ou centième de demi-ton au tempérament égal, vaut 1200 fois le logarithme binaire du rapport de fréquence des sons concernés.
+                                    546 * 60 ~= short.MaxValue */
+                                    sf2.AddInstrumentGenerator(SF2Generator.AttackVolEnv, new SF2GeneratorAmount { Amount = (short)(short.MinValue + articulation.Ar * 500) });
+                                    sf2.AddInstrumentGenerator(SF2Generator.HoldVolEnv, new SF2GeneratorAmount { Amount = (short)0 });
+                                    /* C'est le temps, en timecents absolus, pour une variation de 100% de la valeur de l'enveloppe du volume pendant la phase de décroissance.
+                                    Pour l'enveloppe de volume, la décroissance tend linéairement vers le niveau de maintien, ce qui provoque un changement de dB constant pour chaque unité de temps.
+                                    Si le niveau de maintien = -100dB, le temps de décroissance de l'enveloppe de volume = temps de la phase de décroissance.
+                                    Une valeur de 0 indique 1 seconde de temps de décroissance pour un niveau zéro. Une valeur négative indique un temps inférieur à une seconde,
+                                    une valeur positive un temps supérieur à une seconde.
+                                    Ex : un temps de décroissance de 10 msec serait 1200log2 (.01) = -7973.*/
+                                    sf2.AddInstrumentGenerator(SF2Generator.DecayVolEnv, new SF2GeneratorAmount { Amount = (short)(articulation.Dr * 128) });
+                                    /* C'est le taux de la diminution, exprimé en centibels, pour laquelle l'enveloppe de volume décroît au cours de la phase de décroissance.
+                                    Pour l'enveloppe de volume, le niveau d'atténuation du sustain est mieux exprimé en centibels. Une valeur de 0 indique que le niveau est maximum.
+                                    Une valeur positive indique une décroissance au niveau correspondant. Les valeurs inférieures à zéro doivent être interprétés comme zéro;
+                                    conventionnellement 1000 indique une atténuation complète.
+                                    Ex : un niveau de soutien qui correspond à une valeur absolue de 12 dB en dessous du pic serait 120.*/
+                                    sf2.AddInstrumentGenerator(SF2Generator.SustainVolEnv, new SF2GeneratorAmount { Amount = (short)(articulation.Sr * 2) });
+                                    /* C'est la durée, en timecents absolu, pour une variation de 100% de la valeur de l'enveloppe du volume pendant la phase de libération (release).
+                                    Pour l'enveloppe de volume, la phase de libération tend linéairement vers zéro depuis la niveau en cours,
+                                    ce qui provoque un changement en dB constant pour chaque unité de temps.
+                                    Si le niveau actuel est maximum, la durée du release de l'enveloppe de volume sera le temps de libération jusqu'à ce que 100 dB d'atténuation soit atteint.
+                                    Une valeur de 0 indique 1 seconde de temps de décroissance pour finir complètement. Une valeur négative indique un temps inférieur à une seconde,
+                                    une valeur positive un temps de plus d'une seconde.
+                                    Ex : un temps de libération de 10 msec serait 1200log2 (.01) = -7973. */
+                                    sf2.AddInstrumentGenerator(SF2Generator.ReleaseVolEnv, new SF2GeneratorAmount { Amount = (short)(short.MinValue + articulation.Rr * 1024) });
+                                    /* Décalage de la hauteur, en cents, qui sera appliqué à la note.
+                                    Il est additionnel à coarseTune. Une valeur positive indique que le son est reproduit à une hauteur plus élevée, une valeur négative indique une hauteur inférieure.
+                                    Ex : une valeur finetune = -5 provoquera un son joué cinq cents plus bas. */
+                                    sf2.AddInstrumentGenerator(SF2Generator.FineTune, new SF2GeneratorAmount { Amount = (short)region.fineTune });
+                                    sf2.AddInstrumentGenerator(SF2Generator.SampleID, new SF2GeneratorAmount { UAmount = (ushort)sampleIDX });
+                                }
+
+                            }
+
+                            dls.AddInstrument(DSLInstrument);
+                        }
+
                     }
                 }
             }
@@ -776,6 +806,7 @@ namespace VS.Parser
                     sf2.AddSample(pcm, AKAOsmp.name, (AKAOsmp.loopStart > 0), AKAOsmp.loopStart, 44100, AKAOsmp.unityKey, 0);
                 }
             }
+
             if (bDLS)
             {
                 ToolBox.DirExNorCreate("Assets/Resources/Sounds/DLS/");
@@ -788,6 +819,8 @@ namespace VS.Parser
                 sf2.Save("Assets/Resources/Sounds/SF2/" + FileName + ".sf2");
             }
 
+
+            return sf2;
         }
     }
 }

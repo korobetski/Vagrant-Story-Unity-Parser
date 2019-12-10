@@ -103,8 +103,8 @@ namespace VS.Format
             public VLQ size = new VLQ(0);       // Total node length in bytes, including node content.
             public VLQ itemNum = new VLQ(0);    // number of child nodes non recursive
             public VLQ contentOffset;           // Pointer to node content
-            public NodeMetaData metadatas;      // NodeMetaData
-            public NodeUnpackers unpackers;     // NodesUnpackers
+            public NodeMetaData metadatas = null;      // NodeMetaData
+            public NodeUnpackers unpackers = null;     // NodesUnpackers
 
             public VLQ refTypeID;               // VLQ XMF DOC page 18 / 143
             public List<byte> refData;
