@@ -364,7 +364,7 @@ namespace VS.Parser
                         end = buffer.BaseStream.Length;
                     }
 
-                    composer = new AKAOComposer(buffer, musInstrPtr, end, instrCount, numTrack, FileName, true);
+                    composer = new AKAOComposer(buffer, musInstrPtr, end, instrCount, numTrack, FileName, false);
 
                     if (composer.A1Calls.Count > 0)
                     {
@@ -604,10 +604,7 @@ namespace VS.Parser
                 uint i = 0;
                 foreach (AKAOInstrument instrument in sequencer.instruments)
                 {
-                    if (instrument.IsDrum() && !composer.DrumKitOn)
-                    {
-                        continue;
-                    } else if (composer.progIDs.Contains(instrument.program) || composer.A1Calls.Contains(instrument.program) || (instrument.IsDrum() && composer.DrumKitOn))
+                    if (composer.progIDs.Contains(instrument.program) || composer.A1Calls.Contains(instrument.program) || instrument.IsDrum())
                     {
                         uint midiBank = 0x00000000;
                         if (instrument.IsDrum())
@@ -746,7 +743,7 @@ namespace VS.Parser
                                     En musique, le logarithme binaire intervient dans la formule permettant de déterminer la valeur en cents d’un intervalle.
                                     Un cent, ou centième de demi-ton au tempérament égal, vaut 1200 fois le logarithme binaire du rapport de fréquence des sons concernés.
                                     546 * 60 ~= short.MaxValue */
-                                    sf2.AddInstrumentGenerator(SF2Generator.AttackVolEnv, new SF2GeneratorAmount { Amount = (short)(short.MinValue + articulation.Ar * 500) });
+                                    sf2.AddInstrumentGenerator(SF2Generator.AttackVolEnv, new SF2GeneratorAmount { Amount = (short)(1200*Math.Log(articulation.A, 2)) });
                                     sf2.AddInstrumentGenerator(SF2Generator.HoldVolEnv, new SF2GeneratorAmount { Amount = (short)0 });
                                     /* C'est le temps, en timecents absolus, pour une variation de 100% de la valeur de l'enveloppe du volume pendant la phase de décroissance.
                                     Pour l'enveloppe de volume, la décroissance tend linéairement vers le niveau de maintien, ce qui provoque un changement de dB constant pour chaque unité de temps.
@@ -754,13 +751,13 @@ namespace VS.Parser
                                     Une valeur de 0 indique 1 seconde de temps de décroissance pour un niveau zéro. Une valeur négative indique un temps inférieur à une seconde,
                                     une valeur positive un temps supérieur à une seconde.
                                     Ex : un temps de décroissance de 10 msec serait 1200log2 (.01) = -7973.*/
-                                    sf2.AddInstrumentGenerator(SF2Generator.DecayVolEnv, new SF2GeneratorAmount { Amount = (short)(articulation.Dr * 128) });
+                                    sf2.AddInstrumentGenerator(SF2Generator.DecayVolEnv, new SF2GeneratorAmount { Amount = (short)(1200 * Math.Log(articulation.D, 2)) });
                                     /* C'est le taux de la diminution, exprimé en centibels, pour laquelle l'enveloppe de volume décroît au cours de la phase de décroissance.
                                     Pour l'enveloppe de volume, le niveau d'atténuation du sustain est mieux exprimé en centibels. Une valeur de 0 indique que le niveau est maximum.
                                     Une valeur positive indique une décroissance au niveau correspondant. Les valeurs inférieures à zéro doivent être interprétés comme zéro;
                                     conventionnellement 1000 indique une atténuation complète.
                                     Ex : un niveau de soutien qui correspond à une valeur absolue de 12 dB en dessous du pic serait 120.*/
-                                    sf2.AddInstrumentGenerator(SF2Generator.SustainVolEnv, new SF2GeneratorAmount { Amount = (short)(articulation.Sr * 2) });
+                                    sf2.AddInstrumentGenerator(SF2Generator.SustainVolEnv, new SF2GeneratorAmount { Amount = (short)(articulation.S) });
                                     /* C'est la durée, en timecents absolu, pour une variation de 100% de la valeur de l'enveloppe du volume pendant la phase de libération (release).
                                     Pour l'enveloppe de volume, la phase de libération tend linéairement vers zéro depuis la niveau en cours,
                                     ce qui provoque un changement en dB constant pour chaque unité de temps.
@@ -768,7 +765,7 @@ namespace VS.Parser
                                     Une valeur de 0 indique 1 seconde de temps de décroissance pour finir complètement. Une valeur négative indique un temps inférieur à une seconde,
                                     une valeur positive un temps de plus d'une seconde.
                                     Ex : un temps de libération de 10 msec serait 1200log2 (.01) = -7973. */
-                                    sf2.AddInstrumentGenerator(SF2Generator.ReleaseVolEnv, new SF2GeneratorAmount { Amount = (short)(short.MinValue + articulation.Rr * 1024) });
+                                    sf2.AddInstrumentGenerator(SF2Generator.ReleaseVolEnv, new SF2GeneratorAmount { Amount = (short)(1200 * Math.Log(articulation.R, 2)) });
                                     /* Décalage de la hauteur, en cents, qui sera appliqué à la note.
                                     Il est additionnel à coarseTune. Une valeur positive indique que le son est reproduit à une hauteur plus élevée, une valeur négative indique une hauteur inférieure.
                                     Ex : une valeur finetune = -5 provoquera un son joué cinq cents plus bas. */

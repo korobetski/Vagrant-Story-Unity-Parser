@@ -25,6 +25,13 @@ using VS.Utils;
 // MUSIC038 -> OST Nightmare
 // MUSIC039 -> OST Grotesque Creature
 // MUSIC040 -> OST Factory
+// MUSIC041 -> OST Great Cathedral
+// MUSIC043 -> OST Abandoned Mines B1
+// MUSIC044 -> OST Snowfly Forest
+// MUSIC045 -> OST Wyvern
+// MUSIC046 -> OST Golem
+// MUSIC047 -> OST Ogre
+// MUSIC048 -> OST Dark Element
 // MUSIC180 -> OST Joshua (another version ?)
 namespace VS.Parser.Akao
 {
@@ -179,7 +186,7 @@ namespace VS.Parser.Akao
             for (uint i = 0; i < numTrack; i++)
             {
                 AKAOTrack trk = tracks[i];
-                if (trk.drumTrack && trk.channel != 9)
+                if (trk.drumTrack)
                 {
                     chanStat[9] = true;
                     trk.ResetChannelTo(9);
@@ -397,11 +404,11 @@ namespace VS.Parser.Akao
                                 if (DrumOn)
                                 {
                                     DrumOn = false;
-                                    curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
+                                    //curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
                                 }
                             } else
                             {
-                                // we add an event without chan
+                                // we add an event without changing track
                                 curTrack.AddEvent(new EvEndTrack(STATUS_BYTE, cTrackId, delta, true));
                             }
 
@@ -810,17 +817,18 @@ namespace VS.Parser.Akao
                                 case 0x04: // Drum kit On
                                     DrumKitOn = true;
                                     DrumOn = true;
+                                    curTrack.drumTrack = true;
                                     curTrack.AddEvent(new EvDrumKitOn(STATUS_BYTE));
                                     curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 128, delta));
-                                    curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, 0, 0));
+                                    curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, 0, delta));
                                     delta = 0;
                                     curTrack.ResetChannelTo(9);
                                     break;
                                 case 0x05: // Drum kit Off
                                     DrumOn = false;
                                     curTrack.AddEvent(new EvDrumKitOff(STATUS_BYTE));
-                                    curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
-                                    delta = 0;
+                                    //curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
+                                    //delta = 0;
                                     break;
                                 case 0x06: // Perma Loop
                                     long dest = buffer.BaseStream.Position + buffer.ReadInt16();
@@ -876,8 +884,8 @@ namespace VS.Parser.Akao
                                         {
                                             DrumOn = false;
                                             curTrack.AddEvent(new EvDrumKitOff(STATUS_BYTE));
-                                            curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
-                                            delta = 0;
+                                            //curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
+                                            //delta = 0;
                                         }
                                         delta = 0;
                                     }
@@ -932,6 +940,7 @@ namespace VS.Parser.Akao
                                             playingNote = false;
                                         }
                                         curTrack.AddEvent(new EvEndTrack(STATUS_BYTE, cTrackId, delta));
+                                        delta = 0;
                                         cTrackId++;
                                         if (cTrackId < tracks.Length)
                                         {
@@ -944,9 +953,8 @@ namespace VS.Parser.Akao
                                         if (DrumOn)
                                         {
                                             DrumOn = false;
-                                            curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
+                                            //curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
                                         }
-                                        delta = 0;
                                     }
                                     break;
                                 case 0x10: // Unknown

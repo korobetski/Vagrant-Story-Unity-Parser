@@ -435,12 +435,12 @@ namespace VS.Format
             cConnectionBlocks = (uint)ConnectionBlocks.Count;
         }
 
-        public void AddADSR(int attack, int decay, int sustain, int release, ushort attackTrans, ushort releaseTrans)
+        public void AddADSR(double attack, double decay, double sustain, double release, double attackTrans, double releaseTrans)
         {
-            ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_ATTACKTIME, attackTrans, attack));
-            ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_DECAYTIME, DLS.CONN_TRN_NONE, decay));
-            ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_SUSTAINLEVEL, DLS.CONN_TRN_NONE, sustain));
-            ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_RELEASETIME, releaseTrans, release));
+            ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_ATTACKTIME, (ushort)attackTrans, (int)attack));
+            ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_DECAYTIME, DLS.CONN_TRN_NONE, (int)decay));
+            ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_SUSTAINLEVEL, DLS.CONN_TRN_NONE, (int)sustain));
+            ConnectionBlocks.Add(new ConnectionBlock(DLS.CONN_SRC_NONE, DLS.CONN_SRC_NONE, DLS.CONN_DST_EG1_RELEASETIME, (ushort)releaseTrans, (int)release));
             SetDataCapacity(8 + ConnectionBlocks.Count * 12);
             cConnectionBlocks = (uint)ConnectionBlocks.Count;
         }
