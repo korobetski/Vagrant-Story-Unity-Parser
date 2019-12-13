@@ -9,13 +9,12 @@ namespace VS.Parser.Akao
         public uint program = 0;
         public AKAORegion[] regions;
         private InstrumentType _type = InstrumentType.INSTR_MELODIC;
+        internal bool a1 = false;
 
         public AKAOInstrument(uint id, InstrumentType type = InstrumentType.INSTR_MELODIC)
         {
             program = id;
             _type = type;
-
-            //Debug.Log(string.Concat("AKAOInstrument : ", _type));
         }
 
         public bool IsDrum()

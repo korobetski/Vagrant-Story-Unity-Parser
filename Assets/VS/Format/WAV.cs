@@ -47,7 +47,7 @@ namespace VS.Format
             data.SetDataCapacity(datas.Count);
             AddChunk(data);
 
-
+            /*
             if (hasLoop)
             {
                 int origFormatBytesPerSamp = BitsPerSample / 8;
@@ -92,6 +92,7 @@ namespace VS.Format
                 smpl.SetData(smplb);
                 AddChunk(smpl);
             }
+            */
         }
 
         public void SetName(string inam)

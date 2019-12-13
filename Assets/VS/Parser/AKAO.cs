@@ -11,7 +11,6 @@ using VS.Utils;
 
 // Akao in MUSIC folder contains music instructions like a Midi file, Akao in SOUND folder contains samples collection like .sfb / .sf2 / .dls files
 
-// 123
 namespace VS.Parser
 {
 
@@ -192,7 +191,6 @@ namespace VS.Parser
                             ushort instrPtr = buffer.ReadUInt16();
                             if (instrPtr != 0xFFFF)
                             {
-                                //if (UseDebug) Debug.Log("Instrument "+ instrPtrs.Count+ " ptr : " + instrPtr);
                                 instrPtrs.Add(instrPtr);
                             }
                             else
@@ -345,16 +343,12 @@ namespace VS.Parser
                     SampleColl64.Parse(samplePath, AKAO.SOUND);
                     sampleCollections[1] = SampleColl64;
 
-                    // Additionnal Collection in case the SampleColl64 isn't 64 arts long, this one must be 64 arts long
-                    // Maybe drums samples are located in WAVE0200.DAT
-                    if (SampleColl64.articulations.Length < 64)
-                    {
-                        hash[hash.Length - 1] = "WAVE0071.DAT";
-                        AKAO addiColl = new AKAO();
-                        addiColl.UseDebug = UseDebug;
-                        addiColl.Parse(String.Join("/", hash), AKAO.SOUND);
-                        sampleCollections[2] = addiColl;
-                    }
+                    // Additionnal Collection, seems to be useless now, we let it just in case
+                    hash[hash.Length - 1] = "WAVE0044.DAT";
+                    AKAO addiColl = new AKAO();
+                    addiColl.UseDebug = UseDebug;
+                    addiColl.Parse(String.Join("/", hash), AKAO.SOUND);
+                    sampleCollections[2] = addiColl;
 
                     long end = 0;
                     if (ptr1 > 0x30)
@@ -380,6 +374,7 @@ namespace VS.Parser
                         {
                             AKAOInstrument A1Instrument = new AKAOInstrument(iid);
                             A1Instrument.name = "A1 Instrument #" + (ushort)iid;
+                            A1Instrument.a1 = true;
                             A1Instrument.regions = new AKAORegion[1];
                             AKAORegion defaultRegion = new AKAORegion();
                             defaultRegion.articulationId = (byte)iid;
@@ -455,7 +450,6 @@ namespace VS.Parser
 
                     // Samples section here
                     ulong samStart = (ulong)buffer.BaseStream.Position;
-                    //Debug.Log(string.Concat("samStart : ", samStart));
                     // First we need to determine the start and the end of the samples, 16 null bytes indicate a new sample, so lets find them.
                     List<long> samPtr = new List<long>();
                     List<long> samEPtr = new List<long>();
@@ -465,16 +459,17 @@ namespace VS.Parser
                         {
                             if (samPtr.Count > 0)
                             {
-                                samEPtr.Add(buffer.BaseStream.Position - 0x20); // samEPtr.Add(buffer.BaseStream.Position - 0x10);
+                                //samEPtr.Add(buffer.BaseStream.Position - 0x20); 
+                                samEPtr.Add(buffer.BaseStream.Position - 0x10);
                             }
-                            samPtr.Add(buffer.BaseStream.Position - 0x10); // samPtr.Add(buffer.BaseStream.Position);
+                            //samPtr.Add(buffer.BaseStream.Position - 0x10);
+                            samPtr.Add(buffer.BaseStream.Position);
                         }
                     }
                     samEPtr.Add(buffer.BaseStream.Length);
 
                     // Let's loop again to get samples
                     int numSam = samPtr.Count;
-                    //Debug.Log("numSam : " + numSam);
                     samples = new AKAOSample[numSam];
                     for (int i = 0; i < numSam; i++)
                     {
@@ -501,13 +496,13 @@ namespace VS.Parser
                     {
                         for (uint l = 0; l < samples.Length; l++)
                         {
-                            //if (articulations[i].sampleOff + samStart + 0x10 == samples[l].offset)
-                            if (articulations[i].sampleOff + samStart == samples[l].offset)
+                            //if (articulations[i].sampleOff + samStart == samples[l].offset)
+                            if (articulations[i].sampleOff + samStart + 0x10 == samples[l].offset)
                             {
                                 articulations[i].sampleNum = l;
                                 articulations[i].sample = samples[l];
                                 samples[l].loopStart = articulations[i].loopPt;
-                                //Debug.Log("articulations["+i+"].sampleNum : " + l);
+
                                 break;
                             }
                         }
@@ -638,7 +633,6 @@ namespace VS.Parser
                             {
                                 AKAOArticulation articulation = null;
                                 AKAO coll = sampleCollections[2];
-                                //Debug.Log(string.Concat("region.articulationId : ", region.articulationId));
 
                                 if (region.articulationId >= 0 && region.articulationId < 32)
                                 {
@@ -654,13 +648,12 @@ namespace VS.Parser
                                 else if (region.articulationId >= 64 && region.articulationId < 128)
                                 {
                                     coll = sampleCollections[1];
-                                    if (region.articulationId - coll.startingArticulationId < coll.articulations.Length)
+                                    if (region.articulationId - coll.startingArticulationId < coll.articulations.Length/* && !instrument.a1*/)
                                     {
                                         articulation = coll.articulations[region.articulationId - coll.startingArticulationId];
                                     }
                                     else
                                     {
-                                        //Debug.LogError("region.articulationId out of range : " + region.articulationId);
                                         // we check in additional collection
                                         coll = sampleCollections[2];
                                         articulation = coll.articulations[region.articulationId - coll.startingArticulationId];
@@ -734,13 +727,13 @@ namespace VS.Parser
                                     // http://linuxmao.org/SoundFont+specification+SF2
                                     sf2.AddInstrumentBag();
                                     sf2.AddInstrumentGenerator(SF2Generator.KeyRange, new SF2GeneratorAmount { LowByte = region.lowRange, HighByte = region.hiRange });
-                                    sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = region.lowVel, HighByte = region.hiVel }); // not sure
-                                                                                                                                                                    //sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = 0, HighByte = 127 });
+                                    //sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = region.lowVel, HighByte = region.hiVel }); // not sure
+                                    sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = 0, HighByte = 127 });
                                     /* C'est l'atténuation, en centibels, pour laquelle une note est atténuée en dessous de la valeur maximum prévue.
                                     Si = 0, il n'y a aucune atténuation, la note sera jouée au maximum prévu.
                                     Ex : 60 indique que la note sera jouée à 6 dB en-dessous du maximum prévu pour la note.
                                     Max value = 1440 */
-                                    //sf2.AddInstrumentGenerator(SF2Generator.InitialAttenuation, new SF2GeneratorAmount { Amount = (short)((127 - region.volume) * 10) });
+                                    sf2.AddInstrumentGenerator(SF2Generator.InitialAttenuation, new SF2GeneratorAmount { UAmount = (ushort)(region.attenuation/10) });
                                     sf2.AddInstrumentGenerator(SF2Generator.Pan, new SF2GeneratorAmount { UAmount = 0x00 });
                                     sf2.AddInstrumentGenerator(SF2Generator.SampleModes, new SF2GeneratorAmount { UAmount = (articulation.loopPt != 0) ? (ushort)1 : (ushort)0 });
                                     sf2.AddInstrumentGenerator(SF2Generator.OverridingRootKey, new SF2GeneratorAmount { UAmount = (ushort)region.unityKey });
@@ -779,7 +772,7 @@ namespace VS.Parser
                                     /* Décalage de la hauteur, en cents, qui sera appliqué à la note.
                                     Il est additionnel à coarseTune. Une valeur positive indique que le son est reproduit à une hauteur plus élevée, une valeur négative indique une hauteur inférieure.
                                     Ex : une valeur finetune = -5 provoquera un son joué cinq cents plus bas. */
-                                    sf2.AddInstrumentGenerator(SF2Generator.FineTune, new SF2GeneratorAmount { Amount = (short)region.fineTune });
+                                    sf2.AddInstrumentGenerator(SF2Generator.FineTune, new SF2GeneratorAmount { Amount = (short)(region.fineTune) });
                                     sf2.AddInstrumentGenerator(SF2Generator.SampleID, new SF2GeneratorAmount { UAmount = (ushort)sampleIDX });
                                 }
 
