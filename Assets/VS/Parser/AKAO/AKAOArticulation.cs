@@ -19,71 +19,62 @@ namespace VS.Parser.Akao
         public ushort ADSR1;
         public ushort ADSR2;
 
-/*
- * 
-The ADSR envelope filter works as follows:
-Ar = Attack rate, which specifies the speed at which the volume increases
-     from zero to it's maximum value, as soon as the note on is given. The
-     slope can be set to lineair or exponential.
-Dr = Decay rate specifies the speed at which the volume decreases to the
-     sustain level. Decay is always decreasing exponentially.
-Sl = Sustain level, base level from which sustain starts.
-Sr = Sustain rate is the rate at which the volume of the sustained note
-     increases or decreases. This can be either lineair or exponential.
-Rr = Release rate is the rate at which the volume of the note decreases
-     as soon as the note off is given.
+        /*
+         * 
+        The ADSR envelope filter works as follows:
+        Ar = Attack rate, which specifies the speed at which the volume increases
+             from zero to it's maximum value, as soon as the note on is given. The
+             slope can be set to lineair or exponential.
+        Dr = Decay rate specifies the speed at which the volume decreases to the
+             sustain level. Decay is always decreasing exponentially.
+        Sl = Sustain level, base level from which sustain starts.
+        Sr = Sustain rate is the rate at which the volume of the sustained note
+             increases or decreases. This can be either lineair or exponential.
+        Rr = Release rate is the rate at which the volume of the note decreases
+             as soon as the note off is given.
 
-     lvl |
-       ^ |     /\Dr     __
-     Sl _| _  / _ \__---  \
-         |   /       ---__ \ Rr
-         |  /Ar       Sr  \ \
-         | /                \\
-         |/___________________\________
-                                  ->time
+             lvl |
+               ^ |     /\Dr     __
+             Sl _| _  / _ \__---  \
+                 |   /       ---__ \ Rr
+                 |  /Ar       Sr  \ \
+                 | /                \\
+                 |/___________________\________
+                                          ->time
 
-The overal volume can also be set to sweep up or down lineairly or
-exponentially from it's current value. This can be done seperately
-for left and right.
+        The overal volume can also be set to sweep up or down lineairly or
+        exponentially from it's current value. This can be done seperately
+        for left and right.
 
-Relevant SPU registers:
--------------------------------------------------------------
-$1f801xx8         Attack/Decay/Sustain level
-bit  |0f|0e 0d 0c 0b 0a 09 08|07 06 05 04|03 02 01 00|
-desc.|Am|         Ar         |Dr         |Sl         |
+        Relevant SPU registers:
+        -------------------------------------------------------------
+        $1f801xx8         Attack/Decay/Sustain level
+        bit  |0f|0e 0d 0c 0b 0a 09 08|07 06 05 04|03 02 01 00|
+        desc.|Am|         Ar         |Dr         |Sl         |
 
-Am       0        Attack mode Linear
-         1                    Exponential
+        Am       0        Attack mode Linear
+                 1                    Exponential
 
-Ar       0-7f     attack rate
-Dr       0-f      decay rate
-Sl       0-f      sustain level
--------------------------------------------------------------
-$1f801xxa         Sustain rate, Release Rate.
-bit  |0f|0e|0d|0c 0b 0a 09 08 07 06|05|04 03 02 01 00|
-desc.|Sm|Sd| 0|   Sr               |Rm|Rr            |
+        Ar       0-7f     attack rate
+        Dr       0-f      decay rate
+        Sl       0-f      sustain level
+        -------------------------------------------------------------
+        $1f801xxa         Sustain rate, Release Rate.
+        bit  |0f|0e|0d|0c 0b 0a 09 08 07 06|05|04 03 02 01 00|
+        desc.|Sm|Sd| 0|   Sr               |Rm|Rr            |
 
-Sm       0        sustain rate mode linear
-         1                          exponential
-Sd       0        sustain rate mode increase
-         1                          decrease
-Sr       0-7f     Sustain Rate
-Rm       0        Linear decrease
-         1        Exponential decrease
-Rr       0-1f     Release Rate
+        Sm       0        sustain rate mode linear
+                 1                          exponential
+        Sd       0        sustain rate mode increase
+                 1                          decrease
+        Sr       0-7f     Sustain Rate
+        Rm       0        Linear decrease
+                 1        Exponential decrease
+        Rr       0-1f     Release Rate
 
-Note: decay mode is always Expontial decrease, and thus cannot
-be set.
-*/
-        public ushort Am;
-        public ushort Ar;
-        public ushort Dr;
-        public ushort Sl;
-        public ushort Rm;
-        public ushort Rr;
-        public ushort Sm;
-        public ushort Sd;
-        public ushort Sr;
+        Note: decay mode is always Expontial decrease, and thus cannot
+        be set.
+        */
 
         internal double A = 0;             //in seconds
         internal ushort AT = 0;         // 0 = No Transform, 1 = concave Transform
@@ -114,28 +105,26 @@ be set.
 
         internal bool BuildADSR()
         {
-            Am = (ushort)((ADSR1 & 0x8000) >> 15);  // if 1, then Exponential, else linear
-            Ar = (ushort)((ADSR1 & 0x7F00) >> 8);
-            Dr = (ushort)((ADSR1 & 0x00F0) >> 4);
-            Sl = (ushort)(ADSR1 & 0x000F);
-            Rm = (ushort)((ADSR2 & 0x0020) >> 5);
-            Rr = (ushort)(ADSR2 & 0x001F);
-            Sm = (ushort)((ADSR2 & 0x8000) >> 15);
-            Sd = (ushort)((ADSR2 & 0x4000) >> 14);
-            Sr = (ushort)((ADSR2 >> 6) & 0x7F);
+            ushort Am = (ushort)((ADSR1 & 0x8000) >> 15);  // if 1, then Exponential, else linear
+            ushort Ar = (ushort)((ADSR1 & 0x7F00) >> 8);
+            ushort Dr = (ushort)((ADSR1 & 0x00F0) >> 4);
+            ushort Sl = (ushort)(ADSR1 & 0x000F);
+            ushort Rm = (ushort)((ADSR2 & 0x0020) >> 5);
+            ushort Rr = (ushort)(ADSR2 & 0x001F);
+            ushort Sm = (ushort)((ADSR2 & 0x8000) >> 15);
+            ushort Sd = (ushort)((ADSR2 & 0x4000) >> 14);
+            ushort Sr = (ushort)((ADSR2 >> 6) & 0x7F);
 
-            // Make sure all the ADSR values are within the valid ranges
+
             if (((Am & ~0x01) != 0) || ((Ar & ~0x7F) != 0) || ((Dr & ~0x0F) != 0) || ((Sl & ~0x0F) != 0) ||
                 ((Rm & ~0x01) != 0) || ((Rr & ~0x1F) != 0) || ((Sm & ~0x01) != 0) || ((Sd & ~0x01) != 0) ||
                 ((Sr & ~0x7F) != 0))
             {
                 Debug.LogError("ADSR parameter(s) out of range (Am : " + Am + ", Ar : " + Ar + ", Dr : " + Dr + ", Sl : " + Sl + ", Rm : " + Rm + ", Rr : " + Rr + ", Sm : " + Sm + ", Sd : " + Sd + ", Sr : " + Sr + ")");
-
                 return false;
             }
-            //Debug.Log("ADSR parameters (Am : " + Am + ", Ar : " + Ar + ", Dr : " + Dr + ", Sl : " + Sl + ", Rm : " + Rm + ", Rr : " + Rr + ", Sm : " + Sm + ", Sd : " + Sd + ", Sr : " + Sr + ")");
 
-            // Setting arbitrary values
+            // Setting default values
             A = int.MaxValue / 50;
             AT = (Am == 1) ? (ushort)1 : (ushort)0;
             D = int.MaxValue / 6;
@@ -163,12 +152,16 @@ be set.
                 {
                     r += rs;
                     rd++;
-                    if (rd == 5) {
+                    if (rd == 5)
+                    {
                         rd = 1;
                         rs *= 2;
                     }
                 }
-                if (r > 0x3FFFFFFF) r = 0x3FFFFFFF;
+                if (r > 0x3FFFFFFF)
+                {
+                    r = 0x3FFFFFFF;
+                }
 
                 rateTable[i] = r;
             }
@@ -178,7 +171,8 @@ be set.
             if (Am == 0) // Line
             {
                 samples = Math.Ceiling(0x7FFFFFFF / (double)rate);
-            } else if (Am == 1)// Expo
+            }
+            else if (Am == 1)// Expo
             {
                 samples = 0x60000000 / rate;
                 remain = 0x60000000 % rate;
@@ -188,7 +182,7 @@ be set.
 
             timeInSecs = samples / sampleRate;
             A = timeInSecs;
-            Debug.Log("ComputeADSR : A -> "+A);
+
 
             // Decay
             int envelope_level = 0x7FFFFFFF;
@@ -198,7 +192,10 @@ be set.
             for (l = 0; envelope_level > 0; l++)
             {
                 if (4 * (Dr ^ 0x1F) < 0x18)
+                {
                     Dr = 0;
+                }
+
                 switch ((envelope_level >> 28) & 0x7)
                 {
                     case 0: envelope_level -= (int)rateTable[RoundToZero((4 * (Dr ^ 0x1F)) - 0x18 + 0) + 32]; break;
@@ -219,11 +216,9 @@ be set.
             samples = l;
             timeInSecs = samples / sampleRate;
             D = timeInSecs;
-            Debug.Log("ComputeADSR : D -> " + D);
 
             // Sustain
             envelope_level = 0x7FFFFFFF;
-            // increasing... we won't even bother
             if (Sd == 0)
             {
                 S = -1;
@@ -231,7 +226,9 @@ be set.
             else
             {
                 if (Sr == 0x7F)
+                {
                     S = -1;        // this is actually infinite
+                }
                 else
                 {
                     // linear
@@ -270,7 +267,6 @@ be set.
                     }
                     timeInSecs = samples / sampleRate;
                     S = /*Sm ? timeInSecs : */LinAmpDecayTimeToLinDBDecayTime(timeInSecs, 0x800);
-                    Debug.Log("ComputeADSR : S -> " + S);
                 }
             }
 
@@ -290,14 +286,21 @@ be set.
                 rate = rateTable[RoundToZero((4 * (Rr ^ 0x1F)) - 0x0C) + 32];
 
                 if (rate != 0)
+                {
                     samples = Math.Ceiling((double)envelope_level / (double)rate);
+                }
                 else
+                {
                     samples = 0;
+                }
             }
             else if (Rm == 1)
             {
                 if ((Rr ^ 0x1F) * 4 < 0x18)
+                {
                     Rr = 0;
+                }
+
                 for (l = 0; envelope_level > 0; l++)
                 {
                     switch ((envelope_level >> 28) & 0x7)
@@ -316,7 +319,6 @@ be set.
             }
             timeInSecs = samples / sampleRate;
             R = timeInSecs;
-            Debug.Log("ComputeADSR : R -> " + R);
         }
 
         private int RoundToZero(int v)

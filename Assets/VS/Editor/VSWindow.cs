@@ -487,13 +487,10 @@ public class VSWindow : EditorWindow
                 fileParsed++;
             }
 
-            //AKAO parser = new AKAO();
-            //parser.UseDebug = true;
-            //parser.Parse(VSPath + "SOUND/WAVE0088.DAT", AKAO.SOUND);
-
             EditorUtility.ClearProgressBar();
         }
         */
+
         midTrigger = GUILayout.Toggle(midTrigger, new GUIContent("output a MIDI file ?"));
         sf2Trigger = GUILayout.Toggle(sf2Trigger, new GUIContent("output a SF2 (soundfont) file ?"));
         dlsTrigger = GUILayout.Toggle(dlsTrigger, new GUIContent("output a DLS (soundfont) file ? (Not working well yet)"));

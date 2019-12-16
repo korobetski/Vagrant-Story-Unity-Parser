@@ -16,11 +16,20 @@ using VS.Utils;
 // Akao in MUSIC folder contains musical instructions like a Midi file but also some synthetizer controls.
 // Two different instruments cannot play in the same channel at the same time
 
+
+
+// MUSIC023 -> OST Snowfly Forest
+// MUSIC026 -> OST Part of Graylands Incident Climax ()
+// MUSIC027 -> OST Part of Graylands Incident Climax (At ~1:50)
+// MUSIC028 -> Not in OST
+// MUSIC029 -> OST Catacombs
+// MUSIC030 -> OST Sanctum
+// MUSIC031 -> OST Dullahan
 // MUSIC032 -> OST Minotaur
 // MUSIC033 -> OST Iron Crab
 // MUSIC034 -> OST Tieger & Neesa
 // MUSIC035 -> OST Kali
-// MUSIC036 -> OST Dullahan
+// MUSIC036 -> OST Banquet of Transmigration
 // MUSIC037 -> OST Rosencrantz
 // MUSIC038 -> OST Nightmare
 // MUSIC039 -> OST Grotesque Creature
@@ -32,6 +41,7 @@ using VS.Utils;
 // MUSIC046 -> OST Golem
 // MUSIC047 -> OST Ogre
 // MUSIC048 -> OST Dark Element
+// MUSIC049 -> OST Ifrit
 // MUSIC180 -> OST Joshua (another version ?)
 namespace VS.Parser.Akao
 {
@@ -51,6 +61,7 @@ namespace VS.Parser.Akao
         private long start;
         private long end;
         private uint numTrack;
+        private ushort[] tracksPtr;
         private uint numInstr;
         private AKAOTrack[] tracks;
         private uint velocity = 127;
@@ -60,11 +71,12 @@ namespace VS.Parser.Akao
 
 
 
-        public AKAOComposer(BinaryReader buffer, long start, long end, uint NI, uint NT, string name, bool UseDebug = false)
+        public AKAOComposer(BinaryReader buffer, long start, long end, uint NI, uint NT, ushort[] tracksPtr, string name, bool UseDebug = false)
         {
             this.buffer = buffer;
             AKAOComposer.UseDebug = UseDebug;
             numTrack = NT;
+            this.tracksPtr = tracksPtr;
             numInstr = NI;
             this.name = name;
 
@@ -74,6 +86,7 @@ namespace VS.Parser.Akao
             A1Calls = new List<uint>();
 
             buffer.BaseStream.Position = start;
+
             SetTracks();
         }
 
@@ -139,14 +152,16 @@ namespace VS.Parser.Akao
                     MemoryStream sf2MemStr = soundfont.MemorySave();
                     sf2MemStr.Close();
                     synthesizer.LoadBank(new PatchBank(new MemoryAsset(name + ".sf2", sf2MemStr.GetBuffer())));
-                } else if (File.Exists("Assets/Resources/Sounds/SF2/" + name + ".sf2"))
+                }
+                else if (File.Exists("Assets/Resources/Sounds/SF2/" + name + ".sf2"))
                 {
                     synthesizer.LoadBank(new PatchBank(new AssetResouce("Resources/Sounds/SF2/" + name + ".sf2")));
                 }
                 if (File.Exists("Resources/Sounds/" + name + ".mid"))
                 {
                     sequencer.LoadMidi(new AssetResouce("Resources/Sounds/" + name + ".mid"));
-                } else
+                }
+                else
                 {
                     sequencer.LoadMidi(new MemoryAsset(name + ".mid", midiByte.ToArray()));
                 }
@@ -177,10 +192,10 @@ namespace VS.Parser.Akao
 
         private void SyncTracksChannels()
         {
-            bool[] chanStat = new bool[16];
+            uint[] chanStat = new uint[16];
             for (int i = 0; i < 16; i++)
             {
-                chanStat[i] = false;
+                chanStat[i] = 0;
             }
 
             for (uint i = 0; i < numTrack; i++)
@@ -188,9 +203,10 @@ namespace VS.Parser.Akao
                 AKAOTrack trk = tracks[i];
                 if (trk.drumTrack)
                 {
-                    chanStat[9] = true;
+                    chanStat[9]++;
                     trk.ResetChannelTo(9);
-                } else
+                }
+                else
                 {
                     if (i > 0)
                     {
@@ -199,9 +215,9 @@ namespace VS.Parser.Akao
                         for (uint j = 0; j < i; j++)
                         {
                             AKAOTrack ntrk = tracks[j];
-                            if (trk.programs.Except(ntrk.programs).Count() == 0)
+                            if (trk.programs.Except(ntrk.programs).Count() == 0 && ntrk.programs.Except(trk.programs).Count() == 0/* && chanStat[ntrk.channel] < 4*/)
                             {
-                                chanStat[ntrk.channel] = true;
+                                chanStat[ntrk.channel]++;
                                 trk.ResetChannelTo(ntrk.channel);
                                 chk = true;
                                 break;
@@ -213,40 +229,45 @@ namespace VS.Parser.Akao
                             // we must find an empty chan
                             for (int j = 0; j < 16; j++)
                             {
-                                if (chanStat[j] == false)
+                                if (chanStat[j] == 0 && j != 9)
                                 {
-                                    chanStat[j] = true;
+                                    chanStat[j]++;
                                     trk.ResetChannelTo((byte)j);
                                     break;
                                 }
                             }
                         }
                     }
+                    else
+                    {
+                        chanStat[tracks[0].channel]++;
+                    }
                 }
-            }
-        }
-
-        private byte ProcChan(byte cTrackId, bool drumOn)
-        {
-            byte channel = 0;
-            if (!drumOn)
-            {
-                channel = (byte)(cTrackId % 0xF);
-                if (channel > 8)
-                {
-                    channel++;
-                }
-                if (channel == 16)
-                {
-                    channel = 0;
-                }
-            }
-            else
-            {
-                channel = 9;
             }
 
-            return channel;
+            // if free channels left, we set bigger tracks in
+            // we consider that events count determine the importance of the track
+            
+            tracks = tracks.OrderByDescending(o => o.Events.Count).ToArray();
+            List<AKAOTrack> swiTracks = new List<AKAOTrack>();
+            for (int j = 0; j < 16; j++)
+            {
+                if (chanStat[j] == 0 && j != 9)
+                {
+                    for (uint i = 0; i < numTrack; i++)
+                    {
+                        if (chanStat[tracks[i].channel] > 1 && !swiTracks.Contains(tracks[i]) && !tracks[i].drumTrack)
+                        {
+                            chanStat[tracks[i].channel]--;
+                            tracks[i].ResetChannelTo((byte)j);
+                            chanStat[j]++;
+                            swiTracks.Add(tracks[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+            
         }
 
         private void SetTracks()
@@ -254,12 +275,7 @@ namespace VS.Parser.Akao
             long beginOffset = buffer.BaseStream.Position;
 
             tracks = new AKAOTrack[numTrack];
-            for (uint i = 0; i < numTrack; i++)
-            {
-                tracks[i] = new AKAOTrack();
-            }
-
-            byte cTrackId = 0;
+            
             bool playingNote = false;
             uint prevKey = 0;
             ushort delta = 0;
@@ -275,45 +291,89 @@ namespace VS.Parser.Akao
 
             progIDs = new List<uint>();
 
-            int metaECount = 0;
-
-            bool DrumOn = false;
-
-            if (AKAOComposer.UseDebug)
-            {
-                Debug.Log("## TRACK : " + cTrackId + "   -----------------------------------------------------------------------");
-            }
-
-            while (buffer.BaseStream.Position < end)
+            for (uint t = 0; t < numTrack; t++)
             {
 
-
-                AKAOTrack curTrack;
-                if (cTrackId < tracks.Length)
+                if (AKAOComposer.UseDebug)
                 {
-                    curTrack = tracks[cTrackId];
-                }
-                else
-                {
-                    curTrack = tracks[tracks.Length - 1]; // using the last track instead
+                    Debug.Log("## TRACK : " + t + "   -----------------------------------------------------------------------");
                 }
 
-                channel = ProcChan(cTrackId, DrumOn);
+                tracks[t] = new AKAOTrack();
+                AKAOTrack curTrack = tracks[t];
+
+                delta = 0;
+                channel = 0;
+                /*
+                channel = (byte)Math.Floor((decimal)(t / 2));
+                if (channel == 9)
+                {
+                    channel++;
+                }
+                if (channel > 15)
+                {
+                    channel = 0;
+                }
+                */
                 curTrack.channel = channel;
+                long trackEnd = (t < numTrack - 1) ? tracksPtr[t + 1] : end;
 
-                byte STATUS_BYTE = buffer.ReadByte();
-                int i, k;
-
-                if (STATUS_BYTE <= 0x9A)
+                while (buffer.BaseStream.Position < trackEnd)
                 {
-                    i = STATUS_BYTE / 11;
-                    k = i * 2;
-                    k += i;
-                    k *= 4;
-                    k -= i;
-                    k = STATUS_BYTE - k;
 
-                    if (STATUS_BYTE < 0x83) // Note On
+                    byte STATUS_BYTE = buffer.ReadByte();
+                    int i, k;
+
+                    if (STATUS_BYTE <= 0x9A)
+                    {
+                        i = STATUS_BYTE / 11;
+                        k = i * 2;
+                        k += i;
+                        k *= 4;
+                        k -= i;
+                        k = STATUS_BYTE - k;
+
+                        if (STATUS_BYTE < 0x83) // Note On
+                        {
+
+                            if (playingNote)
+                            {
+                                curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
+                                delta = 0;
+                                playingNote = false;
+                            }
+
+
+                            uint relativeKey = (uint)i;
+                            uint baseKey = octave * 12;
+                            uint key = baseKey + relativeKey;
+                            curTrack.AddEvent(new EvNoteOn(STATUS_BYTE, channel, key, velocity, delta));
+                            delta = delta_time_table[k];
+                            prevKey = key;
+                            playingNote = true;
+                        }
+                        else if (STATUS_BYTE < 0x8F) // Tie
+                        {
+                            ushort duration = delta_time_table[k];
+                            delta += duration;
+                            curTrack.AddEvent(new EvTieTime(STATUS_BYTE, duration));
+                        }
+                        else // Rest
+                        {
+
+                            if (playingNote == true)
+                            {
+                                curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
+                                delta = 0;
+                                playingNote = false;
+                            }
+
+                            ushort duration = delta_time_table[k];
+                            delta += (ushort)duration;
+                            curTrack.AddEvent(new EvRest(STATUS_BYTE, delta));
+                        }
+                    }
+                    else if ((STATUS_BYTE >= 0xF0) && (STATUS_BYTE <= 0xFB)) // Alternate Note On ?
                     {
 
                         if (playingNote)
@@ -324,684 +384,544 @@ namespace VS.Parser.Akao
                         }
 
 
-                        uint relativeKey = (uint)i;
+                        uint relativeKey = (uint)STATUS_BYTE - 0xF0;
                         uint baseKey = octave * 12;
                         uint key = baseKey + relativeKey;
-                        curTrack.AddEvent(new EvNoteOn(STATUS_BYTE, channel, key, velocity, delta));
-                        delta = delta_time_table[k];
+                        uint time = buffer.ReadByte();
+
+                        curTrack.AddEvent(new EvNoteOn(STATUS_BYTE, channel, key, velocity, delta, true));
+                        delta = (ushort)time;
                         prevKey = key;
                         playingNote = true;
                     }
-                    else if (STATUS_BYTE < 0x8F) // Tie
+                    else
                     {
-                        ushort duration = delta_time_table[k];
-                        delta += duration;
-                        curTrack.AddEvent(new EvTieTime(STATUS_BYTE, duration));
-                    }
-                    else // Rest
-                    {
-
-                        if (playingNote == true)
+                        switch (STATUS_BYTE)
                         {
-                            curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
-                            delta = 0;
-                            playingNote = false;
-                        }
-
-                        ushort duration = delta_time_table[k];
-                        delta += (ushort)duration;
-                        curTrack.AddEvent(new EvRest(STATUS_BYTE, delta));
-                    }
-                }
-                else if ((STATUS_BYTE >= 0xF0) && (STATUS_BYTE <= 0xFB)) // Alternate Note On ?
-                {
-
-                    if (playingNote)
-                    {
-                        curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
-                        delta = 0;
-                        playingNote = false;
-                    }
-
-
-                    uint relativeKey = (uint)STATUS_BYTE - 0xF0;
-                    uint baseKey = octave * 12;
-                    uint key = baseKey + relativeKey;
-                    uint time = buffer.ReadByte();
-
-                    curTrack.AddEvent(new EvNoteOn(STATUS_BYTE, channel, key, velocity, delta, true));
-                    delta = (ushort)time;
-                    prevKey = key;
-                    playingNote = true;
-                }
-                else
-                {
-                    switch (STATUS_BYTE)
-                    {
-                        case 0xA0: // End Track ??
-
-                            if (playingNote)
-                            {
-                                curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
-                                delta = 0;
-                                playingNote = false;
-                            }
-
-                            // We don't want an empty track or premature end
-                            if (curTrack.Events.Count > 3 && metaECount == 0)
-                            {
-                                curTrack.AddEvent(new EvEndTrack(STATUS_BYTE, cTrackId, delta));
-                                cTrackId++;
-                                if (cTrackId < tracks.Length)
+                            case 0xA0: // End Track ??
+                                if (playingNote)
                                 {
-                                    curTrack = tracks[cTrackId];
+                                    curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
+                                    delta = 0;
+                                    playingNote = false;
                                 }
+                                curTrack.AddEvent(new EvEndTrack(STATUS_BYTE, t, delta));
+                                break;
+                            case 0xA1:// Program Change (articulation)
+                                byte prog = buffer.ReadByte();
+                                if (!A1Calls.Contains(prog))
+                                {
+                                    A1Calls.Add(prog);
+                                }
+
+                                if (!progIDs.Contains(prog))
+                                {
+                                    progIDs.Add(prog);
+                                }
+
+                                if (curTrack.LastProgram() != prog)
+                                {
+                                    curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, prog, delta));
+                                }
+
+                                if (curTrack.name == "AKAOTrack")
+                                {
+                                    curTrack.name = string.Concat("Track ", SMF.INSTRUMENTS[prog]);
+                                    curTrack.AddEvent(new EvTrackName(curTrack.name));
+                                }
+                                delta = 0;
+                                break;
+                            case 0xA2: // often in MUSIC062, MUSIC074  (0xA2-0xE1-0xBB) when unk3 = -1
+                                byte pause = buffer.ReadByte();
+                                delta += pause;
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE, pause));
+                                break;
+                            case 0xA3:// Volume
+                                uint volume = buffer.ReadByte();
+                                double val = Math.Round(Math.Sqrt((volume / 127.0f)) * 127.0f);
+                                velocity = (byte)val;
+                                curTrack.AddEvent(new EvVolume(STATUS_BYTE, channel, velocity, delta));
+                                delta = 0;
+                                break;
+                            case 0xA4:// Portamento
+                                byte[] b = buffer.ReadBytes(2);
+                                curTrack.AddEvent(new EvPortamento(STATUS_BYTE, channel, b[0], b[1]));
+                                break;
+                            case 0xA5:// Octave
+                                octave = buffer.ReadByte();
+                                curTrack.AddEvent(new EvOctave(STATUS_BYTE, octave));
+                                break;
+                            case 0xA6:// Octave ++
+                                octave++;
+                                curTrack.AddEvent(new EvOctaveUp(STATUS_BYTE));
+                                break;
+                            case 0xA7:// Octave --
+                                octave--;
+                                curTrack.AddEvent(new EvOctaveDown(STATUS_BYTE));
+                                break;
+                            case 0xA8:// Expression
+                                byte expression = buffer.ReadByte();
+                                // maybe we shouldn't reset delta
+                                currentExpr = expression;
+                                curTrack.AddEvent(new EvExpr(STATUS_BYTE, channel, expression, delta));
+                                delta = 0;
+                                break;
+                            case 0xA9:// Expression Slide
+                                uint duration = buffer.ReadByte();
+                                expression = buffer.ReadByte();
                                 /*
-                                channel = ProcChan(cTrackId, DrumOn);
-                                curTrack.channel = channel;
-                                */
+                                curTrack.AddEvent(new EvExprSlide(STATUS_BYTE, channel, expression, delta));
                                 delta = 0;
-                                if (DrumOn)
+                                */
+                                // Todo : make a linear interpolation of expression
+
+                                int interpolations = Mathf.RoundToInt(duration / 12);
+                                uint baseTime = curTrack.Events[curTrack.Events.Count - 1].absTime + delta;
+                                for (int it = 0; it < interpolations; it++)
                                 {
-                                    DrumOn = false;
-                                    //curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
+                                    byte linExpr = (byte)(currentExpr + ((expression - currentExpr) / interpolations) * it);
+                                    curTrack.InsertEvent(new EvExprSlide(STATUS_BYTE, channel, linExpr), (uint)(baseTime + it * 12));
                                 }
-                            } else
-                            {
-                                // we add an event without changing track
-                                curTrack.AddEvent(new EvEndTrack(STATUS_BYTE, cTrackId, delta, true));
-                            }
 
-                            break;
-                        case 0xA1:// Alt Program Change, articulation id ? GM fallback ?
-                            // seems to target an articulation 
-                            byte prog = (byte)(buffer.ReadByte()); //  + numInstr
-                            if (!A1Calls.Contains(prog))
-                            {
-                                A1Calls.Add(prog);
-                            }
+                                break;
+                            case 0xAA:// Pan
+                                curTrack.AddEvent(new EvPan(STATUS_BYTE, channel, buffer.ReadByte(), delta));
+                                delta = 0;
+                                break;
+                            case 0xAB:// Pan Fade
+                                curTrack.AddEvent(new EvPanSlide(STATUS_BYTE, channel, buffer.ReadByte(), buffer.ReadByte()));
+                                break;
+                            case 0xAC: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
+                                break;
+                            case 0xAD: // Attack
+                                curTrack.AddEvent(new EvAttack(STATUS_BYTE, channel, buffer.ReadByte(), delta));
+                                delta = 0;
+                                break;
+                            case 0xAE: // Decay
+                                byte decay = buffer.ReadByte();
+                                curTrack.AddEvent(new EvDecay(STATUS_BYTE, channel, decay, delta));
+                                delta = 0;
+                                break;
+                            case 0xAF: // Sustain
+                                byte sustain = buffer.ReadByte();
+                                curTrack.AddEvent(new EvSustain(STATUS_BYTE, channel, sustain, delta));
+                                break;
+                            case 0xB0: // Decay + Sustain
+                                decay = buffer.ReadByte();
+                                sustain = buffer.ReadByte();
+                                curTrack.AddEvent(new EvDecay(STATUS_BYTE, channel, decay, delta));
+                                delta = 0;
+                                curTrack.AddEvent(new EvSustain(STATUS_BYTE, channel, sustain, delta));
+                                break;
+                            case 0xB1: // Sustain ?
+                                curTrack.AddEvent(new EvSustainRelease(STATUS_BYTE, channel, buffer.ReadByte(), delta));
+                                //delta = 0;
+                                break;
+                            case 0xB2: // Release
+                                curTrack.AddEvent(new EvRelease(STATUS_BYTE, channel, buffer.ReadByte(), delta));
+                                delta = 0;
+                                break;
+                            case 0xB3: // Reset ADSR (Attack-Decay-Sustain-Release)
+                                curTrack.AddEvent(new EvResetADSR(STATUS_BYTE));
+                                break;
+                            // LFO (low-frequency oscillators) Pitch bend
+                            case 0xB4: // LFO Pitch bend Range
+                                b = buffer.ReadBytes(3);
+                                curTrack.AddEvent(new EvLFOPitchRange(STATUS_BYTE, b[0], b[1], b[2]));
+                                break;
+                            case 0xB5: // LFO Pitch bend Depth
+                                int depth = buffer.ReadByte();
+                                curTrack.AddEvent(new EvLFOPitchDepth(STATUS_BYTE, depth));
+                                break;
+                            case 0xB6: // LFO Pitch bend Off
+                                curTrack.AddEvent(new EvLFOPitchOff(STATUS_BYTE));
+                                break;
+                            case 0xB7: // LFO Pitch bend ??
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
+                                break;
+                            // LFO (low-frequency oscillators) Expression
+                            case 0xB8: // LFO Expression Range
+                                b = buffer.ReadBytes(3);
+                                curTrack.AddEvent(new EvLFOExprRange(STATUS_BYTE, b[0], b[1], b[2]));
+                                break;
+                            case 0xB9: // LFO Expression Depth
+                                depth = buffer.ReadByte();
+                                curTrack.AddEvent(new EvLFOExprDepth(STATUS_BYTE, depth));
+                                break;
+                            case 0xBA: // LFO Expression Off
+                                curTrack.AddEvent(new EvLFOExprOff(STATUS_BYTE));
+                                break;
+                            case 0xBB: // ??? occur when AKAO MUSIC unk3 is 255 or -1 (MUSIC074, 75, 76, 77, ...) (0xA2-0xE1-0xBB)
+                                b = buffer.ReadBytes(2);
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE, b));
+                                break;
+                            // LFO (low-frequency oscillators) Panpot
+                            case 0xBC: // LFO Panpot Range
+                                b = buffer.ReadBytes(2);
+                                curTrack.AddEvent(new EvLFOPanpotRange(STATUS_BYTE, channel, b[0], b[1], delta));
+                                delta = 0;
+                                break;
+                            case 0xBD: // LFO Panpot Depth
+                                curTrack.AddEvent(new EvLFOPanpotDepth(STATUS_BYTE, channel, buffer.ReadByte(), delta));
+                                delta = 0;
+                                break;
+                            case 0xBE: // LFO Panpot On / Off ?
+                                curTrack.AddEvent(new EvLFOPanpotOff(STATUS_BYTE, channel, delta));
+                                delta = 0;
+                                break;
+                            case 0xBF: // LFO Panpot ??
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
+                                break;
+                            case 0xC0: // Transpose
+                                sbyte transpose = buffer.ReadSByte();
+                                curTrack.AddEvent(new EvTranspose(STATUS_BYTE, transpose));
+                                break;
+                            case 0xC1: // Transpose Move
+                                byte trans = buffer.ReadByte();
+                                curTrack.AddEvent(new EvTransposeMove(STATUS_BYTE, trans));
+                                break;
 
-                            if (!progIDs.Contains(prog))
-                            {
-                                progIDs.Add(prog);
-                            }
+                            case 0xC2: // Reverb On
+                                curTrack.AddEvent(new EvReverbOn(STATUS_BYTE, channel, delta));
+                                delta = 0;
+                                break;
+                            case 0xC3: // Reverb Off
+                                curTrack.AddEvent(new EvReverbOff(STATUS_BYTE, channel, delta));
+                                delta = 0;
+                                break;
 
-                            if (curTrack.LastProgram() != prog) curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, prog, delta));
+                            case 0xC4: // Noise On
+                                curTrack.AddEvent(new EvNoiseOn(STATUS_BYTE));
+                                break;
+                            case 0xC5: // Noise Off
+                                curTrack.AddEvent(new EvNoiseOff(STATUS_BYTE));
+                                break;
 
-                            if (curTrack.name == "AKAOTrack")
-                            {
-                                curTrack.name = string.Concat("Track ", SMF.INSTRUMENTS[prog]);
-                                curTrack.AddEvent(new EvTrackName(curTrack.name));
-                            }
-                            delta = 0;
-                            break;
-                        case 0xA2: // often in MUSIC062, MUSIC074  (0xA2-0xE1-0xBB) when unk3 = -1
-                            byte pause = buffer.ReadByte();
-                            delta += pause;
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE, pause));
-                            break;
-                        case 0xA3:// Volume
-                            uint volume = buffer.ReadByte();
-                            double val = Math.Round(Math.Sqrt((volume / 127.0f)) * 127.0f);
-                            velocity = (byte)val;
-                            curTrack.AddEvent(new EvVolume(STATUS_BYTE, channel, velocity, delta));
-                            delta = 0;
-                            break;
-                        case 0xA4:// Portamento
-                            byte[] b = buffer.ReadBytes(2);
-                            curTrack.AddEvent(new EvPortamento(STATUS_BYTE, channel, b[0], b[1]));
-                            break;
-                        case 0xA5:// Octave
-                            octave = buffer.ReadByte();
-                            curTrack.AddEvent(new EvOctave(STATUS_BYTE, octave));
-                            break;
-                        case 0xA6:// Octave ++
-                            octave++;
-                            curTrack.AddEvent(new EvOctaveUp(STATUS_BYTE));
-                            break;
-                        case 0xA7:// Octave --
-                            octave--;
-                            curTrack.AddEvent(new EvOctaveDown(STATUS_BYTE));
-                            break;
-                        case 0xA8:// Expression
-                            byte expression = buffer.ReadByte();
-                            // maybe we shouldn't reset delta
-                            currentExpr = expression;
-                            curTrack.AddEvent(new EvExpr(STATUS_BYTE, channel, expression, delta));
-                            delta = 0;
-                            break;
-                        case 0xA9:// Expression Slide
-                            uint duration = buffer.ReadByte();
-                            expression = buffer.ReadByte();
-                            /*
-                            curTrack.AddEvent(new EvExprSlide(STATUS_BYTE, channel, expression, delta));
-                            delta = 0;
-                            */
-                            // Todo : make a linear interpolation of expression
-                            
-                            int interpolations = Mathf.RoundToInt(duration / 12);
-                            uint baseTime = curTrack.Events[curTrack.Events.Count - 1].absTime + delta;
-                            for (int it = 0; it < interpolations; it++)
-                            {
-                                byte linExpr = (byte)(currentExpr + ((expression - currentExpr) / interpolations)*it);
-                                curTrack.InsertEvent(new EvExprSlide(STATUS_BYTE, channel, linExpr), (uint)(baseTime+it * 12));
-                            }
-                            
-                            break;
-                        case 0xAA:// Pan
-                            curTrack.AddEvent(new EvPan(STATUS_BYTE, channel, buffer.ReadByte(), delta));
-                            delta = 0;
-                            break;
-                        case 0xAB:// Pan Fade
-                            curTrack.AddEvent(new EvPanSlide(STATUS_BYTE, channel, buffer.ReadByte(), buffer.ReadByte()));
-                            break;
-                        case 0xAC: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
-                            break;
-                        case 0xAD: // Attack
-                            curTrack.AddEvent(new EvAttack(STATUS_BYTE, channel, buffer.ReadByte(), delta));
-                            delta = 0;
-                            break;
-                        case 0xAE: // Decay
-                            byte decay = buffer.ReadByte();
-                            curTrack.AddEvent(new EvDecay(STATUS_BYTE, channel, decay, delta));
-                            break;
-                        case 0xAF: // Sustain
-                            byte sustain = buffer.ReadByte();
-                            curTrack.AddEvent(new EvSustain(STATUS_BYTE, channel, sustain, delta));
-                            break;
-                        case 0xB0: // Decay + Sustain
-                            decay = buffer.ReadByte();
-                            sustain = buffer.ReadByte();
-                            curTrack.AddEvent(new EvDecay(STATUS_BYTE, channel, decay, delta));
-                            curTrack.AddEvent(new EvSustain(STATUS_BYTE, channel, sustain, delta));
-                            break;
-                        case 0xB1: // Sustain ?
-                            curTrack.AddEvent(new EvSustainRelease(STATUS_BYTE, channel, buffer.ReadByte(), delta));
-                            delta = 0;
-                            break;
-                        case 0xB2: // Release
-                            curTrack.AddEvent(new EvRelease(STATUS_BYTE, channel, buffer.ReadByte(), delta));
-                            delta = 0;
-                            break;
-                        case 0xB3: // Reset ADSR (Attack-Decay-Sustain-Release)
-                            curTrack.AddEvent(new EvResetADSR(STATUS_BYTE));
-                            break;
-                        // LFO (low-frequency oscillators) Pitch bend
-                        case 0xB4: // LFO Pitch bend Range
-                            b = buffer.ReadBytes(3);
-                            curTrack.AddEvent(new EvLFOPitchRange(STATUS_BYTE, b[0], b[1], b[2]));
-                            break;
-                        case 0xB5: // LFO Pitch bend Depth
-                            int depth = buffer.ReadByte();
-                            curTrack.AddEvent(new EvLFOPitchDepth(STATUS_BYTE, depth));
-                            break;
-                        case 0xB6: // LFO Pitch bend Off
-                            curTrack.AddEvent(new EvLFOPitchOff(STATUS_BYTE));
-                            break;
-                        case 0xB7: // LFO Pitch bend ??
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
-                            break;
-                        // LFO (low-frequency oscillators) Expression
-                        case 0xB8: // LFO Expression Range
-                            b = buffer.ReadBytes(3);
-                            curTrack.AddEvent(new EvLFOExprRange(STATUS_BYTE, b[0], b[1], b[2]));
-                            break;
-                        case 0xB9: // LFO Expression Depth
-                            depth = buffer.ReadByte();
-                            curTrack.AddEvent(new EvLFOExprDepth(STATUS_BYTE, depth));
-                            break;
-                        case 0xBA: // LFO Expression Off
-                            curTrack.AddEvent(new EvLFOExprOff(STATUS_BYTE));
-                            break;
-                        case 0xBB: // ??? occur when AKAO MUSIC unk3 is 255 or -1 (MUSIC074, 75, 76, 77, ...) (0xA2-0xE1-0xBB)
-                            b = buffer.ReadBytes(2);
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE, b));
-                            break;
-                        // LFO (low-frequency oscillators) Panpot
-                        case 0xBC: // LFO Panpot Range
-                            b = buffer.ReadBytes(2);
-                            curTrack.AddEvent(new EvLFOPanpotRange(STATUS_BYTE, channel,  b[0], b[1], delta));
-                            delta = 0;
-                            break;
-                        case 0xBD: // LFO Panpot Depth
-                            curTrack.AddEvent(new EvLFOPanpotDepth(STATUS_BYTE, channel, buffer.ReadByte(), delta));
-                            delta = 0;
-                            break;
-                        case 0xBE: // LFO Panpot On / Off ?
-                            curTrack.AddEvent(new EvLFOPanpotOff(STATUS_BYTE, channel, delta));
-                            delta = 0;
-                            break;
-                        case 0xBF: // LFO Panpot ??
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
-                            break;
-                        case 0xC0: // Transpose
-                            sbyte transpose = buffer.ReadSByte();
-                            curTrack.AddEvent(new EvTranspose(STATUS_BYTE, transpose));
-                            break;
-                        case 0xC1: // Transpose Move
-                            byte trans = buffer.ReadByte();
-                            curTrack.AddEvent(new EvTransposeMove(STATUS_BYTE, trans));
-                            break;
+                            case 0xC6: // FM (Frequency Modulation) On
+                                curTrack.AddEvent(new EvFMOn(STATUS_BYTE));
+                                break;
+                            case 0xC7: // FM (Frequency Modulation) Off
+                                curTrack.AddEvent(new EvFMOff(STATUS_BYTE));
+                                break;
 
-                        case 0xC2: // Reverb On
-                            curTrack.AddEvent(new EvReverbOn(STATUS_BYTE, channel, delta));
-                            delta = 0;
-                            break;
-                        case 0xC3: // Reverb Off
-                            curTrack.AddEvent(new EvReverbOff(STATUS_BYTE, channel, delta));
-                            delta = 0;
-                            break;
+                            case 0xC8: // Repeat Start
+                                       //repeatBegin = buffer.BaseStream.Position;
+                                repeaterStartPositions.Add(buffer.BaseStream.Position);
+                                repeatIndex++;
+                                curTrack.AddEvent(new EvRepeatStart(STATUS_BYTE, buffer.BaseStream.Position));
+                                break;
+                            case 0xC9: // Repeat End
+                                int loopId = buffer.ReadByte();
 
-                        case 0xC4: // Noise On
-                            curTrack.AddEvent(new EvNoiseOn(STATUS_BYTE));
-                            break;
-                        case 0xC5: // Noise Off
-                            curTrack.AddEvent(new EvNoiseOff(STATUS_BYTE));
-                            break;
-
-                        case 0xC6: // FM (Frequency Modulation) On
-                            curTrack.AddEvent(new EvFMOn(STATUS_BYTE));
-                            break;
-                        case 0xC7: // FM (Frequency Modulation) Off
-                            curTrack.AddEvent(new EvFMOff(STATUS_BYTE));
-                            break;
-
-                        case 0xC8: // Repeat Start
-                            //repeatBegin = buffer.BaseStream.Position;
-                            repeaterStartPositions.Add(buffer.BaseStream.Position);
-                            repeatIndex++;
-                            curTrack.AddEvent(new EvRepeatStart(STATUS_BYTE));
-                            break;
-                        case 0xC9: // Repeat End
-                            int loopId = buffer.ReadByte();
-
-                            if (!repeaterEndPositions.Contains(buffer.BaseStream.Position))
-                            {
-                                repeaterEndPositions.Add(buffer.BaseStream.Position);
-                                repeatNumber = loopId;
-                            }
-
-                            if (repeatNumber >= 2 && repeaterStartPositions.Count > repeatIndex)
-                            {
-                                buffer.BaseStream.Position = repeaterStartPositions[repeatIndex];
-                                repeatNumber--;
-                            }
-                            else
-                            {
-                                if (repeatIndex > 0) // We want to keep the level 0 repeat start
+                                if (!repeaterEndPositions.Contains(buffer.BaseStream.Position))
                                 {
-                                    repeaterStartPositions.RemoveAt(repeatIndex);
-                                    repeatIndex--;
+                                    repeaterEndPositions.Add(buffer.BaseStream.Position);
+                                    repeatNumber = loopId;
                                 }
-                            }
-                            curTrack.AddEvent(new EvRepeatEnd(STATUS_BYTE, repeatIndex, loopId));
-                            break;
-                        case 0xCA: // Repeat End
-                            loopId = 2;
-                            if (!repeaterEndPositions.Contains(buffer.BaseStream.Position))
-                            {
-                                repeaterEndPositions.Add(buffer.BaseStream.Position);
-                                repeatNumber = loopId;
-                            }
 
-                            if (repeatNumber >= 2 && repeaterStartPositions.Count > repeatIndex)
-                            {
-                                buffer.BaseStream.Position = repeaterStartPositions[repeatIndex];
-                                repeatNumber--;
-                            }
-                            else
-                            {
-                                if (repeatIndex > 0) // We want to keep the level 0 repeat start
+                                if (repeatNumber >= 2 && repeaterStartPositions.Count > repeatIndex)
                                 {
-                                    repeaterStartPositions.RemoveAt(repeatIndex);
-                                    repeatIndex--;
+                                    buffer.BaseStream.Position = repeaterStartPositions[repeatIndex];
+                                    repeatNumber--;
                                 }
-                            }
-                            curTrack.AddEvent(new EvRepeatEnd(STATUS_BYTE, repeatIndex));
-                            break;
-                        case 0xCB: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xCC: // Slur On
-                            curTrack.AddEvent(new EvSlurOn(STATUS_BYTE));
-                            break;
-                        case 0xCD: // Slur Off
-                            curTrack.AddEvent(new EvSlurOff(STATUS_BYTE));
-                            break;
-                        case 0xCE: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xCF: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xD0: // Note Off
-                            curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
-                            delta = 0;
-                            playingNote = false;
-                            break;
-                        case 0xD1: // Desactivate Notes ?
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xD2: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
-                            break;
-                        case 0xD3: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
-                            break;
-                        case 0xD4: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xD5: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xD6: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xD7: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xD8: // Pitch Bend
-                            curTrack.AddEvent(new EvPitchBend(STATUS_BYTE, channel, buffer.ReadSByte()));
-                            break;
-                        case 0xD9: // Pitch Bend Move
-                            curTrack.AddEvent(new EvPitchBendMove(STATUS_BYTE, buffer.ReadByte()));
-                            break;
-                        case 0xDA: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
-                            break;
-                        case 0xDB: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xDC: // ?? (MUSIC 088 to 091) when unk3 is 16383
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
-                            break;
-                        case 0xDD: // ?? when AKAO MUSIC unk3 is 255 or -1
-                            b = buffer.ReadBytes(2);
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE, b));
-                            break;
-                        case 0xDE: // LFO Expression times
-                            b = buffer.ReadBytes(2);
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xDF: // LFO Panpot times
-                            b = buffer.ReadBytes(2);
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xE0: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xE1: // Unknown       (2x in MUSIC058 set to 44 | 8x in MUSIC074 set to 64)
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
-                            break;
-                        case 0xE2: // Unknown       (6x in MUSIC074)
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xE3: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xE4: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xE5: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xE6: // LFO Expression times
-                            b = buffer.ReadBytes(2);
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xE7: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xE8: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xE9: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xEA: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xEB: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xEC: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xED: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xEE: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xEF: // Unknown
-                            curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
-                        case 0xFC: // Tie ??
-                            duration = buffer.ReadByte();
-                            delta += (byte)duration;
-                            curTrack.AddEvent(new EvTieTime(STATUS_BYTE, duration));
-                            break;
-                        case 0xFD: // Rest ??
-                            duration = buffer.ReadByte();
-                            if (playingNote)
-                            {
+                                else
+                                {
+                                    if (repeatIndex > 0) // We want to keep the level 0 repeat start
+                                    {
+                                        repeaterStartPositions.RemoveAt(repeatIndex);
+                                        repeatIndex--;
+                                    }
+                                }
+                                curTrack.AddEvent(new EvRepeatEnd(STATUS_BYTE, repeatIndex, loopId));
+                                break;
+                            case 0xCA: // Repeat End
+                                loopId = 2;
+                                if (!repeaterEndPositions.Contains(buffer.BaseStream.Position))
+                                {
+                                    repeaterEndPositions.Add(buffer.BaseStream.Position);
+                                    repeatNumber = loopId;
+                                }
+
+                                if (repeatNumber >= 2 && repeaterStartPositions.Count > repeatIndex)
+                                {
+                                    buffer.BaseStream.Position = repeaterStartPositions[repeatIndex];
+                                    repeatNumber--;
+                                }
+                                else
+                                {
+                                    if (repeatIndex > 0) // We want to keep the level 0 repeat start
+                                    {
+                                        repeaterStartPositions.RemoveAt(repeatIndex);
+                                        repeatIndex--;
+                                    }
+                                }
+                                curTrack.AddEvent(new EvRepeatEnd(STATUS_BYTE, repeatIndex));
+                                break;
+                            case 0xCB: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xCC: // Slur On
+                                curTrack.AddEvent(new EvSlurOn(STATUS_BYTE));
+                                break;
+                            case 0xCD: // Slur Off
+                                curTrack.AddEvent(new EvSlurOff(STATUS_BYTE));
+                                break;
+                            case 0xCE: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xCF: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xD0: // Note Off
                                 curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
                                 delta = 0;
                                 playingNote = false;
-                            }
-                            delta += (ushort)duration;
-                            curTrack.AddEvent(new EvRest(STATUS_BYTE, duration));
-                            break;
-                        case 0xFE: // Meta Event
-                            byte Meta = buffer.ReadByte();
-                            switch (Meta)
-                            {
-                                case 0x00: // Tempo
-                                    b = buffer.ReadBytes(2);
-                                    curTrack.AddEvent(new EvTempo(STATUS_BYTE, b[0], b[1], delta));
+                                break;
+                            case 0xD1: // Desactivate Notes ?
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xD2: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
+                                break;
+                            case 0xD3: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
+                                break;
+                            case 0xD4: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xD5: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xD6: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xD7: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xD8: // Pitch Bend
+                                curTrack.AddEvent(new EvPitchBend(STATUS_BYTE, channel, buffer.ReadSByte()));
+                                break;
+                            case 0xD9: // Pitch Bend Move
+                                curTrack.AddEvent(new EvPitchBendMove(STATUS_BYTE, buffer.ReadByte()));
+                                break;
+                            case 0xDA: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
+                                break;
+                            case 0xDB: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xDC: // ?? (MUSIC 088 to 091) when unk3 is 16383
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
+                                break;
+                            case 0xDD: // ?? when AKAO MUSIC unk3 is 255 or -1
+                                b = buffer.ReadBytes(2);
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE, b));
+                                break;
+                            case 0xDE: // LFO Expression times
+                                b = buffer.ReadBytes(2);
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xDF: // LFO Panpot times
+                                b = buffer.ReadBytes(2);
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xE0: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xE1: // Unknown       (2x in MUSIC058 set to 44 | 8x in MUSIC074 set to 64)
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
+                                break;
+                            case 0xE2: // Unknown       (6x in MUSIC074)
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xE3: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xE4: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xE5: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xE6: // LFO Expression times
+                                b = buffer.ReadBytes(2);
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xE7: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xE8: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xE9: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xEA: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xEB: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xEC: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xED: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xEE: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xEF: // Unknown
+                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                            case 0xFC: // Tie ??
+                                duration = buffer.ReadByte();
+                                delta += (byte)duration;
+                                curTrack.AddEvent(new EvTieTime(STATUS_BYTE, duration));
+                                break;
+                            case 0xFD: // Rest ??
+                                duration = buffer.ReadByte();
+                                if (playingNote)
+                                {
+                                    curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
                                     delta = 0;
-                                    break;
-                                case 0x01: // Tempo Slide
-                                    b = buffer.ReadBytes(2);
-                                    curTrack.AddEvent(new EvTempoSlide(STATUS_BYTE, b[0], b[1], delta));
-                                    break;
-                                case 0x02: // Reverb Level
-                                    b = buffer.ReadBytes(2);
-                                    curTrack.AddEvent(new EvReverbLevel(STATUS_BYTE, channel, b[0], b[1], delta));
-                                    break;
-                                case 0x03: // Reverb Fade
-                                    b = buffer.ReadBytes(2);
-                                    curTrack.AddEvent(new EvReverbFade(STATUS_BYTE, b[0], b[1]));
-                                    break;
-                                case 0x04: // Drum kit On
-                                    DrumKitOn = true;
-                                    DrumOn = true;
-                                    curTrack.drumTrack = true;
-                                    curTrack.AddEvent(new EvDrumKitOn(STATUS_BYTE));
-                                    curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 128, delta));
-                                    curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, 0, delta));
-                                    delta = 0;
-                                    curTrack.ResetChannelTo(9);
-                                    break;
-                                case 0x05: // Drum kit Off
-                                    DrumOn = false;
-                                    curTrack.AddEvent(new EvDrumKitOff(STATUS_BYTE));
-                                    //curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
-                                    //delta = 0;
-                                    break;
-                                case 0x06: // Perma Loop
-                                    long dest = buffer.BaseStream.Position + buffer.ReadInt16();
-                                    long loopLen = buffer.BaseStream.Position - beginOffset;
-                                    curTrack.AddEvent(new EvPermaLoop(STATUS_BYTE, cTrackId, dest));
-
-                                    // TODO add a midi loop point
-
-                                    // This event can be an end track
-                                    // we use a trick to check what is beyond
-                                    // if the next events are volume - pan - reverb and program change so this is a new track
-                                    bool EOT = false;
-                                    long pos = buffer.BaseStream.Position;
-                                    if (pos == end)
-                                    {
-                                        EOT = true;
+                                    playingNote = false;
+                                }
+                                delta += (ushort)duration;
+                                curTrack.AddEvent(new EvRest(STATUS_BYTE, duration));
+                                break;
+                            case 0xFE: // Meta Event
+                                byte Meta = buffer.ReadByte();
+                                switch (Meta)
+                                {
+                                    case 0x00: // Tempo
+                                        b = buffer.ReadBytes(2);
+                                        curTrack.AddEvent(new EvTempo(STATUS_BYTE, b[0], b[1], delta));
+                                        delta = 0;
                                         break;
-                                    }
-                                    List<byte> bytes = new List<byte>(buffer.ReadBytes(14));
-                                    buffer.BaseStream.Position = pos;
-                                    if (UseDebug) Debug.LogError(BitConverter.ToString(bytes.ToArray()));
-                                    // C8-FD-90-C9-28-A3-7F-A3-28-AA-5A-C2-FE
-                                    // A3-7F-A3-7F-AA-31-AD-28-AF-09-B1-43-B2-0F
-                                    if (bytes.Contains(0xA3) && (bytes.Contains(0xC2)|| bytes.Contains(0xAA)) && (bytes.Contains(0xA1) || (bytes.Contains(0xFE) && (bytes.Contains(0x14) || bytes.Contains(0x04)))))
-                                    {
-                                        // how many chance that's true if a new track doesn't start ?
-                                        EOT = true;
-                                    } else if (bytes.Contains(0xA3) && (bytes.Contains(0xC2) || bytes.Contains(0xAA)) && bytes.Contains(0xAD) && bytes.Contains(0xAF))
-                                    {
-                                        EOT = true;
-
-                                    }
-
-                                    if (EOT)
-                                    {
-                                        if (playingNote)
+                                    case 0x01: // Tempo Slide
+                                        b = buffer.ReadBytes(2);
+                                        curTrack.AddEvent(new EvTempoSlide(STATUS_BYTE, b[0], b[1], delta));
+                                        break;
+                                    case 0x02: // Reverb Level
+                                        b = buffer.ReadBytes(2);
+                                        curTrack.AddEvent(new EvReverbLevel(STATUS_BYTE, channel, b[0], b[1], delta));
+                                        break;
+                                    case 0x03: // Reverb Fade
+                                        b = buffer.ReadBytes(2);
+                                        curTrack.AddEvent(new EvReverbFade(STATUS_BYTE, b[0], b[1]));
+                                        break;
+                                    case 0x04: // Drum kit On
+                                        DrumKitOn = true;
+                                        curTrack.drumTrack = true;
+                                        curTrack.AddEvent(new EvDrumKitOn(STATUS_BYTE));
+                                        curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 128, delta));
+                                        delta = 0;
+                                        curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, 0, delta));
+                                        //curTrack.ResetChannelTo(9);
+                                        break;
+                                    case 0x05: // Drum kit Off
+                                        curTrack.AddEvent(new EvDrumKitOff(STATUS_BYTE));
+                                        //curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
+                                        //delta = 0;
+                                        break;
+                                    case 0x06: // Perma Loop
+                                        long dest = buffer.BaseStream.Position + buffer.ReadInt16();
+                                        long loopLen = buffer.BaseStream.Position - beginOffset;
+                                        if (trackEnd == buffer.BaseStream.Position)
                                         {
-                                            curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
-                                            delta = 0;
-                                            playingNote = false;
+                                            // this is the end of the track, we turn off if a note is playing
+                                            if (playingNote)
+                                            {
+                                                curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
+                                                delta = 0;
+                                                playingNote = false;
+                                            }
                                         }
-                                        curTrack.AddEvent(new EvEndTrack(STATUS_BYTE, cTrackId, delta));
-                                        cTrackId++;
-                                        if (cTrackId < tracks.Length)
+                                        curTrack.AddEvent(new EvPermaLoop(STATUS_BYTE, t, dest));
+                                        // TODO add a midi loop point
+
+                                        break;
+                                    case 0x07: // Perma Loop break with conditional.
+                                        byte cond = buffer.ReadByte();
+                                        dest = buffer.BaseStream.Position + buffer.ReadInt16();
+                                        loopLen = buffer.BaseStream.Position - beginOffset;
+                                        curTrack.AddEvent(new EvPermaLoopBreak(STATUS_BYTE, t, cond, dest));
+                                        break;
+                                    case 0x09: // Repeat Break
+                                        b = buffer.ReadBytes(3);
+                                        curTrack.AddEvent(new EvRepeatBreak(STATUS_BYTE, b));
+                                        break;
+                                    case 0x0E: // call subroutine Recurent in MUSIC034 (total festa 200 calls...), 123, ...
+                                               // for some reason there is several calls of this instruction for some 0x0F below before the track ends
+                                               // maybe its work like a if / else statment or a kind of sysex message
+                                        b = buffer.ReadBytes(2);
+                                        curTrack.AddEvent(new EvSubRoutine(STATUS_BYTE, b));
+                                        break;
+                                    case 0x0F: // return from subroutine
+
+                                        if (trackEnd == buffer.BaseStream.Position)
                                         {
-                                            curTrack = tracks[cTrackId];
+                                            // this is the end of the track, we turn off if a note is playing
+                                            if (playingNote)
+                                            {
+                                                curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
+                                                delta = 0;
+                                                playingNote = false;
+                                            }
                                         }
-                                        /*
-                                        channel = ProcChan(cTrackId, DrumOn);
-                                        curTrack.channel = channel;
-                                        */
-                                        if (DrumOn)
+                                        curTrack.AddEvent(new EvEndSubRoutine(STATUS_BYTE, Meta));
+                                        break;
+                                    case 0x10: // Unknown
+                                        curTrack.AddEvent(new EvUnknown(STATUS_BYTE, Meta));
+                                        break;
+                                    case 0x14: // Program Change (articulation target)
+                                        byte art = buffer.ReadByte();
+                                        if (!progIDs.Contains(art))
                                         {
-                                            DrumOn = false;
-                                            curTrack.AddEvent(new EvDrumKitOff(STATUS_BYTE));
-                                            //curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
-                                            //delta = 0;
+                                            progIDs.Add(art);
+                                        }
+
+                                        if (curTrack.LastProgram() != art)
+                                        {
+                                            curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, art, delta));
+                                        }
+
+                                        if (curTrack.name == "AKAOTrack")
+                                        {
+                                            curTrack.name = string.Concat("Track ", SMF.INSTRUMENTS[art]);
+                                            curTrack.AddEvent(new EvTrackName(curTrack.name));
                                         }
                                         delta = 0;
-                                    }
-
-                                    break;
-                                case 0x07: // Perma Loop break with conditional.
-                                    byte cond = buffer.ReadByte();
-                                    dest = buffer.BaseStream.Position + buffer.ReadInt16();
-                                    loopLen = buffer.BaseStream.Position - beginOffset;
-                                    curTrack.AddEvent(new EvPermaLoopBreak(STATUS_BYTE, cTrackId, cond, dest));
-                                    break;
-                                case 0x09: // Repeat Break
-                                    b = buffer.ReadBytes(3);
-                                    curTrack.AddEvent(new EvRepeatBreak(STATUS_BYTE, b));
-                                    break;
-                                case 0x0E: // call subroutine Recurent in MUSIC034 (total festa 200 calls...), 123, ...
-                                    // for some reason there is several calls of this instruction for some 0x0F below before the track ends
-                                    // maybe its work like a if / else statment or a kind of sysex message
-                                    metaECount++;
-                                    b = buffer.ReadBytes(2);
-                                    curTrack.AddEvent(new EvSubRoutine(STATUS_BYTE, b));
-                                    break;
-                                case 0x0F: // return from subroutine
-                                    curTrack.AddEvent(new EvEndSubRoutine(STATUS_BYTE, Meta));
-
-                                    // This event can be an end track
-                                    // same trick
-                                    EOT = false;
-                                    if (metaECount > 0)
-                                    {
-                                        pos = buffer.BaseStream.Position;
-                                        if (pos == end)
-                                        {
-                                            EOT = true;
-                                            break;
-                                        }
-                                        bytes = new List<byte>(buffer.ReadBytes(13));
-                                        buffer.BaseStream.Position = pos;
-                                        if (UseDebug) Debug.LogError(BitConverter.ToString(bytes.ToArray()));
-                                        if (bytes.Contains(0xA3) && (bytes.Contains(0xC2) || bytes.Contains(0xAA)) && (bytes.Contains(0xA1) || (bytes.Contains(0xFE) && (bytes.Contains(0x14) || bytes.Contains(0x04)))))
-                                        {
-                                            EOT = true;
-                                            metaECount = 0; // so we don't polute next tracks
-                                        }
-                                    }
-                                    if(EOT)
-                                    {
-                                        if (playingNote)
-                                        {
-                                            curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
-                                            delta = 0;
-                                            playingNote = false;
-                                        }
-                                        curTrack.AddEvent(new EvEndTrack(STATUS_BYTE, cTrackId, delta));
-                                        delta = 0;
-                                        cTrackId++;
-                                        if (cTrackId < tracks.Length)
-                                        {
-                                            curTrack = tracks[cTrackId];
-                                        }
-                                        /*
-                                        channel = ProcChan(cTrackId, DrumOn);
-                                        curTrack.channel = channel;
-                                        */
-                                        if (DrumOn)
-                                        {
-                                            DrumOn = false;
-                                            //curTrack.AddEvent(new EvBank(STATUS_BYTE, channel, 0, delta));
-                                        }
-                                    }
-                                    break;
-                                case 0x10: // Unknown
-                                    curTrack.AddEvent(new EvUnknown(STATUS_BYTE, Meta));
-                                    break;
-                                case 0x14: // Program Change (articulation target)
-                                    byte art = buffer.ReadByte();
-                                    if (!progIDs.Contains(art))
-                                    {
-                                        progIDs.Add(art);
-                                    }
-
-                                    if(curTrack.LastProgram() != art) curTrack.AddEvent(new EvProgramChange(STATUS_BYTE, channel, art, delta));
-                                    if (curTrack.name == "AKAOTrack")
-                                    {
-                                        curTrack.name = string.Concat("Track ", SMF.INSTRUMENTS[art]);
-                                        curTrack.AddEvent(new EvTrackName(curTrack.name));
-                                    }
-                                    delta = 0;
-                                    break;
-                                case 0x15: // Time Signature
-                                    b = buffer.ReadBytes(2);
-                                    curTrack.AddEvent(new EvTimeSign(STATUS_BYTE, b[0], b[1]));
-                                    break;
-                                case 0x16: // Marker
-                                    b = buffer.ReadBytes(2);
-                                    curTrack.AddEvent(new EvMarker(STATUS_BYTE, b[0], b[1]));
-                                    break;
-                                case 0x1C: // Unknown
-                                    curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
-                                    break;
-                                case 0x1F: // Unknown Recurent in MUSIC004, MUSIC005, MUSIC016, MUSIC017, MUSIC018, MUSIC020, MUSIC025, MUSIC026
-                                    // often on a side of a Rest Event
-                                    curTrack.AddEvent(new EvUnknown(STATUS_BYTE, Meta));
-                                    break;
-                                default:
-                                    curTrack.AddEvent(new EvUnknown(STATUS_BYTE, Meta));
-                                    break;
-                            }
-                            break;
-                        case 0xFF: // End Track Padding
-                            //curTrack.AddEvent(new EvEndTrack(cTrackId, delta, true));
-                            break;
-                        default:
-                            Debug.LogWarning("Unknonw instruction in " + name + " at " + buffer.BaseStream.Position + "  ->  " + (byte)STATUS_BYTE);
-                            //curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
-                            break;
+                                        break;
+                                    case 0x15: // Time Signature
+                                        b = buffer.ReadBytes(2);
+                                        curTrack.AddEvent(new EvTimeSign(STATUS_BYTE, b[0], b[1]));
+                                        break;
+                                    case 0x16: // Marker
+                                        b = buffer.ReadBytes(2);
+                                        curTrack.AddEvent(new EvMarker(STATUS_BYTE, b[0], b[1]));
+                                        break;
+                                    case 0x1C: // Unknown
+                                        curTrack.AddEvent(new EvUnknown(STATUS_BYTE, buffer.ReadByte()));
+                                        break;
+                                    case 0x1F: // Unknown Recurent in MUSIC004, MUSIC005, MUSIC016, MUSIC017, MUSIC018, MUSIC020, MUSIC025, MUSIC026
+                                               // often on a side of a Rest Event
+                                        curTrack.AddEvent(new EvUnknown(STATUS_BYTE, Meta));
+                                        break;
+                                    default:
+                                        curTrack.AddEvent(new EvUnknown(STATUS_BYTE, Meta));
+                                        break;
+                                }
+                                break;
+                            case 0xFF: // End Track Padding
+                                break;
+                            default:
+                                Debug.LogWarning("Unknonw instruction in " + name + " at " + buffer.BaseStream.Position + "  ->  " + (byte)STATUS_BYTE);
+                                //curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
+                                break;
+                        }
                     }
                 }
             }
@@ -1035,7 +955,8 @@ namespace VS.Parser.Akao
                 if (programs.Count > 0)
                 {
                     return programs[programs.Count - 1];
-                } else
+                }
+                else
                 {
                     return null;
                 }
@@ -1044,7 +965,7 @@ namespace VS.Parser.Akao
 
             public void ResetChannelTo(byte newChan)
             {
-                this.channel = newChan;
+                channel = newChan;
                 if (events != null && events.Count > 0)
                 {
                     for (int i = 0; i < events.Count; i++)
@@ -1082,7 +1003,11 @@ namespace VS.Parser.Akao
                 }
                 if (ev.GetType() == typeof(EvProgramChange))
                 {
-                    if (mainProg == -1) mainProg = (short)ev.midiArg1;
+                    if (mainProg == -1)
+                    {
+                        mainProg = (short)ev.midiArg1;
+                    }
+
                     programs.Add((byte)ev.midiArg1);
                 }
                 if (ev.GetType() == typeof(EvDrumKitOn))
@@ -1129,15 +1054,16 @@ namespace VS.Parser.Akao
             {
                 if (events != null && events.Count > 1)
                 {
-                    for(int i = 0; i < events.Count; i++ )
+                    for (int i = 0; i < events.Count; i++)
                     {
                         AKAOEvent lEv = events[i];
                         if (i == 0)
                         {
                             lEv.deltaTime = lEv.absTime;
-                        } else
+                        }
+                        else
                         {
-                            AKAOEvent pEv = events[i-1];
+                            AKAOEvent pEv = events[i - 1];
                             lEv.deltaTime = lEv.absTime - pEv.absTime;
                         }
                     }
@@ -1156,7 +1082,8 @@ namespace VS.Parser.Akao
                 {
                     return events[events.Count - 1];
 
-                } else
+                }
+                else
                 {
                     return null;
                 }
@@ -1253,7 +1180,7 @@ namespace VS.Parser.Akao
                 }
             }
         }
-        private class EvAfterTouch:AKAOEvent
+        private class EvAfterTouch : AKAOEvent
         {
             public EvAfterTouch(byte STATUS_BYTE, byte channel, uint key, uint value, uint t = 0x00)
             {
@@ -1296,7 +1223,7 @@ namespace VS.Parser.Akao
                 }
             }
         }
-        private class EvChannelPressure: AKAOEvent
+        private class EvChannelPressure : AKAOEvent
         {
             public EvChannelPressure(byte STATUS_BYTE, byte channel, byte value, uint delta = 0x00)
             {
@@ -1404,11 +1331,14 @@ namespace VS.Parser.Akao
 
             public EvVolume(byte STATUS_BYTE, byte channel, uint volume, uint delta = 0x00)
             {
+                double val = Math.Round(Math.Sqrt((volume / 127.0f)) * 127.0f);
+                byte velocity = (byte)val;
+
                 this.channel = channel;
                 deltaTime = delta;
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x07;
-                midiArg2 = (byte)volume;
+                midiArg2 = (byte)velocity;
 
                 if (AKAOComposer.UseDebug)
                 {
@@ -1470,14 +1400,15 @@ namespace VS.Parser.Akao
 
         private class EvSustain : AKAOEvent
         {
-            public EvSustain(byte STATUS_BYTE, byte channel, byte value, uint delta)
+            public EvSustain(byte STATUS_BYTE, byte channel, byte value, uint delta = 0)
             {
                 this.channel = channel;
+                /*
                 deltaTime = delta;
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x40;
                 midiArg2 = value;
-
+                */
                 if (AKAOComposer.UseDebug)
                 {
                     Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  ->  EvSustain : ", value));
@@ -1488,14 +1419,15 @@ namespace VS.Parser.Akao
         private class EvSustainRelease : AKAOEvent
         {
 
-            public EvSustainRelease(byte STATUS_BYTE, byte channel, byte value, uint delta)
+            public EvSustainRelease(byte STATUS_BYTE, byte channel, byte value, uint delta = 0)
             {
                 this.channel = channel;
+                /*
                 deltaTime = delta;
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x40;
                 midiArg2 = value;
-
+                */
                 if (AKAOComposer.UseDebug)
                 {
                     // MUSIC/MUSIC021.DAT
@@ -1505,7 +1437,7 @@ namespace VS.Parser.Akao
         }
         private class EvRelease : AKAOEvent
         {
-            public EvRelease(byte STATUS_BYTE, byte channel, byte release, uint delta)
+            public EvRelease(byte STATUS_BYTE, byte channel, byte release, uint delta = 0)
             {
                 this.channel = channel;
                 deltaTime = delta;
@@ -1522,7 +1454,7 @@ namespace VS.Parser.Akao
 
         private class EvDecay : AKAOEvent
         {
-            public EvDecay(byte STATUS_BYTE, byte channel, byte value, uint delta)
+            public EvDecay(byte STATUS_BYTE, byte channel, byte value, uint delta = 0)
             {
                 this.channel = channel;
                 deltaTime = delta;
@@ -1550,7 +1482,7 @@ namespace VS.Parser.Akao
 
         private class EvAttack : AKAOEvent
         {
-            public EvAttack(byte STATUS_BYTE, byte channel, byte attack, uint delta)
+            public EvAttack(byte STATUS_BYTE, byte channel, byte attack, uint delta = 0)
             {
                 this.channel = channel;
                 deltaTime = delta;
@@ -2073,8 +2005,11 @@ namespace VS.Parser.Akao
 
         private class EvRepeatStart : AKAOEvent
         {
-            public EvRepeatStart(byte STATUS_BYTE)
+            long position;
+
+            public EvRepeatStart(byte STATUS_BYTE, long _pos)
             {
+                long position = _pos;
                 if (UseDebugFull)
                 {
                     Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  ->  EvRepeatStart"));

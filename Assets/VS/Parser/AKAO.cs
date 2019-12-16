@@ -136,6 +136,7 @@ namespace VS.Parser
                     buffer.ReadBytes(8); // padding
 
                     int bnumt = buffer.ReadInt32();
+                    uint numTrack = ToolBox.GetNumPositiveBits(bnumt);
                     short unk3 = buffer.ReadInt16(); // (0, -1, 255 or 16383) from MUSIC050 to MUSIC101 => unk3 != 0
                     // when != 0 it seems like it's not a "music" but more like a sounds store for maps ambiance or monsters
                     // when != 0, in most of case there is no instruments set nor a drum (excp 68, 69) and Unknowns AKAO events occur a lot.
@@ -146,37 +147,33 @@ namespace VS.Parser
                     // Case -1 all others from 50 to 101
                     buffer.ReadBytes(10); // padding
 
-                    int ptr1 = buffer.ReadUInt16() + 0x30; // instruments pointer
-                    buffer.ReadUInt16(); // always 0000
-                    int ptr2 = buffer.ReadUInt16() + 0x34; // Drums pointer
-                    buffer.ReadBytes(10); // padding
+                    uint ptr1 = buffer.ReadUInt32() + 0x30; // instruments pointer
+                    uint ptr2 = buffer.ReadUInt32() + 0x34; // Drums pointer
+                    buffer.ReadBytes(8); // padding
 
                     ushort jump = buffer.ReadUInt16();
+                    long basePtr = buffer.BaseStream.Position;
                     long musInstrPtr = buffer.BaseStream.Position + jump - 2;
-                    uint numTrack = ToolBox.GetNumPositiveBits(bnumt);
+
 
                     if (true)
                     {
                         Debug.Log(string.Concat("AKAO from : ", FileName, " FileSize = ", FileSize, "    |    reverb : ", reverb, " numTrack : ", numTrack, " sampleSet : ", sampleSet,
                             "\r\ninstruments at : ", ptr1, "  Drums at : ", ptr2, "   musInstrPtr : ", musInstrPtr, "   |  unk1 : ", unk1, "   unk3 : ", unk3));
                     }
+                    ushort[] tracksPtr = new ushort[numTrack];
+                    tracksPtr[0] = (ushort)musInstrPtr;
 
-
-                    // kind of listing here, i don't know what it is. seems to be relative to tracks
-                    //if (UseDebug) Debug.Log((jump - 2) / 2);
-                    for (uint i = 0; i < (jump - 2) / 2; i++)
+                    for (uint i = 0; i < numTrack-1; i++)
                     {
-                        byte[] b = buffer.ReadBytes(2);
-                        if (UseDebug)
-                        {
-                            //Debug.Log(b[0] + "   ->   " + b[1]);
-                        }
+                        tracksPtr[i+1] = (ushort)((basePtr + i * 2)+ buffer.ReadUInt16());
                     }
 
 
 
 
                     // music instuctions begin here, MIDI like format, we don't care yet, so let's jump
+
 
 
                     uint instrCount = 0;
@@ -305,6 +302,23 @@ namespace VS.Parser
                         instruments.Add(drum);
                     }
 
+                    long end = 0;
+                    if (ptr1 > 0x30)
+                    {
+                        end = ptr1;
+                    }
+                    else if (ptr2 > 0x34)
+                    {
+                        end = ptr2;
+                    }
+                    else
+                    {
+                        end = buffer.BaseStream.Length;
+                    }
+
+                    composer = new AKAOComposer(buffer, musInstrPtr, end, instrCount, numTrack, tracksPtr, FileName, false);
+
+
                     // AKAO from : WAVE0000 startingArticulationId = 0
                     // AKAO from : WAVE0005 startingArticulationId = 32
                     // AKAO from : WAVE0032 startingArticulationId = 32
@@ -318,7 +332,7 @@ namespace VS.Parser
                     AKAO[] sampleCollections = new AKAO[3];
 
                     // Program from 32 to 63
-                    hash[hash.Length - 1] = "WAVE0005.DAT"; // wave 005 or wave 032 ?
+                    hash[hash.Length - 1] = "WAVE0005.DAT"; // wave 005 or wave 032 ? (5 seems good)
                     AKAO SampleColl32 = new AKAO();
                     SampleColl32.UseDebug = UseDebug;
                     SampleColl32.Parse(String.Join("/", hash), AKAO.SOUND);
@@ -343,33 +357,19 @@ namespace VS.Parser
                     SampleColl64.Parse(samplePath, AKAO.SOUND);
                     sampleCollections[1] = SampleColl64;
 
-                    // Additionnal Collection, seems to be useless now, we let it just in case
-                    hash[hash.Length - 1] = "WAVE0044.DAT";
-                    AKAO addiColl = new AKAO();
-                    addiColl.UseDebug = UseDebug;
-                    addiColl.Parse(String.Join("/", hash), AKAO.SOUND);
-                    sampleCollections[2] = addiColl;
-
-                    long end = 0;
-                    if (ptr1 > 0x30)
+                    // Additionnal Collection, somztimes usefull for drum kit or A1 program change
+                    if (SampleColl64.articulations.Length < 64)
                     {
-                        end = ptr1;
+                        hash[hash.Length - 1] = "WAVE0069.DAT";
+                        AKAO addiColl = new AKAO();
+                        addiColl.UseDebug = UseDebug;
+                        addiColl.Parse(String.Join("/", hash), AKAO.SOUND);
+                        sampleCollections[2] = addiColl;
                     }
-                    else if (ptr2 > 0x34)
-                    {
-                        end = ptr2;
-                    }
-                    else
-                    {
-                        end = buffer.BaseStream.Length;
-                    }
-
-                    composer = new AKAOComposer(buffer, musInstrPtr, end, instrCount, numTrack, FileName, false);
 
                     if (composer.A1Calls.Count > 0)
                     {
                         // we need to add new instruments with an unique region
-
                         foreach (uint iid in composer.A1Calls)
                         {
                             AKAOInstrument A1Instrument = new AKAOInstrument(iid);
@@ -386,6 +386,10 @@ namespace VS.Parser
                             instruments.Add(A1Instrument);
                         }
                     }
+
+
+
+
                     SF2 sf2 = null;
                     if (bWAV || bSF2 || bDLS)
                     {
@@ -393,7 +397,11 @@ namespace VS.Parser
                     }
                     if (bMID || bWAV)
                     {
-                        if (unk3 != 0) bWAV = false; // we don't want 1Gb crap .wav
+                        if (unk3 != 0)
+                        {
+                            bWAV = false; // we don't want 1Gb crap .wav
+                        }
+
                         composer.Synthetize(bMID, bWAV, sf2);
                     }
 
@@ -406,8 +414,8 @@ namespace VS.Parser
                     ushort sampleId = buffer.ReadUInt16();
                     buffer.ReadBytes(10); // padding
 
-                    unk1 = buffer.ReadByte();
-                    unk3 = buffer.ReadByte();
+                    unk1 = buffer.ReadByte(); // almost always 0 (but one case 48 in WAVE0032)
+                    unk3 = buffer.ReadByte(); // almost always 81 (two cases 49 (WAVE0000, WAVE0005), one case 16 in WAVE0032, one case 177 in WAVE0200)
                     buffer.ReadBytes(2); // padding
                     var sampleSize = buffer.ReadUInt32();
                     startingArticulationId = buffer.ReadUInt32();
@@ -444,7 +452,7 @@ namespace VS.Parser
                         articulations[i] = arti;
                         if (UseDebug)
                         {
-                            Debug.Log(arti.ToString());
+                            //Debug.Log(arti.ToString());
                         }
                     }
 
@@ -611,13 +619,14 @@ namespace VS.Parser
                         {
                             midiBank = DLS.F_INSTRUMENT_DRUMS;
                             sf2.AddPreset(instrument.name, 0, 128);
-                        } else
+                        }
+                        else
                         {
                             sf2.AddPreset(instrument.name, (ushort)instrument.program, 0);
                         }
 
                         sf2.AddPresetBag();
-                        sf2.AddPresetGenerator(SF2Generator.ReverbEffectsSend, new SF2GeneratorAmount { UAmount = (ushort)250 });
+                        sf2.AddPresetGenerator(SF2Generator.ReverbEffectsSend, new SF2GeneratorAmount { UAmount = (ushort)1000 });
                         sf2.AddPresetGenerator(SF2Generator.Instrument, new SF2GeneratorAmount { UAmount = (ushort)i });
                         sf2.AddInstrument(instrument.name);
                         i++;
@@ -652,6 +661,7 @@ namespace VS.Parser
                                     else
                                     {
                                         // we check in additional collection
+                                        //Debug.LogWarning(region.articulationId);
                                         coll = sampleCollections[2];
                                         articulation = coll.articulations[region.articulationId - coll.startingArticulationId];
 
@@ -659,9 +669,8 @@ namespace VS.Parser
                                 }
                                 if (UseDebug)
                                 {
-                                    Debug.Log(string.Concat("Instrument ", i, "  ", instrument.name, "  |  Region articulation found in ", coll.FileName));
+                                    Debug.Log(string.Concat("Instrument ", i, "  ", instrument.name, "  |  Region articulation  "+ region.articulationId + "  found in ", coll.FileName));
                                 }
-                                //Debug.Log(string.Concat("articulation.sampleNum : ", articulation.sampleNum, "   coll start id : ", coll.startingArticulationId));
 
 
 
@@ -686,9 +695,8 @@ namespace VS.Parser
                                         ft += short.MaxValue;
                                     }
 
-                                    // this gives us the pitch multiplier value ex. 1.05946
                                     double freq_multiplier = ((ft * 32) + 0x100000) / (double)0x100000;
-                                    double cents = Mathf.Log((float)freq_multiplier) / Mathf.Log(2) * 1200;
+                                    double cents = (short)(1200 * Math.Log(freq_multiplier, 2));
                                     if (articulation.fineTune < 0)
                                     {
                                         cents -= 1200;
@@ -724,14 +732,15 @@ namespace VS.Parser
                                     // http://linuxmao.org/SoundFont+specification+SF2
                                     sf2.AddInstrumentBag();
                                     sf2.AddInstrumentGenerator(SF2Generator.KeyRange, new SF2GeneratorAmount { LowByte = region.lowRange, HighByte = region.hiRange });
-                                    //sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = region.lowVel, HighByte = region.hiVel }); // not sure
-                                    sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = 0, HighByte = 127 });
+                                    sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = region.lowVel, HighByte = region.hiVel }); // not sure
+                                    //sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = 0, HighByte = 127 });
                                     /* C'est l'atténuation, en centibels, pour laquelle une note est atténuée en dessous de la valeur maximum prévue.
                                     Si = 0, il n'y a aucune atténuation, la note sera jouée au maximum prévu.
                                     Ex : 60 indique que la note sera jouée à 6 dB en-dessous du maximum prévu pour la note.
                                     Max value = 1440 */
-                                    sf2.AddInstrumentGenerator(SF2Generator.InitialAttenuation, new SF2GeneratorAmount { UAmount = (ushort)(region.attenuation/10) });
-                                    sf2.AddInstrumentGenerator(SF2Generator.Pan, new SF2GeneratorAmount { UAmount = 0x00 });
+                                    sf2.AddInstrumentGenerator(SF2Generator.InitialAttenuation, new SF2GeneratorAmount { UAmount = (ushort)(region.attenuation / 10) });
+                                    //sf2.AddInstrumentGenerator(SF2Generator.ReverbEffectsSend, new SF2GeneratorAmount { Amount = 1000 });
+                                    sf2.AddInstrumentGenerator(SF2Generator.Pan, new SF2GeneratorAmount { Amount = region.pan });
                                     sf2.AddInstrumentGenerator(SF2Generator.SampleModes, new SF2GeneratorAmount { UAmount = (articulation.loopPt != 0) ? (ushort)1 : (ushort)0 });
                                     sf2.AddInstrumentGenerator(SF2Generator.OverridingRootKey, new SF2GeneratorAmount { UAmount = (ushort)region.unityKey });
 
@@ -743,7 +752,7 @@ namespace VS.Parser
                                     En musique, le logarithme binaire intervient dans la formule permettant de déterminer la valeur en cents d’un intervalle.
                                     Un cent, ou centième de demi-ton au tempérament égal, vaut 1200 fois le logarithme binaire du rapport de fréquence des sons concernés.
                                     546 * 60 ~= short.MaxValue */
-                                    sf2.AddInstrumentGenerator(SF2Generator.AttackVolEnv, new SF2GeneratorAmount { Amount = (short)(1200*Math.Log(articulation.A, 2)) });
+                                    sf2.AddInstrumentGenerator(SF2Generator.AttackVolEnv, new SF2GeneratorAmount { Amount = (short)(1200 * Math.Log(articulation.A, 2)) });
                                     sf2.AddInstrumentGenerator(SF2Generator.HoldVolEnv, new SF2GeneratorAmount { Amount = (short)0 });
                                     /* C'est le temps, en timecents absolus, pour une variation de 100% de la valeur de l'enveloppe du volume pendant la phase de décroissance.
                                     Pour l'enveloppe de volume, la décroissance tend linéairement vers le niveau de maintien, ce qui provoque un changement de dB constant pour chaque unité de temps.

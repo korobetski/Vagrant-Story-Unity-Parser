@@ -41,7 +41,7 @@ namespace VS.Parser.Akao
             unk3 = b[5];
             unk4 = b[6];
             volume = b[7];
-            attenuation = (byte)((1440 - (volume + lowVel) * 5)/10);
+            attenuation = (byte)((1440 - (volume + lowVel) * 5) / 10);
         }
 
         public void FeedDrum(byte[] b, int key)

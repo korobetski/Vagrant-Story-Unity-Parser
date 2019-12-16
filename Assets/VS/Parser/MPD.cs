@@ -601,6 +601,7 @@ namespace VS.Parser
                         MPDFace f = groups[i].meshes[j].faces[k];
                         if (f.isQuad)
                         {
+                            // TODO Vertices colors
                             meshVertices.Add(-f.v1.position / 100);
                             meshVertices.Add(-f.v2.position / 100);
                             meshVertices.Add(-f.v3.position / 100);
