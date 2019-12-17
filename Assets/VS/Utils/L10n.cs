@@ -300,22 +300,41 @@ namespace VS.Utils
                     switch (c)
                     {
                         case 0xF8: // ???
-                            text += string.Concat(" (§F8:", raw[i + 1], ") ");
+                            if (raw.Length > i + 1)
+                            {
+                                text += string.Concat("\n (§F8:", raw[i + 1], ") ");
+                            }
+                            else
+                            {
+                                text += string.Concat("\n (§F8) ");
+                            }
                             i++;
                             break;
                         case 0xFA: // space between words + one byte parameter
-                            int sps = raw[i + 1] / 6;
-                            string[] spaces = new string[sps];
-                            for (int j = 0; j < sps; j++)
+                            if (raw.Length > i + 1)
                             {
-                                spaces[j] = " ";
+                                int sps = raw[i + 1] / 6;
+                                string[] spaces = new string[sps];
+                                for (int j = 0; j < sps; j++)
+                                {
+                                    spaces[j] = " ";
+                                }
+                                text += string.Join("", spaces);
                             }
-
-                            text += string.Join("", spaces);
+                            else
+                            {
+                                text += " ";
+                            }
                             i++;
                             break;
                         case 0xFB: // new dialog bubble + one byte parameter
-                            text += string.Concat("\n (§FB:", raw[i + 1], ") ");
+                            if (raw.Length > i+1)
+                            {
+                                text += string.Concat("\n (§FB:", raw[i + 1], ") ");
+                            } else
+                            {
+                                text += string.Concat("\n (§FB) ");
+                            }
                             i++;
                             break;
                     }

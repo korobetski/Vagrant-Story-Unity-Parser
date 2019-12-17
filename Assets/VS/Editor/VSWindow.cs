@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -80,8 +81,12 @@ public class VSWindow : EditorWindow
         if (fileLoadTrigger && VSPath != "" && FilePath != "")
         {
             string[] hash = FilePath.Split("/"[0]);
+            string[] h2 = hash[hash.Length - 1].Split("."[0]);
+            string folder = hash[0];
+            string fileName = h2[0];
+            string ext = h2[1];
 
-            switch (hash[0])
+            switch (folder)
             {
                 case "BATTLE":
                     // BATTLE.PRG
@@ -107,6 +112,23 @@ public class VSWindow : EditorWindow
                     // ENDING.XA
                     // ILLUST06.BIN -> ILLUST16.BIN
                     // NULL.DAT
+                    break;
+                case "MAP":
+                    // MAP***.MPD
+                    // Z***U**.ZUD
+                    // ZONE***.ZND
+                    switch (ext)
+                    {
+                        case "MPD":
+                            ParseMPD(VSPath + FilePath, true);
+                            break;
+                        case "ZUD":
+                            ParseZUD(VSPath + FilePath, fileName, true);
+                            break;
+                        case "ZND":
+                            ParseZND(VSPath + FilePath, true);
+                            break;
+                    }
                     break;
                 case "MUSIC":
                     ParseAKAO(VSPath + FilePath, AKAO.MUSIC, true);
@@ -257,47 +279,14 @@ public class VSWindow : EditorWindow
             string[] files = Directory.GetFiles(VSPath + "MAP/", "*.ZUD");
             float fileToParse = files.Length;
             float fileParsed = 0f;
-
-            // excp = list of models with a weird polygons section, impossible to build rigth now
-            List<string> excp = new List<string>();
-            excp.Add("Z006U00.ZUD");
-            excp.Add("Z050U00.ZUD");
-            excp.Add("Z050U11.ZUD");
-            excp.Add("Z051U21.ZUD");
-            excp.Add("Z054U00.ZUD");
-            excp.Add("Z054U01.ZUD");
-            excp.Add("Z055U04.ZUD");
-            excp.Add("Z055U05.ZUD");
-            excp.Add("Z234U16.ZUD");
-
             foreach (string file in files)
             {
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-
-                if (!excp.Contains(filename))
-                {
-                    ZUD parser = new ZUD();
-                    //parser.UseDebug = true;
-                    parser.Parse(file);
-                    parser.BuildPrefab();
-                }
-                else
-                {
-                    ZUD parser = new ZUD();
-                    //parser.UseDebug = true;
-                    parser.Parse(file);
-                }
-
+                ParseZUD(file, filename, false);
                 fileParsed++;
             }
-
-            /*
-            ZUD parser = new ZUD();
-            parser.UseDebug = true;
-            parser.Parse(VSPath + "MAP/Z006U00.ZUD");
-            */
             EditorUtility.ClearProgressBar();
         }
 
@@ -314,19 +303,9 @@ public class VSWindow : EditorWindow
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                MPD parser = new MPD();
-                //parser.UseDebug = true;
-                parser.Parse(file);
-                parser.BuildPrefab();
+                ParseMPD(file, false);
                 fileParsed++;
             }
-
-            /*
-            MPD parser = new MPD();
-            parser.UseDebug = true;
-            parser.Parse(VSPath + "MAP/MAP000.MPD");
-            parser.BuildPrefab();
-            */
             EditorUtility.ClearProgressBar();
         }
 
@@ -596,7 +575,6 @@ public class VSWindow : EditorWindow
 
     }
 
-
     private void BuildDatabase()
     {
         BIN DB = new BIN();
@@ -610,6 +588,51 @@ public class VSWindow : EditorWindow
             //parser.UseDebug = true;
             parser.Parse(file, texts);
         }
+    }
+
+    private void ParseZND(string path, bool UseDebug)
+    {
+        ZND parser = new ZND();
+        parser.UseDebug = UseDebug;
+        parser.Parse(path);
+        parser.BuildPrefab();
+    }
+
+    private void ParseZUD(string path, string filename, bool UseDebug)
+    {
+        // excp = list of models with a weird polygons section, impossible to build rigth now
+        List<string> excp = new List<string>();
+        excp.Add("Z006U00.ZUD");
+        excp.Add("Z050U00.ZUD");
+        excp.Add("Z050U11.ZUD");
+        excp.Add("Z051U21.ZUD");
+        excp.Add("Z054U00.ZUD");
+        excp.Add("Z054U01.ZUD");
+        excp.Add("Z055U04.ZUD");
+        excp.Add("Z055U05.ZUD");
+        excp.Add("Z234U16.ZUD");
+
+        if (!excp.Contains(filename))
+        {
+            ZUD parser = new ZUD();
+            parser.UseDebug = UseDebug;
+            parser.Parse(path);
+            parser.BuildPrefab();
+        }
+        else
+        {
+            ZUD parser = new ZUD();
+            parser.UseDebug = UseDebug;
+            parser.Parse(path);
+        }
+    }
+
+    private void ParseMPD(string path, bool UseDebug)
+    {
+        MPD parser = new MPD();
+        parser.UseDebug = UseDebug;
+        parser.Parse(path);
+        parser.BuildPrefab();
     }
 
     private void ParseAKAO(string path, AKAO.AKAOType type, bool UseDebug)

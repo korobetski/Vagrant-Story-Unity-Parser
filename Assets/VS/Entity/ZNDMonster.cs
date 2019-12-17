@@ -1,27 +1,32 @@
 ﻿using System;
 using System.IO;
+using UnityEngine;
 using VS.Utils;
 
 namespace VS.Entity
 {
 
-    [Serializable]
-    public class ZNDMonster
+    public class ZNDMonster: MonoBehaviour
     {
-        public string name;
+        [SerializeField]
+        public new string name;
+        [SerializeField]
         public ushort HP;
+        [SerializeField]
         public ushort MP;
+        [SerializeField]
         public byte STR;
+        [SerializeField]
         public byte INT;
+        [SerializeField]
         public byte AGI;
+        [SerializeField]
         public byte speed;
+        [SerializeField]
         public uint MPDId;
 
-        public ZNDMonster(byte[] v)
+        public ZNDMonster(BinaryReader reader)
         {
-            MemoryStream memStream = new MemoryStream(v);
-            BinaryReader reader = new BinaryReader(memStream);
-
             reader.ReadUInt16();
             reader.ReadByte(); // location in table for 3d model special effect
             reader.ReadByte();

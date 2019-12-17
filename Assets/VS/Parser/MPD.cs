@@ -62,6 +62,8 @@ namespace VS.Parser
 
         GameObject MapGO;
 
+        private bool _geom = true;
+
         public void Parse(string filePath)
         {
             PreParse(filePath);
@@ -158,6 +160,10 @@ namespace VS.Parser
                 if (lenGeometrySection > 0)
                 {
                     numGroups = buffer.ReadUInt32();
+                    if (UseDebug)
+                    {
+                        Debug.Log("numGroups : " + numGroups);
+                    }
                     groups = new MPDGroup[numGroups];
                     for (uint i = 0; i < numGroups; i++)
                     {
@@ -197,7 +203,7 @@ namespace VS.Parser
                     uint TyleHeight = buffer.ReadUInt16();
                     if (UseDebug)
                     {
-                        //Debug.Log("TyleWidth : " + TyleWidth + "  TyleHeight : " + TyleHeight);
+                        Debug.Log("TyleWidth : " + TyleWidth + "  TyleHeight : " + TyleHeight);
                     }
 
                     uint unk1 = buffer.ReadUInt16();
@@ -264,8 +270,9 @@ namespace VS.Parser
 
                     buffer.BaseStream.Position = doorPtr + lenRoomDoorSection;
                 }
+
                 // lights section
-                //http://datacrystal.romhacking.net/wiki/Vagrant_Story:range  maybe usefull
+                // http://www.psxdev.net/forum/viewtopic.php?f=51&t=3383
                 if (lenLightingSection > 0)
                 {
                     long lightPtr = buffer.BaseStream.Position;
@@ -288,23 +295,52 @@ namespace VS.Parser
                     string lightsDebug = "";
                     for (uint i = 0; i < numLights; i++)
                     {
-                        byte[] bytes = buffer.ReadBytes(20);
-                        byte[] bytes2 = buffer.ReadBytes(12);
-                        lightsDebug += string.Concat("Light # ", i, "  :  ", BitConverter.ToString(bytes), "  |  ", BitConverter.ToString(bytes2), "\r\n");
-                        /*
+                        string lgtMat = "";
+                        ushort[] matrix = new ushort[10];
+
+                        for (uint j = 0; j < 10; j++)
+                        {
+                            matrix[j] = buffer.ReadUInt16();
+                            lgtMat += (matrix[j]) + " - ";
+                        }
+
+
+                        byte[] cols = buffer.ReadBytes(12);
+                        Color32 colorX = new Color32(cols[0], cols[1], cols[2], cols[3]);
+                        Color32 colorY = new Color32(cols[4], cols[5], cols[6], cols[7]);
+                        Color32 colorZ = new Color32(cols[8], cols[9], cols[10], cols[11]);
+
+                        Color32 main = Color.white;
+                        if (colorX.r != mc.r && colorX.g != mc.g && colorX.b != mc.b)
+                        {
+                            main = colorX;
+                        }
+                        if (colorY.r != mc.r && colorY.g != mc.g && colorY.b != mc.b)
+                        {
+                            main = colorY;
+                        }
+                        if (colorZ.r != mc.r && colorZ.g != mc.g && colorZ.b != mc.b)
+                        {
+                            main = colorZ;
+                        }
+                        main.a = 255;
+
+                        lightsDebug += string.Concat("Light # ", i, "  :  ", lgtMat, "  |  ", colorX,", ", colorY, ", ", colorZ, "\r\n");
+                        
                         GameObject lgo = new GameObject("Point Light");
-                        lgo.transform.position = new Vector3(vv[0].x / 16, 1, vv[0].z / 16);
-                        lgo.transform.localScale = Vector3.one * 10;
+                        // this isn't the best way do to this...
+                        lgo.transform.position = new Vector3(-0.2f-matrix[0]/90, 5+ matrix[2] / 1024, -0.2f - matrix[1] / 90);
+                        lgo.transform.localScale = Vector3.one;
 
                         Light l = lgo.AddComponent<Light>();
                         l.name = "l" + i;
                         l.type = LightType.Point;
-                        l.range = 200f;
-                        l.intensity = 2f;
+                        l.range = 10f;
+                        l.intensity = 1.5f;
                         l.color = main;
-                        l.shadows = LightShadows.Hard;
+                        l.shadows = LightShadows.Soft;
                         lights.Add(lgo);
-                        */
+                        
                     }
 
                     if (UseDebug)
@@ -314,7 +350,7 @@ namespace VS.Parser
 
                     if (UseDebug)
                     {
-                        Debug.Log("buffer.BaseStream.Position  :  " + buffer.BaseStream.Position);
+                        Debug.Log("end lights  :  " + buffer.BaseStream.Position);
                     }
 
                     buffer.BaseStream.Position = lightPtr + lenLightingSection;
@@ -447,6 +483,10 @@ namespace VS.Parser
                     Debug.Log("SubSection18 ptr : " + buffer.BaseStream.Position + "   lenSubSection18 : " + lenSubSection18);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection18;
                 }
+            } else
+            {
+                // No geometry :s
+                _geom = false;
             }
 
             // Cleared section
@@ -514,8 +554,15 @@ namespace VS.Parser
         }
         public GameObject BuildGameObject()
         {
-            Build(false);
-            return MapGO;
+            if (_geom)
+            {
+                Build(false);
+                return MapGO;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public void BuildPrefab(bool erase = false)
@@ -553,6 +600,7 @@ namespace VS.Parser
             string[] hash = FilePath.Split("/"[0]);
             hash[hash.Length - 1] = zoneName;
             zndParser.FilePath = String.Join("/", hash);
+            zndParser.UseDebug = UseDebug;
             zndParser.Parse(zndParser.FilePath);
 
             string zn = ToolBox.MPDToZND(mapName, true);
@@ -594,6 +642,7 @@ namespace VS.Parser
                     List<int> meshTriangles = new List<int>();
                     List<Vector2> meshTrianglesUV = new List<Vector2>();
                     List<Vector3> meshNormals = new List<Vector3>();
+                    List<Color32> meshColors = new List<Color32>();
                     int iv = 0;
                     int lmf = groups[i].meshes[j].faces.Count;
                     for (int k = 0; k < lmf; k++)
@@ -601,11 +650,14 @@ namespace VS.Parser
                         MPDFace f = groups[i].meshes[j].faces[k];
                         if (f.isQuad)
                         {
-                            // TODO Vertices colors
                             meshVertices.Add(-f.v1.position / 100);
                             meshVertices.Add(-f.v2.position / 100);
                             meshVertices.Add(-f.v3.position / 100);
                             meshVertices.Add(-f.v4.position / 100);
+                            meshColors.Add(f.v1.color);
+                            meshColors.Add(f.v2.color);
+                            meshColors.Add(f.v3.color);
+                            meshColors.Add(f.v4.color);
                             meshTrianglesUV.Add(f.v2.uv / 256);
                             meshTrianglesUV.Add(f.v3.uv / 256);
                             meshTrianglesUV.Add(f.v1.uv / 256);
@@ -629,6 +681,9 @@ namespace VS.Parser
                             meshVertices.Add(-f.v1.position / 100);
                             meshVertices.Add(-f.v2.position / 100);
                             meshVertices.Add(-f.v3.position / 100);
+                            meshColors.Add(f.v1.color);
+                            meshColors.Add(f.v2.color);
+                            meshColors.Add(f.v3.color);
                             meshTrianglesUV.Add(f.v2.uv / 256);
                             meshTrianglesUV.Add(f.v3.uv / 256);
                             meshTrianglesUV.Add(f.v1.uv / 256);
@@ -647,6 +702,7 @@ namespace VS.Parser
                     mesh.triangles = meshTriangles.ToArray();
                     mesh.uv = meshTrianglesUV.ToArray();
                     mesh.normals = meshNormals.ToArray();
+                    mesh.colors32 = meshColors.ToArray();
                     mesh.RecalculateNormals();
 
                     GameObject meshGo = new GameObject("mesh_" + i + "-" + j);
@@ -685,7 +741,7 @@ namespace VS.Parser
             {
                 for (int i = 0; i < lights.Count; i++)
                 {
-                    //lights[i].transform.parent = mapGO.transform;
+                    lights[i].transform.parent = mapGO.transform;
                 }
 
             }

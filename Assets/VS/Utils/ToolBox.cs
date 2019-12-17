@@ -243,6 +243,12 @@ namespace VS.Utils
             table[99] = new string[] { "MAP430.MPD" }; // 99
             table[100] = new string[] { "MAP000.MPD" }; // 100
 
+            table[210] = new string[] { };
+            table[212] = new string[] { };
+            table[233] = new string[] { };
+            table[234] = new string[] { };
+            table[235] = new string[] { };
+            table[242] = new string[] { };
             table[250] = new string[] { "MAP506.MPD" }; // 250
 
             for (int i = 0; i < 256; i++)

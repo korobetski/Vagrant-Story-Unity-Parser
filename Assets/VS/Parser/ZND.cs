@@ -103,14 +103,20 @@ namespace VS.Parser
 
             // TODO enemy class & parse
             long loopbase = buffer.BaseStream.Position;
+            Debug.Log("start loop Position " + buffer.BaseStream.Position);
+            Debug.Log("timPtr " + timPtr);
+
             for (int i = 0; i < numEnemies; i++)
             {
-                if (buffer.BaseStream.Position != (loopbase + numEnemies * 464))
+                Debug.Log("ZND ennemy # "+i);
+                /*
+                if (buffer.BaseStream.Position != (loopbase + i * 464))
                 {
-                    buffer.BaseStream.Position = (loopbase + numEnemies * 464);
-                }
-                datas.monsters[i] = new ZNDMonster(buffer.ReadBytes(464));
+                    buffer.BaseStream.Position = (loopbase + i * 464);
+                }*/
+                datas.monsters[i] = new ZNDMonster(buffer);
             }
+            Debug.Log("end loop Position " + buffer.BaseStream.Position);
 
 
             // Textures section

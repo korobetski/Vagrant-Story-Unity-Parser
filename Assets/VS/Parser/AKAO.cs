@@ -10,7 +10,7 @@ using VS.Utils;
 // Minoru Akao Audio Script Format (Sequencer, SoundFont and more)
 
 // Akao in MUSIC folder contains music instructions like a Midi file, Akao in SOUND folder contains samples collection like .sfb / .sf2 / .dls files
-
+//http://problemkaputt.de/psx-spx.htm
 namespace VS.Parser
 {
 
