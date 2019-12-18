@@ -296,7 +296,7 @@ namespace VS.Parser.Akao
 
                 if (AKAOComposer.UseDebug)
                 {
-                    Debug.Log("## TRACK : " + t + "   -----------------------------------------------------------------------");
+                    Debug.LogWarning("## TRACK : " + t + "   -----------------------------------------------------------------------");
                 }
 
                 tracks[t] = new AKAOTrack();

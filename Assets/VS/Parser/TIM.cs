@@ -368,8 +368,8 @@ namespace VS.Parser
             if (CreatePNG)
             {
                 byte[] bytes = tex.EncodeToPNG();
-                ToolBox.DirExNorCreate("Assets/Resources/Textures/Weapons/");
-                File.WriteAllBytes("Assets/Resources/Textures/Weapons/" + FileName + "_tex.png", bytes);
+                ToolBox.DirExNorCreate("Assets/Resources/Obj/");
+                File.WriteAllBytes("Assets/Resources/Obj/" + FileName + "_tex.png", bytes);
             }
             tex.Compress(true);
             return tex;

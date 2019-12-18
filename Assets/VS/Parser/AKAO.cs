@@ -316,7 +316,7 @@ namespace VS.Parser
                         end = buffer.BaseStream.Length;
                     }
 
-                    composer = new AKAOComposer(buffer, musInstrPtr, end, instrCount, numTrack, tracksPtr, FileName, false);
+                    composer = new AKAOComposer(buffer, musInstrPtr, end, instrCount, numTrack, tracksPtr, FileName, true);
 
 
                     // AKAO from : WAVE0000 startingArticulationId = 0

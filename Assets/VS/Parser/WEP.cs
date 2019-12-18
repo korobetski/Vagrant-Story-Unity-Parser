@@ -5,6 +5,7 @@ using UnityEngine;
 using VS.Data;
 using VS.Entity;
 using VS.Utils;
+using VS.Format;
 
 //http://datacrystal.romhacking.net/wiki/Vagrant_Story:WEP_files
 
@@ -386,7 +387,7 @@ namespace VS.Parser
             weaponMesh.RecalculateNormals();
             weaponMesh.RecalculateTangents();
             weaponMesh.RecalculateBounds();
-            weaponMesh.Optimize();
+
 
             Shader shader = Shader.Find("Standard");
             Material mat = new Material(shader);
@@ -464,11 +465,20 @@ namespace VS.Parser
             mr.BakeMesh(baked);
             baked.RecalculateNormals();
 
+            MTL mtl = new MTL(FileName + "_tex.png", string.Concat(FileName, ".mtl"), string.Concat("material_wep_",FileName));
+            mtl.offset = new Vector3(0, 0, 0);
+            mtl.scale = new Vector3(2f, 2.5f, 1f);
+            mtl.Write();
 
+
+            OBJ wepObj = new OBJ(baked, FileName, mtl);
+            wepObj.Write();
+
+            baked.Optimize();
             mesh = baked;
 
             // Database 
-
+            /*
             int weaponId = int.Parse(FileName, System.Globalization.NumberStyles.HexNumber);
             if (weaponId < 91)
             {
@@ -481,7 +491,7 @@ namespace VS.Parser
                 shieldScript.type = Shield.Library(weaponId);
                 shieldScript.WEP = (byte)weaponId;
             }
-
+            */
             WEPGO = weaponGo;
             GOBuilded = true;
 

@@ -130,8 +130,23 @@ public class VSWindow : EditorWindow
                             break;
                     }
                     break;
+                case "MENU":
+                    break;
+                case "MOV":
+                    break;
                 case "MUSIC":
                     ParseAKAO(VSPath + FilePath, AKAO.MUSIC, true);
+                    break;
+                case "OBJ":
+                    // **.SHP
+                    // **.SEQ
+                    // **.WEP
+                    switch (ext)
+                    {
+                        case "WEP":
+                            ParseWEP(VSPath + FilePath, true);
+                            break;
+                    }
                     break;
                 case "SOUND":
                     ParseAKAO(VSPath + FilePath, AKAO.SOUND, true);
@@ -179,10 +194,7 @@ public class VSWindow : EditorWindow
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                WEP parser = new WEP();
-                //parser.UseDebug = true;
-                parser.Parse(file);
-                parser.BuildPrefab();
+                ParseWEP(file, true);
                 fileParsed++;
             }
             EditorUtility.ClearProgressBar();
@@ -588,6 +600,15 @@ public class VSWindow : EditorWindow
             //parser.UseDebug = true;
             parser.Parse(file, texts);
         }
+    }
+
+
+    private void ParseWEP(string path, bool UseDebug)
+    {
+        WEP parser = new WEP();
+        parser.UseDebug = UseDebug;
+        parser.Parse(path);
+        parser.BuildPrefab(true);
     }
 
     private void ParseZND(string path, bool UseDebug)

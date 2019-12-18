@@ -199,6 +199,7 @@
     <Compile Include="Assets\VS\Entity\ZNDDatas.cs" />
     <Compile Include="Assets\VS\Entity\ZNDMonster.cs" />
     <Compile Include="Assets\VS\Format\DLS.cs" />
+    <Compile Include="Assets\VS\Format\MTL.cs" />
     <Compile Include="Assets\VS\Format\OBJ.cs" />
     <Compile Include="Assets\VS\Format\RIFF.cs" />
     <Compile Include="Assets\VS\Format\RMID.cs" />
