@@ -11,7 +11,10 @@ ARM ++
 ZND +
 MPD =
 ZUD +
-AKAO +
+
+AKAO ++
+Akao's file formats is finally relatively well known now, so it's now possible to convert music instruction into a MIDI file, and create a sf2 soundfont to go with.
+Here is some examples of re-sampled musics using this tool (and some other fonts to try to get a better sound): https://www.youtube.com/playlist?list=PLLk6oPkqLHuGNvKgo8T2zjSt-O8oo6Eky
 
 
 There is a dependency for AKAO conversion to WAV, just copy my forked version of Unity-Midi in Assets Folder : https://github.com/korobetski/unity-midi/tree/master/Assets/UnityMidi
