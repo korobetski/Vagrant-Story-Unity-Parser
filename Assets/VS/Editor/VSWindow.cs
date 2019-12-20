@@ -106,6 +106,12 @@ public class VSWindow : EditorWindow
                     // E*.FBC
                     // E*.FBT
                     // PLG*.BIN lot of empty
+                    switch (ext)
+                    {
+                        case "P":
+                            EFFECT effect = new EFFECT(VSPath + FilePath);
+                            break;
+                    }
                     break;
                 case "ENDING":
                     // ENDING.PRG

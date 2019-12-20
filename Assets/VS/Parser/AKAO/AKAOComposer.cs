@@ -1219,7 +1219,12 @@ namespace VS.Parser.Akao
 
                 if (AKAOComposer.UseDebug)
                 {
-                    Debug.LogWarning(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  ->  EvProgramChange : ", prog, "  ", SMF.INSTRUMENTS[prog], "   channel : ", channel, "    delta : ", delta));
+                    string progName = "" + prog;
+                    if (prog < SMF.INSTRUMENTS.Length)
+                    {
+                        progName = SMF.INSTRUMENTS[prog];
+                    }
+                    Debug.LogWarning(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  ->  EvProgramChange : ", prog, "  ", progName, "   channel : ", channel, "    delta : ", delta));
                 }
             }
         }

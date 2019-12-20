@@ -9,7 +9,7 @@ namespace VS.Parser.Effect
 
         public P(string path)
         {
-            UseDebug = false;
+            UseDebug = true;
             Parse(path);
         }
 
@@ -56,7 +56,7 @@ namespace VS.Parser.Effect
                     sbyte id = buffer.ReadSByte(); // frame id
                     buffer.ReadByte(); // 00
 
-                    //if (UseDebug) Debug.Log(string.Concat("layer : ", layer, "   ID : ", id));
+                    if (UseDebug) Debug.Log(string.Concat("layer : ", layer, "   ID : ", id));
                 }
                 else
                 {
@@ -91,13 +91,13 @@ namespace VS.Parser.Effect
                     iB = buffer.ReadInt16();
                     iC = buffer.ReadInt16();
 
-                    /*
+                    
                     if (UseDebug) Debug.Log(string.Concat("i1 : ", i1, "   i2 : ", i2, "   b1 : ", b1,
                         "   b2 : ", b2, "   b3 : ", b3, "   b4 : ", b4, "   i5 : ", i5,
                         "   i6 : ", i6, "   i7 : ", i7, "   i8 : ", i8, "   i9 : ", i9,
                         "   iA : ", iA, "   iB : ", iB, "   iC : ", iC
                         ));
-                        */
+                        
                 }
                 else
                 {

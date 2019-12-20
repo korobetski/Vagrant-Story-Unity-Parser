@@ -517,7 +517,7 @@ namespace VS.Parser
                     }
                     break;
                 case AKAOType.PROG:
-                    // Not understood yet
+                    // similar to AKAOType.MUSIC without instruments & regions, use an AKAOType.SAMPLE as an instrument i supose
                     header = buffer.ReadBytes(4);// AKAO
                     ushort id = buffer.ReadUInt16();
                     buffer.ReadUInt16();
@@ -534,12 +534,10 @@ namespace VS.Parser
                     byteLen = buffer.ReadUInt16();
 
                     //Debug.Log(string.Concat("AKAO PROG : id : ", id, "  tp : ", tp, "  byteLen : ", byteLen));
-                    int waveLen = (int)(limit - buffer.BaseStream.Position);
-                    if (waveLen > 0)
-                    {
-                        buffer.ReadBytes(waveLen);
-                    }
+                    //int waveLen = (int)(limit - buffer.BaseStream.Position);
 
+                    composer = new AKAOComposer(buffer, buffer.BaseStream.Position, limit, 0, 1, new ushort[] { (ushort)buffer.BaseStream.Position }, FileName, true);
+                    composer.Synthetize(true, false);
                     break;
                 case AKAOType.SAMPLE:
                     // similar to AKAOType.SOUND without articulations, we can output a WAV file
