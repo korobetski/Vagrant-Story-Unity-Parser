@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace VS.Parser.Effect
@@ -52,11 +53,13 @@ namespace VS.Parser.Effect
                 if (buffer.BaseStream.Position + 4 <= buffer.BaseStream.Length)
                 {
 
-                    short layer = buffer.ReadInt16(); // 0100
-                    sbyte id = buffer.ReadSByte(); // frame id
-                    buffer.ReadByte(); // 00
+                    ushort layer = buffer.ReadUInt16(); // 0100
+                    ushort id = buffer.ReadUInt16(); // frame id
 
-                    if (UseDebug) Debug.Log(string.Concat("layer : ", layer, "   ID : ", id));
+                    if (UseDebug)
+                    {
+                        Debug.Log(string.Concat("layer : ", layer, "   ID : ", id));
+                    }
                 }
                 else
                 {
@@ -74,6 +77,7 @@ namespace VS.Parser.Effect
             {
                 if (buffer.BaseStream.Position + 24 <= buffer.BaseStream.Length)
                 {
+                    /*
                     i1 = buffer.ReadInt16();
                     i2 = buffer.ReadInt16();
                     //int i3 = buffer.ReadInt16();
@@ -97,7 +101,12 @@ namespace VS.Parser.Effect
                         "   i6 : ", i6, "   i7 : ", i7, "   i8 : ", i8, "   i9 : ", i9,
                         "   iA : ", iA, "   iB : ", iB, "   iC : ", iC
                         ));
-                        
+                    */
+
+                    if (UseDebug)
+                    {
+                        Debug.Log(BitConverter.ToString(buffer.ReadBytes(24)));
+                    }
                 }
                 else
                 {

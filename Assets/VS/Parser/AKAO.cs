@@ -164,9 +164,9 @@ namespace VS.Parser
                     ushort[] tracksPtr = new ushort[numTrack];
                     tracksPtr[0] = (ushort)musInstrPtr;
 
-                    for (uint i = 0; i < numTrack-1; i++)
+                    for (uint i = 0; i < numTrack - 1; i++)
                     {
-                        tracksPtr[i+1] = (ushort)((basePtr + i * 2)+ buffer.ReadUInt16());
+                        tracksPtr[i + 1] = (ushort)((basePtr + i * 2) + buffer.ReadUInt16());
                     }
 
 
@@ -536,8 +536,8 @@ namespace VS.Parser
                     //Debug.Log(string.Concat("AKAO PROG : id : ", id, "  tp : ", tp, "  byteLen : ", byteLen));
                     //int waveLen = (int)(limit - buffer.BaseStream.Position);
 
-                    composer = new AKAOComposer(buffer, buffer.BaseStream.Position, limit, 0, 1, new ushort[] { (ushort)buffer.BaseStream.Position }, FileName, true);
-                    composer.Synthetize(true, false);
+                    composer = new AKAOComposer(buffer, buffer.BaseStream.Position, limit, 0, 1, new ushort[] { (ushort)buffer.BaseStream.Position }, FileName, false);
+                    //composer.Synthetize(true, false);
                     break;
                 case AKAOType.SAMPLE:
                     // similar to AKAOType.SOUND without articulations, we can output a WAV file
@@ -667,7 +667,7 @@ namespace VS.Parser
                                 }
                                 if (UseDebug)
                                 {
-                                    Debug.Log(string.Concat("Instrument ", i, "  ", instrument.name, "  |  Region articulation  "+ region.articulationId + "  found in ", coll.FileName));
+                                    Debug.Log(string.Concat("Instrument ", i, "  ", instrument.name, "  |  Region articulation  " + region.articulationId + "  found in ", coll.FileName));
                                 }
 
 

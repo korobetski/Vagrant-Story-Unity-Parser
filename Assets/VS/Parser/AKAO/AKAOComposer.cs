@@ -247,7 +247,7 @@ namespace VS.Parser.Akao
 
             // if free channels left, we set bigger tracks in
             // we consider that events count determine the importance of the track
-            
+
             tracks = tracks.OrderByDescending(o => o.Events.Count).ToArray();
             List<AKAOTrack> swiTracks = new List<AKAOTrack>();
             for (int j = 0; j < 16; j++)
@@ -267,7 +267,7 @@ namespace VS.Parser.Akao
                     }
                 }
             }
-            
+
         }
 
         private void SetTracks()
@@ -275,7 +275,7 @@ namespace VS.Parser.Akao
             long beginOffset = buffer.BaseStream.Position;
 
             tracks = new AKAOTrack[numTrack];
-            
+
             bool playingNote = false;
             uint prevKey = 0;
             ushort delta = 0;
@@ -426,7 +426,7 @@ namespace VS.Parser.Akao
 
                                 if (curTrack.name == "AKAOTrack")
                                 {
-                                    curTrack.name = string.Concat("Track ", SMF.INSTRUMENTS[prog]);
+                                    curTrack.name = string.Concat("Track ", SMF.GetName(prog));
                                     curTrack.AddEvent(new EvTrackName(curTrack.name));
                                 }
                                 delta = 0;

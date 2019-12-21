@@ -25,7 +25,7 @@ namespace VS.Format
             _f = new List<Face>();
             _mtl = mtl;
 
-            for (int i = 0; i < mesh.vertices.Length/3; i++ )
+            for (int i = 0; i < mesh.vertices.Length / 3; i++)
             {
                 Vector3Int v1 = new Vector3Int(1 + i * 3, 1 + i * 3, 1 + i * 3);
                 Vector3Int v2 = new Vector3Int(1 + i * 3 + 1, 1 + i * 3 + 1, 1 + i * 3 + 1);
@@ -42,7 +42,7 @@ namespace VS.Format
             List<string> content = new List<string>();
             content.Add(string.Concat("o ", _name));
             content.Add(string.Concat("mtllib ", _mtl.path));
-            for (int i = 0; i < _v.Count ; i++)
+            for (int i = 0; i < _v.Count; i++)
             {
                 content.Add(string.Concat("v ", _v[i].x, " ", _v[i].y, " ", _v[i].z));
             }

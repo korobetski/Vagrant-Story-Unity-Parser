@@ -151,7 +151,16 @@
             "Gunshot"
         };
 
-
-
+        public static string GetName(uint num)
+        {
+            if (num < 128)
+            {
+                return INSTRUMENTS[num];
+            }
+            else
+            {
+                return string.Concat("Unk Inst ", num);
+            }
+        }
     }
 }

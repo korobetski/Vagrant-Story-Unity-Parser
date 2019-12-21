@@ -108,7 +108,7 @@ namespace VS.Parser
 
             for (int i = 0; i < numEnemies; i++)
             {
-                Debug.Log("ZND ennemy # "+i);
+                Debug.Log("ZND ennemy # " + i);
                 /*
                 if (buffer.BaseStream.Position != (loopbase + i * 464))
                 {

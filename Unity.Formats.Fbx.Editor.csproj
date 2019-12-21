@@ -9,10 +9,10 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{D2F66FD3-3CE8-C4A4-9897-4A42827983B3}</ProjectGuid>
+    <ProjectGuid>{B88DCCFC-5647-3A8D-000F-269A0FBE43B2}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <AssemblyName>Assembly-CSharp-Editor</AssemblyName>
+    <AssemblyName>Unity.Formats.Fbx.Editor</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <BaseDirectory>.</BaseDirectory>
@@ -63,42 +63,43 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\VS\Editor\VSWindow.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\CameraVisitor.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\ConvertToNestedPrefab.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\ConvertToPrefabEditorWindow.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\ConvertToPrefabSettings.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\CustomExtensions.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\ExportModelEditorWindow.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\ExportModelSettings.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\FbxExportPresetSelectorReceiver.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\FbxExportSettings.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\FbxExporter.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\FbxExporterRepairMissingScripts.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\FbxPropertyChannelPair.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\FbxRotationCurve.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\IExportData.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\InstallIntegration.cs" />
+    <Compile Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\ManualUpdateEditorWindow.cs" />
+    <None Include="B:\Documents\Projets\com.unity.formats.fbx\com.unity.formats.fbx\Editor\Unity.Formats.Fbx.Editor.asmdef" />
+    <Reference Include="Unity.Timeline">
+      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Timeline.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Timeline.Editor">
+      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
+    </Reference>
+    <Reference Include="Autodesk.Fbx">
+      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Autodesk.Fbx.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.UI">
+      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/UnityEditor.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/UnityEngine.UI.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEditor.TestRunner">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/UnityEditor.TestRunner.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TestRunner">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/UnityEngine.TestRunner.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Timeline.Editor">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.VSCode.Editor">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.VSCode.Editor.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.TextMeshPro.Editor">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/UnityEngine.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Timeline">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Timeline.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.CollabProxy.Editor">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.CollabProxy.Editor.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Rider.Editor">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Rider.Editor.dll</HintPath>
-    </Reference>
-    <Reference Include="Autodesk.Fbx">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Autodesk.Fbx.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.TextMeshPro">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEditor.UI">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/UnityEditor.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.3.0f1/Editor/Data/Managed/UnityEngine/UnityEngine.AIModule.dll</HintPath>
@@ -648,18 +649,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="Assembly-CSharp.csproj">
-      <Project>{9CE08B41-AF5E-DD00-2666-5E475BD4855D}</Project>
-      <Name>Assembly-CSharp</Name>
-    </ProjectReference>
-    <ProjectReference Include="Unity.Formats.Fbx.Editor.csproj">
-      <Project>{B88DCCFC-5647-3A8D-000F-269A0FBE43B2}</Project>
-      <Name>Unity.Formats.Fbx.Editor</Name>
-    </ProjectReference>
-    <ProjectReference Include="Unity.Formats.Fbx.Editor.Tests.Prefabs.csproj">
-      <Project>{5AD19EE7-2D2F-8132-1F7B-F3E937550BA8}</Project>
-      <Name>Unity.Formats.Fbx.Editor.Tests.Prefabs</Name>
-    </ProjectReference>
     <ProjectReference Include="Unity.Formats.Fbx.Runtime.csproj">
       <Project>{E44BBF7D-E8C7-854F-5997-51140C7B8634}</Project>
       <Name>Unity.Formats.Fbx.Runtime</Name>

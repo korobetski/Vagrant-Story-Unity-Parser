@@ -143,12 +143,22 @@ namespace VS.Parser
                 VSBone bone = new VSBone();
                 bone.index = i;
                 bone.name = "bone_" + i;
-                bone.length = -buffer.ReadInt16();
+                bone.length = buffer.ReadInt16();
+                //Debug.LogWarning("bone  "+i+ " .length : "+ bone.length);
                 buffer.ReadUInt16(); // always 0xFFFF
                 bone.parentIndex = buffer.ReadByte();
+                if (bone.parentIndex > numBones)
+                {
+                    bone.parentIndex = -1;
+                }
+                //Debug.LogWarning("bone.parentIndex : " + bone.parentIndex);
                 byte[] offset = buffer.ReadBytes(3);
                 bone.offset = new Vector3(offset[0], offset[1], offset[2]);
                 bone.mode = buffer.ReadByte();
+                // 0 - 2 normal ?
+                // 3 - 6 normal + roll 90 degrees
+                // 7 - 255 absolute, different angles
+
                 buffer.ReadBytes(7); // always 0000000
                 bones.Add(bone);
             }
@@ -213,7 +223,7 @@ namespace VS.Parser
                 int y = buffer.ReadInt16();
                 int z = buffer.ReadInt16();
                 buffer.ReadInt16();
-                vertex.position = new Vector3(x, y, z) / 100;
+                vertex.position = -new Vector3(x, y, z) / 100;
                 vertices.Add(vertex);
             }
 
@@ -255,7 +265,7 @@ namespace VS.Parser
                 {
                     if (UseDebug)
                     {
-                        Debug.Log("####  Unknown face type !");
+                        Debug.LogError("####  Unknown face type !");
                     }
                 }
 
@@ -378,34 +388,6 @@ namespace VS.Parser
             //buffer.Close();
         }
 
-        public void BuildWireframe()
-        {
-            Material linesMaterial = (Material)Resources.Load("Prefabs/ARMLineMaterial", typeof(Material));
-            if (!linesMaterial)
-            {
-                linesMaterial = new Material(Shader.Find("Standard"));
-                linesMaterial.color = new Color32(0x00, 0xA0, 0xFF, 192);
-                AssetDatabase.CreateAsset(linesMaterial, "Assets/Resources/Prefabs/ARMLineMaterial.mat");
-            }
-
-            GameObject wire = new GameObject("wireframe");
-            LineRenderer lines = wire.AddComponent<LineRenderer>();
-            lines.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            lines.receiveShadows = false;
-            lines.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
-            lines.material = linesMaterial;
-            lines.startWidth = 0.25f;
-            lines.endWidth = 0.25f;
-            lines.positionCount = (int)(vertices.Count);
-            lines.useWorldSpace = false;
-            Vector3[] linePos = new Vector3[vertices.Count];
-            for (int j = 0; j < vertices.Count; j++)
-            {
-                linePos[j] = vertices[j].position;
-            }
-            lines.SetPositions(linePos);
-        }
-
         public GameObject BuildGameObject()
         {
             Build(false);
@@ -416,7 +398,7 @@ namespace VS.Parser
         {
             string modFolder = "Assets/Resources/Prefabs/Models/";
             ToolBox.DirExNorCreate(modFolder);
-            string modFilename = modFolder + FileName + ".prefab";
+            string modFilename = string.Concat(modFolder, "SHP_", FileName, ".prefab");
             GameObject pref = AssetDatabase.LoadAssetAtPath(modFilename, typeof(GameObject)) as GameObject;
             if (pref != null && erase == false)
             {
@@ -467,32 +449,6 @@ namespace VS.Parser
                     if (faces[i].side == 8)
                     {
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
-                        meshTrianglesUV.Add(faces[i].uv[1]);
-                        meshTrianglesUV.Add(faces[i].uv[0]);
-
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[3]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[1]);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
-                        meshTrianglesUV.Add(faces[i].uv[3]);
-
-                        meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[0]].position);
                         meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
@@ -517,34 +473,60 @@ namespace VS.Parser
                         meshTrianglesUV.Add(faces[i].uv[3]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[1]);
+
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshTrianglesUV.Add(faces[i].uv[1]);
+                        meshTrianglesUV.Add(faces[i].uv[0]);
+
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[3]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
+                        meshTrianglesUV.Add(faces[i].uv[1]);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshTrianglesUV.Add(faces[i].uv[3]);
                     }
                     else
                     {
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[0]].position);
                         meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
-                        meshTrianglesUV.Add(faces[i].uv[1]);
-                        meshTrianglesUV.Add(faces[i].uv[0]);
-
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
                         meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);
                         meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshTrianglesUV.Add(faces[i].uv[0]);
+                        meshTrianglesUV.Add(faces[i].uv[1]);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
+
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[3]].position);
                         meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[1]);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
                         meshTrianglesUV.Add(faces[i].uv[3]);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshTrianglesUV.Add(faces[i].uv[1]);
                     }
                 }
                 else if (faces[i].type == 0x24)
@@ -552,45 +534,45 @@ namespace VS.Parser
                     if (faces[i].side == 8)
                     {
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
                         meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[0]);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
                         meshTrianglesUV.Add(faces[i].uv[1]);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshTrianglesUV.Add(faces[i].uv[0]);
 
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
                         meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshTrianglesUV.Add(faces[i].uv[0]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[1]);
-                        meshTrianglesUV.Add(faces[i].uv[0]);
                     }
                     else
                     {
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
                         meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[0]);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
                         meshTrianglesUV.Add(faces[i].uv[1]);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshTrianglesUV.Add(faces[i].uv[0]);
                     }
                 }
             }
@@ -600,7 +582,6 @@ namespace VS.Parser
             shapeMesh.uv = meshTrianglesUV.ToArray();
             shapeMesh.boneWeights = meshWeights.ToArray();
 
-            mesh = shapeMesh;
 
             if (tim != null)
             {
@@ -621,7 +602,7 @@ namespace VS.Parser
 
             Shader shader = Shader.Find("Standard");
             Material mat = new Material(shader);
-            mat.name = FileName + "_mat";
+            mat.name = string.Concat("Material_SHP_", FileName);
             mat.SetTexture("_MainTex", texture);
             mat.SetFloat("_Mode", 1);
             mat.SetFloat("_Cutoff", 0.5f);
@@ -641,62 +622,38 @@ namespace VS.Parser
             GameObject shapeGo = new GameObject(FileName);
             GameObject meshGo = new GameObject(FileName + "_mesh");
             meshGo.transform.parent = shapeGo.transform;
-            /*
-            MeshFilter mf = meshGo.AddComponent<MeshFilter>();
-            mf.mesh = shapeMesh;
-            */
-            // Creating bones
-            for (var i = 0; i < numBones; i++)
-            {
-                bones[i].parentIndex = (bones[i].parentIndex < numBones) ? (int)(bones[i].parentIndex + numBones) : -1;
-            }
 
-            // translation bones
-            for (var i = numBones; i < numBones * 2; ++i)
-            {
-                VSBone transBone = new VSBone();
-                transBone.index = i;
-                transBone.name = "tbone_" + i;
-                transBone.parentIndex = (int)(i - numBones);
-                transBone.length = bones[transBone.parentIndex].length;
-                bones.Add(transBone);
-            }
 
-            Transform[] meshBones = new Transform[numBones * 2];
-            Matrix4x4[] bindPoses = new Matrix4x4[numBones * 2];
+            Transform[] meshBones = new Transform[numBones];
+            Matrix4x4[] bindPoses = new Matrix4x4[numBones];
             for (int i = 0; i < numBones; i++)
             {
                 meshBones[i] = new GameObject(bones[i].name).transform;
+                meshBones[i].localRotation = Quaternion.identity;
+                bindPoses[i] = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one);
                 if (bones[i].parentIndex == -1)
                 {
                     meshBones[i].parent = shapeGo.transform;
+                    meshBones[i].localPosition = Vector3.zero;
                 }
                 else
                 {
                     meshBones[i].parent = meshBones[bones[i].parentIndex];
+                    meshBones[i].localPosition = new Vector3((float)(bones[bones[i].parentIndex].length) / 100, 0, 0);
                 }
-
-                meshBones[i].localRotation = Quaternion.identity;
-                meshBones[i].localPosition = Vector3.zero;
-                bindPoses[i] = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one);
-
-                meshBones[i + numBones] = new GameObject(bones[(int)(i + numBones)].name).transform;
-                meshBones[i + numBones].parent = meshBones[bones[(int)(i + numBones)].parentIndex];
-                meshBones[i + numBones].localRotation = Quaternion.identity;
-                meshBones[i + numBones].localPosition = new Vector3((float)(bones[i].length) / 100, 0, 0);
-                bindPoses[i + numBones] = Matrix4x4.TRS(new Vector3((float)(bones[i].length) / 100, 0, 0), Quaternion.identity, Vector3.one);
             }
             SkinnedMeshRenderer mr = meshGo.AddComponent<SkinnedMeshRenderer>();
             mr.material = mat;
-            shapeMesh.bindposes = bindPoses;
             mr.bones = meshBones;
+            shapeMesh.bindposes = bindPoses;
+
             mr.rootBone = meshBones[0];
             mr.sharedMesh = shapeMesh;
 
             this.shapeGo = shapeGo;
 
             string modFolder = "Assets/Resources/Prefabs/Models/";
-            string modFilename = modFolder + FileName + ".prefab";
+            string modFilename = string.Concat( modFolder, "SHP_", FileName,".prefab");
 
 
 
@@ -706,12 +663,6 @@ namespace VS.Parser
 
                 GameObject shpBase = shapeGo;
                 GameObject prefab = PrefabUtility.SaveAsPrefabAsset(shpBase, modFilename);
-                if (shpBase != null)
-                {
-                    AssetDatabase.AddObjectToAsset(mesh, modFilename);
-                    AssetDatabase.AddObjectToAsset(material, modFilename);
-                    AssetDatabase.AddObjectToAsset(texture, modFilename);
-                }
                 string shpId = FileName;
                 if (shpId == "06" || shpId == "99" || shpId == "C9" || shpId == "CA")
                 {
@@ -735,7 +686,7 @@ namespace VS.Parser
                 }
 
                 // Animations seeker
-                Avatar ava = AvatarBuilder.BuildGenericAvatar(shpBase, "");
+                Avatar ava = AvatarBuilder.BuildGenericAvatar(shpBase, "bone_0");
                 ava.name = FileName + "_Ava";
                 AssetDatabase.AddObjectToAsset(ava, modFilename);
                 Animator animator = shpBase.GetComponent<Animator>();
@@ -780,8 +731,26 @@ namespace VS.Parser
                             if (!posed || file == shpId + "_COM.SEQ")
                             {
                                 posed = true;
+
+
                                 _seq.FirstPoseModel(shpBase);
+
+                                Mesh baked = new Mesh();
+                                baked.name = string.Concat("Baked_Mesh_SHP_", FileName);
+                                mr.BakeMesh(baked);
+                                //baked.bindposes = bindPoses; // need to recalculate this before using the baked mesh
+                                //baked.boneWeights = meshWeights.ToArray();
+                                //mr.sharedMesh = baked;
+
+                                //shapeMesh.RecalculateNormals();
+                                shapeMesh.RecalculateTangents();
+                                shapeMesh.Optimize();
+
+                                //AssetDatabase.RemoveObjectFromAsset(mesh);
+                                AssetDatabase.AddObjectToAsset(baked, modFilename);
+                                
                             }
+
                             AnimationClip[] clips = _seq.BuildAnimationClips(shpBase);
                             AnimatorControllerLayer layer = new AnimatorControllerLayer();
                             layer.name = hash[hash.Length - 1].Substring(0, 6);
@@ -802,6 +771,13 @@ namespace VS.Parser
                     }
                 }
 
+                if (shpBase != null)
+                {
+                    mesh = shapeMesh;
+                    AssetDatabase.AddObjectToAsset(mesh, modFilename);
+                    AssetDatabase.AddObjectToAsset(material, modFilename);
+                    AssetDatabase.AddObjectToAsset(texture, modFilename);
+                }
                 //PrefabUtility.ReplacePrefab(shpBase, prefab);
                 prefab = PrefabUtility.SaveAsPrefabAsset(shpBase, modFilename);
                 AssetDatabase.SaveAssets();

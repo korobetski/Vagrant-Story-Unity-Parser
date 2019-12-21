@@ -325,11 +325,11 @@ namespace VS.Parser
                         }
                         main.a = 255;
 
-                        lightsDebug += string.Concat("Light # ", i, "  :  ", lgtMat, "  |  ", colorX,", ", colorY, ", ", colorZ, "\r\n");
-                        
+                        lightsDebug += string.Concat("Light # ", i, "  :  ", lgtMat, "  |  ", colorX, ", ", colorY, ", ", colorZ, "\r\n");
+
                         GameObject lgo = new GameObject("Point Light");
                         // this isn't the best way do to this...
-                        lgo.transform.position = new Vector3(-0.2f-matrix[0]/90, 5+ matrix[2] / 1024, -0.2f - matrix[1] / 90);
+                        lgo.transform.position = new Vector3(-0.2f - matrix[0] / 90, 5 + matrix[2] / 1024, -0.2f - matrix[1] / 90);
                         lgo.transform.localScale = Vector3.one;
 
                         Light l = lgo.AddComponent<Light>();
@@ -340,7 +340,7 @@ namespace VS.Parser
                         l.color = main;
                         l.shadows = LightShadows.Soft;
                         lights.Add(lgo);
-                        
+
                     }
 
                     if (UseDebug)
@@ -483,7 +483,8 @@ namespace VS.Parser
                     Debug.Log("SubSection18 ptr : " + buffer.BaseStream.Position + "   lenSubSection18 : " + lenSubSection18);
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection18;
                 }
-            } else
+            }
+            else
             {
                 // No geometry :s
                 _geom = false;

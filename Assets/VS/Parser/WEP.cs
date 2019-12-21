@@ -2,10 +2,9 @@
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using VS.Data;
 using VS.Entity;
-using VS.Utils;
 using VS.Format;
+using VS.Utils;
 
 //http://datacrystal.romhacking.net/wiki/Vagrant_Story:WEP_files
 
@@ -465,7 +464,7 @@ namespace VS.Parser
             mr.BakeMesh(baked);
             baked.RecalculateNormals();
 
-            MTL mtl = new MTL(FileName + "_tex.png", string.Concat(FileName, ".mtl"), string.Concat("material_wep_",FileName));
+            MTL mtl = new MTL(FileName + "_tex.png", string.Concat(FileName, ".mtl"), string.Concat("material_wep_", FileName));
             mtl.offset = new Vector3(0, 0, 0);
             mtl.scale = new Vector3(2f, 2.5f, 1f);
             mtl.Write();

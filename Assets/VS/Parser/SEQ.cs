@@ -61,59 +61,57 @@ namespace VS.Parser
 
         public void FirstPoseModel(GameObject model)
         {
+
             int t = 0;
-            for (int i = 0; i < numAnimations; i++)
+
+            for (int j = 0; j < numBones; j++)
             {
-                for (int j = 0; j < numBones; j++)
+                if (j < animations[0].keyframes.Length)
                 {
-                    List<Keyframe> keysRX = new List<Keyframe>();
-                    List<Keyframe> keysRY = new List<Keyframe>();
-                    List<Keyframe> keysRZ = new List<Keyframe>();
-                    List<Keyframe> keysRW = new List<Keyframe>();
-
-                    if (j < animations[i].keyframes.Length)
+                    List<NVector4> keyframes = animations[0].keyframes[j];
+                    Vector3 pose = animations[0].pose[j];
+                    int rx = (int)pose.x * 2;
+                    int ry = (int)pose.y * 2;
+                    int rz = (int)pose.z * 2;
+                    t = 0;
+                    int k = 0;
+                    int f = keyframes[k].w;
+                    t += f;
+                    if (keyframes[k].x == 256)
                     {
-                        List<NVector4> keyframes = animations[i].keyframes[j];
-                        Vector3 pose = animations[i].pose[j];
-                        int rx = (int)pose.x * 2;
-                        int ry = (int)pose.y * 2;
-                        int rz = (int)pose.z * 2;
-                        t = 0;
-                        int k = 0;
-                        int f = keyframes[k].w;
-                        t += f;
-                        if (keyframes[k].x == 256)
-                        {
-                            keyframes[k].x = keyframes[k - 1].x;
-                        }
-
-                        if (keyframes[k].y == 256)
-                        {
-                            keyframes[k].y = keyframes[k - 1].y;
-                        }
-
-                        if (keyframes[k].z == 256)
-                        {
-                            keyframes[k].z = keyframes[k - 1].z;
-                        }
-
-                        rx += (keyframes[k].x * f);
-                        ry += (keyframes[k].y * f);
-                        rz += (keyframes[k].z * f);
-
-                        Quaternion qu = ToolBox.quatFromAxisAnle(Vector3.right, ToolBox.rot13toRad(rx));
-                        Quaternion qv = ToolBox.quatFromAxisAnle(Vector3.up, ToolBox.rot13toRad(ry));
-                        Quaternion qw = ToolBox.quatFromAxisAnle(Vector3.forward, ToolBox.rot13toRad(rz));
-                        Quaternion quat = qw * qv * qu;
-                        Quaternion aquat = new Quaternion(quat.x, quat.y, quat.z, quat.w);
-                        ToolBox.findBoneIn("bone_" + j, model).transform.localRotation = aquat;
-                        if (j == 0)
-                        {
-                            Vector3 rot = ToolBox.findBoneIn("bone_" + j, model).transform.eulerAngles;
-                            ToolBox.findBoneIn("bone_" + j, model).transform.eulerAngles = new Vector3(rot.x + 180, rot.y, rot.z);
-                        }
+                        keyframes[k].x = keyframes[k - 1].x;
                     }
 
+                    if (keyframes[k].y == 256)
+                    {
+                        keyframes[k].y = keyframes[k - 1].y;
+                    }
+
+                    if (keyframes[k].z == 256)
+                    {
+                        keyframes[k].z = keyframes[k - 1].z;
+                    }
+
+                    rx += (keyframes[k].x * f);
+                    ry += (keyframes[k].y * f);
+                    rz += (keyframes[k].z * f);
+
+                    Quaternion qu = ToolBox.quatFromAxisAnle(Vector3.right, ToolBox.rot13toRad(rx));
+                    Quaternion qv = ToolBox.quatFromAxisAnle(Vector3.up, ToolBox.rot13toRad(ry));
+                    Quaternion qw = ToolBox.quatFromAxisAnle(Vector3.forward, ToolBox.rot13toRad(rz));
+                    Quaternion quat = qw * qv * qu;
+                    Quaternion aquat = new Quaternion(quat.x, quat.y, quat.z, quat.w);
+
+                    GameObject bone = ToolBox.findBoneIn("bone_" + j, model);
+                    bone.transform.localRotation = aquat;
+                    /*
+                    if (j == 0)
+                    {
+                        // Upside down root bone
+                        Vector3 rot = bone.transform.eulerAngles;
+                        bone.transform.eulerAngles = new Vector3(rot.x + 180, rot.y, rot.z);
+                    }
+                    */
                 }
             }
         }
@@ -177,7 +175,7 @@ namespace VS.Parser
                             Quaternion qv = ToolBox.quatFromAxisAnle(Vector3.up, ToolBox.rot13toRad(ry));
                             Quaternion qw = ToolBox.quatFromAxisAnle(Vector3.forward, ToolBox.rot13toRad(rz));
                             Quaternion quat = qw * qv * qu;
-
+                            /*
                             if (j == 0)
                             {
                                 keysRX.Add(new Keyframe((float)((t) * 0.06), (quat.x + 180f))); // flip the root bone
@@ -186,7 +184,8 @@ namespace VS.Parser
                             {
                                 keysRX.Add(new Keyframe((float)((t) * 0.06), quat.x));
                             }
-
+                            */
+                            keysRX.Add(new Keyframe((float)((t) * 0.06), quat.x));
                             keysRY.Add(new Keyframe((float)((t) * 0.06), quat.y));
                             keysRZ.Add(new Keyframe((float)((t) * 0.06), quat.z));
                             keysRW.Add(new Keyframe((float)((t) * 0.06), quat.w));

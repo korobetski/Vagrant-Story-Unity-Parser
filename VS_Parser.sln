@@ -3,6 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp.csproj", "{9CE08B41-AF5E-DD00-2666-5E475BD4855D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.Formats.Fbx.Runtime", "Unity.Formats.Fbx.Runtime.csproj", "{E44BBF7D-E8C7-854F-5997-51140C7B8634}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.Formats.Fbx.Editor.Tests.Prefabs", "Unity.Formats.Fbx.Editor.Tests.Prefabs.csproj", "{5AD19EE7-2D2F-8132-1F7B-F3E937550BA8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.Formats.Fbx.Editor", "Unity.Formats.Fbx.Editor.csproj", "{B88DCCFC-5647-3A8D-000F-269A0FBE43B2}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-Editor", "Assembly-CSharp-Editor.csproj", "{D2F66FD3-3CE8-C4A4-9897-4A42827983B3}"
 EndProject
 Global
@@ -15,6 +21,18 @@ Global
 		{9CE08B41-AF5E-DD00-2666-5E475BD4855D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9CE08B41-AF5E-DD00-2666-5E475BD4855D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9CE08B41-AF5E-DD00-2666-5E475BD4855D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E44BBF7D-E8C7-854F-5997-51140C7B8634}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E44BBF7D-E8C7-854F-5997-51140C7B8634}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E44BBF7D-E8C7-854F-5997-51140C7B8634}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E44BBF7D-E8C7-854F-5997-51140C7B8634}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AD19EE7-2D2F-8132-1F7B-F3E937550BA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AD19EE7-2D2F-8132-1F7B-F3E937550BA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AD19EE7-2D2F-8132-1F7B-F3E937550BA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AD19EE7-2D2F-8132-1F7B-F3E937550BA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B88DCCFC-5647-3A8D-000F-269A0FBE43B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B88DCCFC-5647-3A8D-000F-269A0FBE43B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B88DCCFC-5647-3A8D-000F-269A0FBE43B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B88DCCFC-5647-3A8D-000F-269A0FBE43B2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D2F66FD3-3CE8-C4A4-9897-4A42827983B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D2F66FD3-3CE8-C4A4-9897-4A42827983B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D2F66FD3-3CE8-C4A4-9897-4A42827983B3}.Release|Any CPU.ActiveCfg = Release|Any CPU

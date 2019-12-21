@@ -328,10 +328,11 @@ namespace VS.Utils
                             i++;
                             break;
                         case 0xFB: // new dialog bubble + one byte parameter
-                            if (raw.Length > i+1)
+                            if (raw.Length > i + 1)
                             {
                                 text += string.Concat("\n (§FB:", raw[i + 1], ") ");
-                            } else
+                            }
+                            else
                             {
                                 text += string.Concat("\n (§FB) ");
                             }

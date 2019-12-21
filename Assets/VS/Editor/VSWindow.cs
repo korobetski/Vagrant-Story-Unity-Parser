@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -149,6 +148,11 @@ public class VSWindow : EditorWindow
                     // **.WEP
                     switch (ext)
                     {
+                        case "SHP":
+                            string[] h = FilePath.Split("/"[0]);
+                            string filename = h[h.Length - 1];
+                            ParseSHP(VSPath + FilePath, filename, true, true);
+                            break;
                         case "WEP":
                             ParseWEP(VSPath + FilePath, true);
                             break;
@@ -213,81 +217,14 @@ public class VSWindow : EditorWindow
             float fileToParse = files.Length;
             float fileParsed = 0f;
 
-
-            // excp = list of models with a weird polygons section, impossible to build rigth now
-            List<string> excp = new List<string>();
-            excp.Add("26.SHP"); // 26.SHP is a Mimic : http://chrysaliswiki.com/bestiary:mimic#VS
-            excp.Add("3A.SHP"); // a dragon maybe the first Wyvern like Z006U00.ZUD
-            excp.Add("3B.SHP"); // a dragon maybe the first Wyvern like Z006U00.ZUD
-            excp.Add("6A.SHP");
-            excp.Add("6B.SHP");
-            excp.Add("AC.SHP");
-            excp.Add("AE.SHP");
-            excp.Add("B1.SHP"); // Platform During Final Battle
-            excp.Add("B2.SHP"); // Stone
-            excp.Add("B3.SHP"); // Stone
-            excp.Add("B4.SHP"); // Stone
-            excp.Add("B5.SHP"); // Lever / Switch (Opens Door in Wine Cellar)
-            excp.Add("B6.SHP"); // Lever / Switch (Opens Door in Wine Cellar)
-            excp.Add("B7.SHP"); // Stone
-            excp.Add("B8.SHP"); // Stone
-            excp.Add("B9.SHP"); // Stone
-            excp.Add("BA.SHP"); // Stone
-            excp.Add("BB.SHP"); // Stone
-            excp.Add("BC.SHP"); // Stone
-            excp.Add("BD.SHP"); // Stone
-            excp.Add("BE.SHP"); // Stone
-            excp.Add("BF.SHP"); // Stone
-            excp.Add("C0.SHP"); // Stone
-            excp.Add("C1.SHP"); // Stone
-            excp.Add("C2.SHP"); // Stone
-            excp.Add("C3.SHP"); // Stone
-
             foreach (string file in files)
             {
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-
-                if (filename == "65.SHP")
-                {
-                    // 65.SHP is Damascus Golem  : http://chrysaliswiki.com/bestiary:damascus-golem#VS
-                    // But somthings wrong when parsing, so we try to use the mesh of 37.SHP Simple Golem
-                    SHP parser = new SHP();
-                    parser.Parse(VSPath + "OBJ/65.SHP");
-                    parser.BuildPrefab(false);
-                    /*
-                    AssetDatabase.CopyAsset("Assets/Resources/Prefabs/Models/37.prefab", "Assets/Resources/Prefabs/Models/65.prefab");
-                    GameObject golemPrefab = AssetDatabase.LoadAssetAtPath("Assets/Resources/Prefabs/Models/65.prefab", typeof(GameObject)) as GameObject;
-
-                    AssetDatabase.AddObjectToAsset(parser.texture, "Assets/Resources/Prefabs/Models/65.prefab");
-                    golemPrefab.GetComponentInChildren<SkinnedMeshRenderer>().sharedMaterial.mainTexture = parser.texture;
-                    AssetDatabase.SaveAssets();
-                    */
-                }
-                else if (!excp.Contains(filename))
-                {
-                    SHP parser = new SHP();
-                    //parser.UseDebug = true;
-                    parser.Parse(file);
-                    parser.BuildPrefab(true);
-                }
-                else
-                {
-                    SHP parser = new SHP();
-                    //parser.UseDebug = true;
-                    parser.Parse(file);
-                    //parser.buildPrefab();
-                }
+                ParseSHP(file, filename, false);
                 fileParsed++;
             }
-
-            /*
-            SHP parser = new SHP();
-            //parser.UseDebug = true;
-            parser.Parse(VSPath + "OBJ/A4.SHP");
-            parser.BuildPrefab();
-            */
             EditorUtility.ClearProgressBar();
         }
 
@@ -615,6 +552,68 @@ public class VSWindow : EditorWindow
         parser.UseDebug = UseDebug;
         parser.Parse(path);
         parser.BuildPrefab(true);
+    }
+    private void ParseSHP(string path, string filename, bool UseDebug, bool erase = false)
+    {
+        // excp = list of models with a weird polygons section, impossible to build rigth now
+        List<string> excp = new List<string>();
+        excp.Add("26.SHP"); // 26.SHP is a Mimic : http://chrysaliswiki.com/bestiary:mimic#VS
+        excp.Add("3A.SHP"); // a dragon maybe the first Wyvern like Z006U00.ZUD
+        excp.Add("3B.SHP"); // a dragon maybe the first Wyvern like Z006U00.ZUD
+        excp.Add("6A.SHP");
+        excp.Add("6B.SHP");
+        excp.Add("AC.SHP");
+        excp.Add("AE.SHP");
+        excp.Add("B1.SHP"); // Platform During Final Battle
+        excp.Add("B2.SHP"); // Stone
+        excp.Add("B3.SHP"); // Stone
+        excp.Add("B4.SHP"); // Stone
+        excp.Add("B5.SHP"); // Lever / Switch (Opens Door in Wine Cellar)
+        excp.Add("B6.SHP"); // Lever / Switch (Opens Door in Wine Cellar)
+        excp.Add("B7.SHP"); // Stone
+        excp.Add("B8.SHP"); // Stone
+        excp.Add("B9.SHP"); // Stone
+        excp.Add("BA.SHP"); // Stone
+        excp.Add("BB.SHP"); // Stone
+        excp.Add("BC.SHP"); // Stone
+        excp.Add("BD.SHP"); // Stone
+        excp.Add("BE.SHP"); // Stone
+        excp.Add("BF.SHP"); // Stone
+        excp.Add("C0.SHP"); // Stone
+        excp.Add("C1.SHP"); // Stone
+        excp.Add("C2.SHP"); // Stone
+        excp.Add("C3.SHP"); // Stone
+
+        SHP parser = new SHP();
+        if (filename == "65.SHP")
+        {
+            // 65.SHP is Damascus Golem  : http://chrysaliswiki.com/bestiary:damascus-golem#VS
+            // But something is wrong when parsing, there is bad face types, so we use the mesh of 37.SHP Simple Golem
+            parser.UseDebug = UseDebug;
+            parser.Parse(VSPath + "OBJ/37.SHP");
+            parser.FileName = "65";
+            parser.BuildPrefab(erase);
+            /*
+            AssetDatabase.CopyAsset("Assets/Resources/Prefabs/Models/37.prefab", "Assets/Resources/Prefabs/Models/65.prefab");
+            GameObject golemPrefab = AssetDatabase.LoadAssetAtPath("Assets/Resources/Prefabs/Models/65.prefab", typeof(GameObject)) as GameObject;
+
+            AssetDatabase.AddObjectToAsset(parser.texture, "Assets/Resources/Prefabs/Models/65.prefab");
+            golemPrefab.GetComponentInChildren<SkinnedMeshRenderer>().sharedMaterial.mainTexture = parser.texture;
+            AssetDatabase.SaveAssets();
+            */
+        }
+        else if (!excp.Contains(filename))
+        {
+            parser.UseDebug = UseDebug;
+            parser.Parse(path);
+            parser.BuildPrefab(erase);
+        }
+        else
+        {
+            parser.UseDebug = UseDebug;
+            parser.Parse(path);
+            //parser.buildPrefab();
+        }
     }
 
     private void ParseZND(string path, bool UseDebug)

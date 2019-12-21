@@ -1,12 +1,11 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using UnityEngine;
 using VS.Utils;
 
 namespace VS.Entity
 {
 
-    public class ZNDMonster: MonoBehaviour
+    public class ZNDMonster : MonoBehaviour
     {
         [SerializeField]
         public new string name;
