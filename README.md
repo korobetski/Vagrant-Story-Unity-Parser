@@ -5,11 +5,17 @@ Add a Vagrant Story window into Unity where you can import models, maps and othe
 
 Currently supported formats : 
 WEP ++
+
 SHP +
+
 SEQ =
+
 ARM ++
+
 ZND +
+
 MPD =
+
 ZUD +
 
 AKAO ++
@@ -23,8 +29,15 @@ There is a dependency for AKAO conversion to WAV, just copy my forked version of
 
 Discord channel here : discord.gg/dXvJNVD
 
+
+SHP view (special case when faces have vertex colors)
+<img src="https://github.com/korobetski/Vagrant-Story-Unity-Parser/raw/master/SHP_3A.png"/>
+
+MPD view
 <img src="https://github.com/korobetski/Vagrant-Story-Unity-Parser/raw/master/wireframe.png"/>
 
+ARM view
 <img src="https://github.com/korobetski/Vagrant-Story-Unity-Parser/raw/master/minimap.png"/>
 
+WEP view
 <img src="https://github.com/korobetski/Vagrant-Story-Unity-Parser/raw/master/vs_parser.png"/>

@@ -151,7 +151,7 @@ public class VSWindow : EditorWindow
                         case "SHP":
                             string[] h = FilePath.Split("/"[0]);
                             string filename = h[h.Length - 1];
-                            ParseSHP(VSPath + FilePath, filename, true, true);
+                            ParseSHP(VSPath + FilePath, filename, false, true);
                             break;
                         case "WEP":
                             ParseWEP(VSPath + FilePath, true);
@@ -558,12 +558,12 @@ public class VSWindow : EditorWindow
         // excp = list of models with a weird polygons section, impossible to build rigth now
         List<string> excp = new List<string>();
         excp.Add("26.SHP"); // 26.SHP is a Mimic : http://chrysaliswiki.com/bestiary:mimic#VS
-        excp.Add("3A.SHP"); // a dragon maybe the first Wyvern like Z006U00.ZUD
-        excp.Add("3B.SHP"); // a dragon maybe the first Wyvern like Z006U00.ZUD
+        excp.Add("3A.SHP"); // D'Tok first Wyvern like Z006U00.ZUD
+        excp.Add("3B.SHP"); // a Wyvern
+        excp.Add("65.SHP"); // 65.SHP is Damascus Golem  : http://chrysaliswiki.com/bestiary:damascus-golem#VS
         excp.Add("6A.SHP");
         excp.Add("6B.SHP");
-        excp.Add("AC.SHP");
-        excp.Add("AE.SHP");
+        excp.Add("AC.SHP"); 
         excp.Add("B1.SHP"); // Platform During Final Battle
         excp.Add("B2.SHP"); // Stone
         excp.Add("B3.SHP"); // Stone
@@ -585,24 +585,7 @@ public class VSWindow : EditorWindow
         excp.Add("C3.SHP"); // Stone
 
         SHP parser = new SHP();
-        if (filename == "65.SHP")
-        {
-            // 65.SHP is Damascus Golem  : http://chrysaliswiki.com/bestiary:damascus-golem#VS
-            // But something is wrong when parsing, there is bad face types, so we use the mesh of 37.SHP Simple Golem
-            parser.UseDebug = UseDebug;
-            parser.Parse(VSPath + "OBJ/37.SHP");
-            parser.FileName = "65";
-            parser.BuildPrefab(erase);
-            /*
-            AssetDatabase.CopyAsset("Assets/Resources/Prefabs/Models/37.prefab", "Assets/Resources/Prefabs/Models/65.prefab");
-            GameObject golemPrefab = AssetDatabase.LoadAssetAtPath("Assets/Resources/Prefabs/Models/65.prefab", typeof(GameObject)) as GameObject;
-
-            AssetDatabase.AddObjectToAsset(parser.texture, "Assets/Resources/Prefabs/Models/65.prefab");
-            golemPrefab.GetComponentInChildren<SkinnedMeshRenderer>().sharedMaterial.mainTexture = parser.texture;
-            AssetDatabase.SaveAssets();
-            */
-        }
-        else if (!excp.Contains(filename))
+        if (!excp.Contains(filename))
         {
             parser.UseDebug = UseDebug;
             parser.Parse(path);
@@ -611,8 +594,9 @@ public class VSWindow : EditorWindow
         else
         {
             parser.UseDebug = UseDebug;
+            parser.excpFaces = true;
             parser.Parse(path);
-            //parser.buildPrefab();
+            parser.BuildPrefab(true);
         }
     }
 
@@ -626,7 +610,6 @@ public class VSWindow : EditorWindow
 
     private void ParseZUD(string path, string filename, bool UseDebug)
     {
-        // excp = list of models with a weird polygons section, impossible to build rigth now
         List<string> excp = new List<string>();
         excp.Add("Z006U00.ZUD");
         excp.Add("Z050U00.ZUD");
@@ -648,8 +631,10 @@ public class VSWindow : EditorWindow
         else
         {
             ZUD parser = new ZUD();
+            parser.excpFaces = true;
             parser.UseDebug = UseDebug;
             parser.Parse(path);
+            parser.BuildPrefab();
         }
     }
 

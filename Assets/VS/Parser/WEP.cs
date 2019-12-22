@@ -247,7 +247,7 @@ namespace VS.Parser
             {
                 if (faces[i].type == 0x2C)
                 {
-                    if (faces[i].side == 8)
+                    if (faces[i].side != 4)
                     {
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);
@@ -332,7 +332,7 @@ namespace VS.Parser
                 }
                 else if (faces[i].type == 0x24)
                 {
-                    if (faces[i].side == 8)
+                    if (faces[i].side != 4)
                     {
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);

@@ -37,6 +37,7 @@ namespace VS.Parser
         public List<VSGroup> groups;
         public List<VSVertex> vertices;
         public List<VSFace> faces;
+        public bool excpFaces = false;
 
         SHP zudShape;
         WEP zudWeapon;
@@ -119,6 +120,7 @@ namespace VS.Parser
                     buffer.BaseStream.Position = ptrCharacterSHP;
                 }
                 zudShape = new SHP();
+                zudShape.excpFaces = excpFaces;
                 zudShape.FileName = FileName + "_ZSHP";
                 zudShape.UseDebug = UseDebug;
                 zudShape.Parse(buffer);

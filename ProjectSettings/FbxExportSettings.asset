@@ -27,9 +27,9 @@
             "exportFormat": 1,
             "animatedSkinnedMesh": true,
             "mayaCompatibleNaming": true,
-            "include": 2,
+            "include": 0,
             "lodLevel": 0,
-            "objectPosition": 0,
+            "objectPosition": 1,
             "exportUnrendered": true
         },
         "convertToPrefabSettingsSerialize": {

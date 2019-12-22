@@ -31,6 +31,7 @@ namespace VS.Parser
         private List<VSVertex> vertices;
         private List<VSFace> faces;
         private TIM tim;
+        public bool excpFaces = false;
 
         public SHP()
         {
@@ -239,60 +240,115 @@ namespace VS.Parser
             }
 
             faces = new List<VSFace>();
-            for (uint i = 0; i < numFaces; i++)
+
+            if (excpFaces)
             {
-                VSFace face = new VSFace();
-                long polyDec = buffer.BaseStream.Position;
-                face.type = buffer.ReadByte();
-                face.size = buffer.ReadByte();
-                face.side = buffer.ReadByte();
-                face.alpha = buffer.ReadByte();
+                if (UseDebug) {
+                    Debug.LogWarning("-------------   TRIANGLES    ----------------------");
+                    Debug.LogWarning(buffer.BaseStream.Position);
+                }
+                for (uint i = 0; i < numTriangles; i++)
+                {
+                    faces.Add(ParseColoredFace(buffer, 3));
+                }
                 if (UseDebug)
                 {
-                    Debug.Log(string.Concat("#####   At : ", polyDec, " face# ", i, "   face.type : ", face.type, "   face.size : ", face.size, "   face.side : ", face.side, "   face.alpha : ", face.alpha));
+                    Debug.LogWarning("-------------   QUAD    ----------------------");
+                    Debug.LogWarning(buffer.BaseStream.Position);
                 }
-
-                uint[] table = new uint[256];
-                table[36] = 3;
-                table[44] = 4;
-
-                face.verticesCount = 0; // fallback
-                if (table[face.type] != 0)
+                for (uint i = 0; i < numQuads; i++)
                 {
-                    face.verticesCount = table[face.type];
+                    faces.Add(ParseColoredFace(buffer, 4));
                 }
-                else
+                if (UseDebug)
                 {
-                    if (UseDebug)
+                    Debug.LogWarning("-------------   POLY    ----------------------");
+                    Debug.LogWarning(buffer.BaseStream.Position);
+                }
+                for (uint i = 0; i < numPolys; i++)
+                {
+                    long polyDec = buffer.BaseStream.Position;
+                    byte[] bytes = buffer.ReadBytes(24);
+                    if (bytes[11] == 0x34)
                     {
-                        Debug.LogError("####  Unknown face type !");
+                        // its a triangle
+                        buffer.BaseStream.Position = polyDec;
+                        faces.Add(ParseColoredFace(buffer, 3));
+                    }
+                    if (bytes[11] == 0x3C)
+                    {
+                        // its a quad
+                        buffer.BaseStream.Position = polyDec;
+                        faces.Add(ParseColoredFace(buffer, 4));
                     }
                 }
+            } else
+            {
+                for (uint i = 0; i < numFaces; i++)
+                {
+                    VSFace face = new VSFace();
+                    long polyDec = buffer.BaseStream.Position;
+                    // 4 bytes
+                    face.type = buffer.ReadByte();
+                    face.size = buffer.ReadByte();
+                    face.side = buffer.ReadByte();
+                    face.alpha = buffer.ReadByte();
 
-                face.vertices = new List<int>();
-                for (uint j = 0; j < face.verticesCount; j++)
-                {
-                    int vId = buffer.ReadUInt16() / 4;
-                    face.vertices.Add(vId);
+                    /*
+                     * Triangles
+                     * 24-10-04-00-C406-CC06-C806-08-78-05-6D-05-7C
+                     * 24-10-04-00-D006-D806-D406-13-6D-0A-6D-0C-78
+                     * 24-10-04-00-D406-E006-DC06-13-78-13-6D-0F-78
+                     * 24-10-04-00-D406-D806-E006-0F-78-13-6D-0C-78
+                     * */
                     if (UseDebug)
                     {
-                        //Debug.Log("vId : " + j + " - " + vId);
+                        Debug.Log(string.Concat("#####   At : ", polyDec, " face# ", i, "   face.type : ", face.type, "   face.size : ", face.size, "   face.side : ", face.side, "   face.alpha : ", face.alpha));
                     }
-                }
-                face.uv = new List<Vector2>();
-                for (uint j = 0; j < face.verticesCount; j++)
-                {
-                    int u = buffer.ReadByte();
-                    int v = buffer.ReadByte();
-                    face.uv.Add(new Vector2(u, v));
-                    if (UseDebug)
+
+                    uint[] table = new uint[256];
+                    table[36] = 3;
+                    table[44] = 4;
+
+                    face.verticesCount = 0; // fallback
+                    if (table[face.type] != 0)
                     {
-                        //Debug.Log("u : " + u + "    v : " + v);
+                        face.verticesCount = table[face.type];
                     }
+                    else
+                    {
+                        if (UseDebug)
+                        {
+                            Debug.LogError("####  Unknown face type !");
+                        }
+                    }
+
+                    // 6 or 8 bytes
+                    for (uint j = 0; j < face.verticesCount; j++)
+                    {
+                        int vId = buffer.ReadUInt16() / 4;
+                        face.vertices.Add(vId);
+                        if (UseDebug)
+                        {
+                            Debug.Log("vId : " + j + " - " + vId);
+                        }
+                    }
+                     
+                    // 6 or 8 bytes
+                    for (uint j = 0; j < face.verticesCount; j++)
+                    {
+                        int u = buffer.ReadByte();
+                        int v = buffer.ReadByte();
+                        face.uv.Add(new Vector2(u, v));
+                        if (UseDebug)
+                        {
+                            //Debug.Log("u : " + u + "    v : " + v);
+                        }
+                    }
+                    faces.Add(face);
                 }
-                faces.Add(face);
+
             }
-
 
             // AKAO section
             if (buffer.BaseStream.Position != AKAOPtr)
@@ -381,11 +437,127 @@ namespace VS.Parser
                 // Textures section
                 tim = new TIM();
                 tim.FileName = FileName;
-                tim.ParseSHP(buffer);
+                tim.ParseSHP(buffer, excpFaces);
                 texture = tim.DrawSHP(true);
             }
 
             //buffer.Close();
+        }
+
+        private VSFace ParseColoredFace(BinaryReader buffer, byte v)
+        {
+            VSFace face = new VSFace();
+            long polyDec = buffer.BaseStream.Position;
+            byte[] bytes;
+            Vector2 uv1;
+            Vector2 uv2;
+            Vector2 uv3;
+            Vector2 uv4;
+            switch (v)
+            {
+                case 3:
+                    // 24 bytes
+                    if (UseDebug)
+                    {
+                        bytes = buffer.ReadBytes(24);
+                        Debug.Log(BitConverter.ToString(bytes));
+                        buffer.BaseStream.Position = polyDec;
+                    }
+                    // vt1  vt2  vt3  u1-v1 col1   t  col2   sz col3   sd u2-v2 u3-v3
+                    // D006-D806-D406-13-6D-FFEFB5-34-FFEFB5-18-FFEFB5-04-0A-6D-0C-78
+                    // D406-E006-DC06-13-78-FFEFB5-34-FFEFB5-18-2C2C26-04-13-6D-0F-78
+                    // D406-D806-E006-0F-78-151515-34-151515-18-151515-04-13-6D-0C-78
+                    // E406-EC06-E806-40-78-181817-34-4F4F45-18-4F4F45-04-43-7C-43-6E
+
+                    // vt1 / vt2 / vt3
+                    face.verticesCount = 3;
+                    for (uint j = 0; j < face.verticesCount; j++)
+                    {
+                        int vId = buffer.ReadUInt16() / 4;
+                        face.vertices.Add(vId);
+                    }
+                    // uv1
+                    uv1 = new Vector2(buffer.ReadByte(), buffer.ReadByte());
+                    // color 1
+                    face.colors.Add(new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255));
+                    // face type
+                    face.type = buffer.ReadByte();
+                    // color 2
+                    face.colors.Add(new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255));
+                    // face size (bytes)
+                    face.size = buffer.ReadByte();
+                    // color 3
+                    face.colors.Add(new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255));
+                    // face side
+                    face.side = buffer.ReadByte();
+                    // uv2
+                    uv2 = new Vector2(buffer.ReadByte(), buffer.ReadByte());
+                    // uv3
+                    uv3 = new Vector2(buffer.ReadByte(), buffer.ReadByte());
+
+                    //Debug.Log(string.Concat("uv1 : ", uv1, "  uv2 : ", uv2, "  uv3 : ", uv3));
+
+                    face.uv.Add(uv1);
+                    face.uv.Add(uv2);
+                    face.uv.Add(uv3);
+                    break;
+                case 4:
+                    // 32 bytes
+                    if (UseDebug)
+                    {
+                        bytes = buffer.ReadBytes(32);
+                        Debug.Log(BitConverter.ToString(bytes));
+                        buffer.BaseStream.Position = polyDec;
+                    }
+                    // vt1  vt2  vt3  vt4  col1   t  col2   sz col3   sd col4   pa u1-v1 u2-v2 u3-v3 u4-v4
+                    // FC06-1807-1007-0C07-393937-3C-1B1B1B-20-323231-04-383838-00-46-68-4D-68-4A-5E-4D-5E
+                    // 5007-4C07-4407-4807-4D4C46-3C-B7B8BF-20-53534F-04-B7B8AF-00-1B-89-1E-8C-21-81-21-89
+                    // 6007-5C07-5407-5807-C7C8FF-3C-555555-20-555555-04-555555-00-28-81-28-89-2E-89-2B-8C
+                    // 7007-6C07-6407-6807-4D4C46-3C-B7B8BF-20-53534F-04-B7B8BF-00-1B-89-1E-8C-21-81-21-89
+
+                    // vt1 / vt2 / vt3 / vt4
+                    face.verticesCount = 4;
+                    for (uint j = 0; j < face.verticesCount; j++)
+                    {
+                        int vId = buffer.ReadUInt16() / 4;
+                        face.vertices.Add(vId);
+                    }
+                    // color 1
+                    face.colors.Add(new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255));
+                    // face type
+                    face.type = buffer.ReadByte();
+                    // color 2
+                    face.colors.Add(new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255));
+                    // face size (bytes)
+                    face.size = buffer.ReadByte();
+                    // color 3
+                    face.colors.Add(new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255));
+                    // face side
+                    face.side = buffer.ReadByte();
+                    // color 4
+                    face.colors.Add(new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255));
+                    // padding
+                    buffer.ReadByte();
+                    // uv1
+                    uv1 = new Vector2(buffer.ReadByte(), buffer.ReadByte());
+                    // uv2
+                    uv2 = new Vector2(buffer.ReadByte(), buffer.ReadByte());
+                    // uv3
+                    uv3 = new Vector2(buffer.ReadByte(), buffer.ReadByte());
+                    // uv4
+                    uv4 = new Vector2(buffer.ReadByte(), buffer.ReadByte());
+
+                    //Debug.LogWarning(string.Concat("uv1 : ", uv1, "  uv2 : ", uv2, "  uv3 : ", uv3, "  uv4 : ", uv4));
+                    
+                    face.uv.Add(uv1);
+                    face.uv.Add(uv2);
+                    face.uv.Add(uv3);
+                    face.uv.Add(uv4);
+
+                    break;
+            }
+
+            return face;
         }
 
         public GameObject BuildGameObject()
@@ -440,13 +612,14 @@ namespace VS.Parser
             List<int> meshTriangles = new List<int>();
             List<Vector2> meshTrianglesUV = new List<Vector2>();
             List<BoneWeight> meshWeights = new List<BoneWeight>();
+            List<Color32> meshColors = new List<Color32>();
 
             for (int i = 0; i < faces.Count; i++)
             {
                 //Debug.Log("faces["+i+"]     .type : " + faces[i].type + " ||    .size : " + faces[i].size + " ||    .side : " + faces[i].side + " ||    .alpha : " + faces[i].alpha);
-                if (faces[i].type == 0x2C)
+                if (faces[i].type == 0x2C || faces[i].type == 0x3C)
                 {
-                    if (faces[i].side == 8)
+                    if (faces[i].side != 4)
                     {
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[0]].position);
@@ -499,6 +672,26 @@ namespace VS.Parser
                         meshTrianglesUV.Add(faces[i].uv[1]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[3]);
+
+                        if (excpFaces)
+                        {
+                            // we have colored vertices
+                            meshColors.Add(faces[i].colors[0]);
+                            meshColors.Add(faces[i].colors[1]);
+                            meshColors.Add(faces[i].colors[2]);
+
+                            meshColors.Add(faces[i].colors[3]);
+                            meshColors.Add(faces[i].colors[2]);
+                            meshColors.Add(faces[i].colors[1]);
+
+                            meshColors.Add(faces[i].colors[2]);
+                            meshColors.Add(faces[i].colors[1]);
+                            meshColors.Add(faces[i].colors[0]);
+
+                            meshColors.Add(faces[i].colors[1]);
+                            meshColors.Add(faces[i].colors[2]);
+                            meshColors.Add(faces[i].colors[3]);
+                        }
                     }
                     else
                     {
@@ -527,11 +720,22 @@ namespace VS.Parser
                         meshTrianglesUV.Add(faces[i].uv[3]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[1]);
+                        if (excpFaces)
+                        {
+                            // we have colored vertices
+                            meshColors.Add(faces[i].colors[0]);
+                            meshColors.Add(faces[i].colors[1]);
+                            meshColors.Add(faces[i].colors[2]);
+
+                            meshColors.Add(faces[i].colors[3]);
+                            meshColors.Add(faces[i].colors[2]);
+                            meshColors.Add(faces[i].colors[1]);
+                        }
                     }
                 }
-                else if (faces[i].type == 0x24)
+                else if (faces[i].type == 0x24 || faces[i].type == 0x34)
                 {
-                    if (faces[i].side == 8)
+                    if (faces[i].side != 4)
                     {
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[0]].position);
@@ -558,6 +762,17 @@ namespace VS.Parser
                         meshTrianglesUV.Add(faces[i].uv[0]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[1]);
+                        if (excpFaces)
+                        {
+                            // we have colored vertices
+                            meshColors.Add(faces[i].colors[0]);
+                            meshColors.Add(faces[i].colors[1]);
+                            meshColors.Add(faces[i].colors[2]);
+
+                            meshColors.Add(faces[i].colors[2]);
+                            meshColors.Add(faces[i].colors[1]);
+                            meshColors.Add(faces[i].colors[0]);
+                        }
                     }
                     else
                     {
@@ -573,6 +788,13 @@ namespace VS.Parser
                         meshTrianglesUV.Add(faces[i].uv[1]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[0]);
+                        if (excpFaces)
+                        {
+                            // we have colored vertices
+                            meshColors.Add(faces[i].colors[0]);
+                            meshColors.Add(faces[i].colors[1]);
+                            meshColors.Add(faces[i].colors[2]);
+                        }
                     }
                 }
             }
@@ -581,7 +803,10 @@ namespace VS.Parser
             shapeMesh.triangles = meshTriangles.ToArray();
             shapeMesh.uv = meshTrianglesUV.ToArray();
             shapeMesh.boneWeights = meshWeights.ToArray();
-
+            if (excpFaces)
+            {
+                shapeMesh.colors32 = meshColors.ToArray();
+            }
 
             if (tim != null)
             {
@@ -599,23 +824,43 @@ namespace VS.Parser
                 texture = new Texture2D(128, 128);
             }
 
+            Material mat = null;
+            if (excpFaces)
+            {
+                Shader shader = Shader.Find("Particles/Standard Unlit");
+                mat = new Material(shader);
+                mat.name = string.Concat("Material_SHP_", FileName);
+                mat.SetTexture("_MainTex", texture);
+                mat.SetFloat("_Mode", 0);
+                mat.SetFloat("_ColorMode", 0);
+                mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                mat.SetInt("_ZWrite", 1);
+                mat.EnableKeyword("_ALPHATEST_ON");
+                mat.DisableKeyword("_ALPHABLEND_ON");
+                mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                mat.SetTextureScale("_MainTex", new Vector2(1, -1));
 
-            Shader shader = Shader.Find("Standard");
-            Material mat = new Material(shader);
-            mat.name = string.Concat("Material_SHP_", FileName);
-            mat.SetTexture("_MainTex", texture);
-            mat.SetFloat("_Mode", 1);
-            mat.SetFloat("_Cutoff", 0.5f);
-            mat.SetFloat("_Glossiness", 0.0f);
-            mat.SetFloat("_SpecularHighlights", 0.0f);
-            mat.SetFloat("_GlossyReflections", 0.0f);
-            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
-            mat.SetInt("_ZWrite", 1);
-            mat.EnableKeyword("_ALPHATEST_ON");
-            mat.DisableKeyword("_ALPHABLEND_ON");
-            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            mat.SetTextureScale("_MainTex", new Vector2(1, -1));
+            } else
+            {
+                Shader shader = Shader.Find("Standard");
+                mat = new Material(shader);
+                mat.name = string.Concat("Material_SHP_", FileName);
+                mat.SetTexture("_MainTex", texture);
+                mat.SetFloat("_Mode", 1);
+                mat.SetFloat("_Cutoff", 0.5f);
+                mat.SetFloat("_Glossiness", 0.0f);
+                mat.SetFloat("_SpecularHighlights", 0.0f);
+                mat.SetFloat("_GlossyReflections", 0.0f);
+                mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                mat.SetInt("_ZWrite", 1);
+                mat.EnableKeyword("_ALPHATEST_ON");
+                mat.DisableKeyword("_ALPHABLEND_ON");
+                mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                mat.SetTextureScale("_MainTex", new Vector2(1, -1));
+
+            }
 
             material = mat;
 

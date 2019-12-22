@@ -273,69 +273,142 @@ namespace VS.Parser
             }
             textures.Add(textures[0]);
         }
-        public void ParseSHP(BinaryReader buffer)
+        public void ParseSHP(BinaryReader buffer, bool vc = false)
         {
             numPallets = 2;
             uint texMapSize = buffer.ReadUInt32();
-            buffer.ReadByte();
+            byte unk = buffer.ReadByte();
             width = buffer.ReadByte() * 2;
             height = buffer.ReadByte() * 2;
             numColors = buffer.ReadByte();
-            List<List<Color32>> pallets = new List<List<Color32>>();
-            if (numColors > 0)
-            {
-                for (uint h = 0; h < numPallets; h++)
-                {
-                    List<Color32> colors = new List<Color32>();
-                    for (uint i = 0; i < numColors; i++)
-                    {
-                        colors.Add(ToolBox.BitColorConverter(buffer.ReadUInt16()));
-                    }
 
-                    pallets.Add(colors);
-                }
-            }
-            List<int> cluts = new List<int>();
-            for (uint x = 0; x < height; x++)
-            {
-                List<int> cl2 = new List<int>();
-                for (uint y = 0; y < width; y++)
-                {
-                    cl2.Add(buffer.ReadByte());
-                }
-                cl2.Reverse();
-                cluts.AddRange(cl2);
-            }
-            cluts.Reverse();
 
-            textures = new List<Texture2D>();
-            for (int h = 0; h < numPallets; h++)
+            if (UseDebug) Debug.LogWarning(string.Concat("Parse SHP Texture => texMapSize : ", texMapSize, "   unk : ", unk,
+                "   width : ", width, "   height : ", height, "   numColors : ", numColors));
+
+            // Parse SHP 37 Texture => texMapSize : 33156   unk : 1   width : 128   height : 256   numColors : 160
+            // Parse SHP 65 Texture => texMapSize : 32804   unk : 16   width : 128   height : 256   numColors : 16
+            if (!vc)
             {
-                List<Color> colors = new List<Color>();
-                for (int y = 0; y < height; y++)
+                List<List<Color32>> pallets = new List<List<Color32>>();
+                if (numColors > 0)
                 {
-                    for (int x = 0; x < width; x++)
+                    for (uint h = 0; h < numPallets; h++)
                     {
-                        if (cluts[(int)((y * width) + x)] < numColors)
+                        List<Color32> colors = new List<Color32>();
+                        for (uint i = 0; i < numColors; i++)
                         {
-                            colors.Add(pallets[h][cluts[(int)((y * width) + x)]]);
+                            colors.Add(ToolBox.BitColorConverter(buffer.ReadUInt16()));
                         }
-                        else
-                        {
-                            colors.Add(Color.clear);
-                        }
+
+                        pallets.Add(colors);
                     }
                 }
+                List<int> cluts = new List<int>();
+                for (uint x = 0; x < height; x++)
+                {
+                    List<int> cl2 = new List<int>();
+                    for (uint y = 0; y < width; y++)
+                    {
+                        cl2.Add(buffer.ReadByte());
+                    }
+                    cl2.Reverse();
+                    cluts.AddRange(cl2);
+                }
+                cluts.Reverse();
 
-                Texture2D tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
-                tex.SetPixels(colors.ToArray());
-                tex.Apply();
-                textures.Add(tex);
+                textures = new List<Texture2D>();
+                for (int h = 0; h < numPallets; h++)
+                {
+                    List<Color> colors = new List<Color>();
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width; x++)
+                        {
+                            if (cluts[(int)((y * width) + x)] < numColors)
+                            {
+                                colors.Add(pallets[h][cluts[(int)((y * width) + x)]]);
+                            }
+                            else
+                            {
+                                colors.Add(Color.clear);
+                            }
+                        }
+                    }
+
+                    Texture2D tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
+                    tex.SetPixels(colors.ToArray());
+                    tex.Apply();
+                    textures.Add(tex);
+                }
+            } else
+            {
+                numPallets = 2;
+                List<List<Color32>> pallets = new List<List<Color32>>();
+                if (numColors > 0)
+                {
+                    for (uint h = 0; h < numPallets; h++)
+                    {
+                        List<Color32> colors = new List<Color32>();
+                        for (uint i = 0; i < numColors; i++)
+                        {
+                            colors.Add(ToolBox.BitColorConverter(buffer.ReadUInt16()));
+                        }
+
+                        pallets.Add(colors);
+                    }
+                }
+
+                List<int> cluts = new List<int>();
+                for (uint x = 0; x < height; x++)
+                {
+                    List<int> cl2 = new List<int>();
+                    for (uint y = 0; y < width; y++)
+                    {
+                        byte id = buffer.ReadByte();
+                        byte l = (byte)Mathf.RoundToInt(id / 16);
+                        byte r = (byte)(id % 16);
+                        cl2.Add(r);
+                        cl2.Add(l);
+                    }
+                    cl2.Reverse();
+                    cluts.AddRange(cl2);
+                }
+                cluts.Reverse();
+
+                textures = new List<Texture2D>();
+                for (int h = 0; h < numPallets; h++)
+                {
+                    List<Color> colors = new List<Color>();
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width*2; x++)
+                        {
+                            if (cluts[(int)((y * width * 2) + x)] < numColors)
+                            {
+                                colors.Add(pallets[h][cluts[(int)((y * width * 2) + x)]]);
+                            }
+                            else
+                            {
+                                colors.Add(Color.clear);
+                            }
+                        }
+                    }
+
+                    Texture2D tex = new Texture2D(width*2, height, TextureFormat.ARGB32, false);
+                    tex.SetPixels(colors.ToArray());
+                    tex.Apply();
+                    textures.Add(tex);
+                }
+
+
+                width *= 2;
             }
+
         }
         public Texture2D DrawSHP(bool CreatePNG = false)
         {
-            Texture2D tex = new Texture2D(width * 2, height, TextureFormat.ARGB32, false);
+            Texture2D tex = new Texture2D(width * numPallets, height, TextureFormat.ARGB32, false);
             tex.PackTextures(textures.ToArray(), 0);
             tex.filterMode = FilterMode.Trilinear;
             tex.anisoLevel = 4;
@@ -348,7 +421,7 @@ namespace VS.Parser
             {
                 byte[] bytes = tex.EncodeToPNG();
                 ToolBox.DirExNorCreate("Assets/Resources/Textures/Models/");
-                File.WriteAllBytes("Assets/Resources/Textures/Models/" + FileName + "_tex.png", bytes);
+                File.WriteAllBytes("Assets/Resources/Textures/Models/SHP_" + FileName + "_tex.png", bytes);
             }
             tex.Compress(true);
             return tex;

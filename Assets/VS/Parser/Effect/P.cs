@@ -71,7 +71,7 @@ namespace VS.Parser.Effect
                 Debug.Log("## 1 loop ends " + buffer.BaseStream.Position);
             }
 
-            int i1, i2, i5, i6, i7, i8, i9, iA, iB, iC;
+            //int i1, i2, i5, i6, i7, i8, i9, iA, iB, iC;
 
             for (int i = 0; i < loop; i++)
             {
