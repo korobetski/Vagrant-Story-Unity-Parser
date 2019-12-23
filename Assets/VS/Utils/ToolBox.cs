@@ -291,17 +291,18 @@ namespace VS.Utils
             int cc = gameObject.transform.childCount;
             if (cc > 0)
             {
-                    foreach (Transform child in gameObject.transform)
-                    {
+                foreach (Transform child in gameObject.transform)
+                {
 #if UNITY_EDITOR
-                        if (coroutine)
+                    if (coroutine)
+                    {
+                        UnityEditor.EditorApplication.delayCall += () =>
                         {
-                            UnityEditor.EditorApplication.delayCall += () =>
-                            {
-                                GameObject.DestroyImmediate(child.gameObject);
-                            };
-                        } else
-                        {
+                            GameObject.DestroyImmediate(child.gameObject);
+                        };
+                    }
+                    else
+                    {
                         GameObject.DestroyImmediate(child.gameObject);
                     }
 #else

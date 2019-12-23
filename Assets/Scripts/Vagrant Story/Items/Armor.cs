@@ -25,7 +25,7 @@ namespace VagrantStory.Items
             name = na;
             description = desc;
             this.id = id;
-            this.wepID = wepid;
+            wepID = wepid;
             gemSlots = gs;
         }
 
@@ -37,7 +37,7 @@ namespace VagrantStory.Items
             name = na;
             description = desc;
             this.id = id;
-            this.wepID = wepid;
+            wepID = wepid;
 
             statistics.STR.value = str;
             statistics.INT.value = inte;

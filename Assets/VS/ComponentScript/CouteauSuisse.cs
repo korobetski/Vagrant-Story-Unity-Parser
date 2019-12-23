@@ -8,251 +8,39 @@ using VS.Utils;
 namespace VS.ComponentScript
 {
 
-
-
     public class CouteauSuisse : MonoBehaviour
     {
-        public enum eMaterials { None, Wood, Leather, Bronze, Iron, Hagane, Silver, Damascus };
-        public enum eWeaponCategories { None, Dagger, Sword, Great_Sword, Axe, Mace, Great_Axe, Staff, Heavy_Mace, Polearm, Crossbow, Shield };
-        public enum eGripCategories { None, Guard, Grip, Pole, Bolt };
-        public enum eGems
-        {
-            None,
-            Talos_Feldspear,
-            Titan_Malachite,
-            Sylphid_Topaz,
-            Djinn_Amber,
-            Salamander_Ruby,
-            Ifrit_Carnelian,
-            Gnome_Emerald,
-            Dao_Moonstone,
-            Undine_Jasper,
-            Marid_Aquamarine,
-            Angel_Pearl,
-            Seraphim_Diamond,
-            Morlock_Jet,
-            Berial_Black_Pearl,
-            Haeralis,
-            Orlandu,
-            Orion,
-            Ogmius,
-            Iocus,
-            Balvus,
-            Trinity,
-            Beowulf,
-            Dragonite,
-            Sigguld,
-            Demonia,
-            Altema,
-            Polaris,
-            Basivalin,
-            Galerian,
-            Vedivier,
-            Berion,
-            Gervin,
-            Tertia,
-            Lancer,
-            Arturos,
-            Braveheart,
-            Hellraiser,
-            Nightkiller,
-            Manabreaker,
-            Powerfist,
-            Brainshield,
-            Speedster,
-            Silent_Queen,
-            Dark_Queen,
-            Death_Queen,
-            White_Queen,
-        };
 
-        public enum eDaggerBlades
-        {
-            None = 0,
-            Battle_Knife = 1,
-            Scramasax,
-            Dirk,
-            Throwing_Knife,
-            Kudi,
-            Cinquedea,
-            Kris,
-            Hatchet,
-            Khukuri,
-            Baselard,
-            Stiletto,
-            Jamadhar
-        };
-        public enum eSwordBlades
-        {
-            None = 0,
-            Spatha = 13,
-            Scimitar,
-            Rapier,
-            Short_Sword,
-            Firangi,
-            Shamshir,
-            Falchion,
-            Shotel,
-            Khora,
-            Khophish,
-            Wakizashi,
-            Rhomphaia
-        };
-        public enum eGreatSwordBlades
-        {
-            None = 0,
-            Broad_Sword = 25,
-            Norse_Sword,
-            Katana,
-            Executioner,
-            Claymore,
-            Schiavona,
-            Bastard_Sword,
-            Nodachi,
-            Rune_Blade,
-            Holy_Wind
-        };
-        public enum eAxeBlades
-        {
-            None = 0,
-            Hand_Axe = 35,
-            Battle_Axe,
-            Francisca,
-            Tabarzin,
-            Chamkaq,
-            Tabar,
-            Bullova,
-            Crescent
-        };
-        public enum eMaceBlades
-        {
-            None = 0,
-            Goblin_Club = 43,
-            Spiked_Club,
-            Ball_Mace,
-            Footmans_Mace,
-            Morning_Star,
-            War_Hammer,
-            Bec_de_Corbin,
-            War_Maul
-
-        };
-        public enum eGreatAxeBlades
-        {
-            None = 0,
-            Guisarme = 51,
-            Large_Crescent,
-            Sabre_Halberd,
-            Balbriggin,
-            Double_Blade,
-            Halberd
-        };
-        public enum eStaffBlades
-        {
-            None = 0,
-            Wizard_Staff = 57,
-            Clergy_Rod,
-            Summoner_Baton,
-            Shamanic_Staff,
-            Bishops_Crosier,
-            Sages_Cane
-        };
-        public enum eHeavyMaceBlades
-        {
-            None = 0,
-            Langdebeve = 63,
-            Sabre_Mace,
-            Footmans_Mace,
-            Gloomwing,
-            Mjolnir,
-            Griever,
-            Destroyer,
-            Hand_Of_Light
-        };
-        public enum ePolearmBlades
-        {
-            None = 0,
-            Spear = 71,
-            Glaive,
-            Scorpion,
-            Corcesca,
-            Trident,
-            Awl_Pike,
-            Boar_Spear,
-            Fauchard,
-            Voulge,
-            Pole_Axe,
-            Bardysh,
-            Brandestoc
-        };
-        public enum eCrossbowBlades
-        {
-            None = 0,
-            Gastraph_Bow = 83,
-            Light_Crossbow,
-            Target_Bow,
-            Windlass,
-            Cranquein,
-            Lug_Crossbow,
-            Siege_Bow,
-            Arbalest
-        };
-        public enum eShields
-        {
-            None = 0,
-            Buckler_Shield = 1,
-            Hoplite_Shield,
-            Round_Shield,
-            Targe_Shield,
-            Quad_Shield,
-            Tower_Shield,
-            Oval_Shield,
-            Pelta_Shield,
-            Circle_Shield,
-            Heater_Shield,
-            Spiked_Shield,
-            Kite_Shield,
-            Casserole_Shield,
-            Jazeraint_Shield,
-            Dread_Shield,
-            Knight_Shield
-        };
-
-        public enum eGuards { None = 0, Short_Hilt = 1, Swept_Hilt, Cross_Guard, Knuckle_Guard, Counter_Guard, Side_Ring, Power_Palm, Murderers_Hilt, Spiral_Hilt }
-        public enum eGrips { None = 0, Wooden_Grip = 10, Sand_Face, Czekan_Type, Sarissa_Grip, Gendarme, Heavy_Grip, Runkastyle, Bhuj_Type, Grimoire_Grip, Elephant }
-        public enum ePoles { None = 0, Wooden_Pole = 20, Spiculum_Pole, Winged_Pole, Framea_Pole, Ahlspies, Spiral_Pole }
-        public enum eBolts { None = 0, Simple_Bolt = 26, Steel_Bolt, Javelin_Bolt, Falarica_Bolt, Stone_Bullet, Sonic_Bullet }
-
-        public eMaterials material = eMaterials.Bronze;
+        public MaterialsDB.eMaterials material = MaterialsDB.eMaterials.Bronze;
         [Separator("Blade")]
-        public eWeaponCategories category = eWeaponCategories.Sword;
-        [ConditionalField(nameof(category), false, eWeaponCategories.Dagger)] public eDaggerBlades dagger = eDaggerBlades.None;
-        [ConditionalField(nameof(category), false, eWeaponCategories.Sword)] public eSwordBlades sword = eSwordBlades.None;
-        [ConditionalField(nameof(category), false, eWeaponCategories.Great_Sword)] public eGreatSwordBlades greatSword = eGreatSwordBlades.None;
-        [ConditionalField(nameof(category), false, eWeaponCategories.Axe)] public eAxeBlades axe = eAxeBlades.None;
-        [ConditionalField(nameof(category), false, eWeaponCategories.Mace)] public eMaceBlades mace = eMaceBlades.None;
-        [ConditionalField(nameof(category), false, eWeaponCategories.Great_Axe)] public eGreatAxeBlades greatAxe = eGreatAxeBlades.None;
-        [ConditionalField(nameof(category), false, eWeaponCategories.Staff)] public eStaffBlades staff = eStaffBlades.None;
-        [ConditionalField(nameof(category), false, eWeaponCategories.Heavy_Mace)] public eHeavyMaceBlades heavyMace = eHeavyMaceBlades.None;
-        [ConditionalField(nameof(category), false, eWeaponCategories.Polearm)] public ePolearmBlades polearm = ePolearmBlades.None;
-        [ConditionalField(nameof(category), false, eWeaponCategories.Crossbow)] public eCrossbowBlades crossbow = eCrossbowBlades.None;
-        [ConditionalField(nameof(category), false, eWeaponCategories.Shield)] public eShields shield = eShields.None;
+        public BladesDB.eBladeCategory category = BladesDB.eBladeCategory.Sword;
+        [ConditionalField(nameof(category), false, BladesDB.eBladeCategory.Dagger)] public BladesDB.eDaggerBlades dagger = BladesDB.eDaggerBlades.None;
+        [ConditionalField(nameof(category), false, BladesDB.eBladeCategory.Sword)] public BladesDB.eSwordBlades sword = BladesDB.eSwordBlades.None;
+        [ConditionalField(nameof(category), false, BladesDB.eBladeCategory.Great_Sword)] public BladesDB.eGreatSwordBlades greatSword = BladesDB.eGreatSwordBlades.None;
+        [ConditionalField(nameof(category), false, BladesDB.eBladeCategory.Axe)] public BladesDB.eAxeBlades axe = BladesDB.eAxeBlades.None;
+        [ConditionalField(nameof(category), false, BladesDB.eBladeCategory.Mace)] public BladesDB.eMaceBlades mace = BladesDB.eMaceBlades.None;
+        [ConditionalField(nameof(category), false, BladesDB.eBladeCategory.Great_Axe)] public BladesDB.eGreatAxeBlades greatAxe = BladesDB.eGreatAxeBlades.None;
+        [ConditionalField(nameof(category), false, BladesDB.eBladeCategory.Staff)] public BladesDB.eStaffBlades staff = BladesDB.eStaffBlades.None;
+        [ConditionalField(nameof(category), false, BladesDB.eBladeCategory.Heavy_Mace)] public BladesDB.eHeavyMaceBlades heavyMace = BladesDB.eHeavyMaceBlades.None;
+        [ConditionalField(nameof(category), false, BladesDB.eBladeCategory.Polearm)] public BladesDB.ePolearmBlades polearm = BladesDB.ePolearmBlades.None;
+        [ConditionalField(nameof(category), false, BladesDB.eBladeCategory.Crossbow)] public BladesDB.eCrossbowBlades crossbow = BladesDB.eCrossbowBlades.None;
+        [ConditionalField(nameof(category), false, BladesDB.eBladeCategory.Shield)] public ArmorsDB.eShields shield = ArmorsDB.eShields.None;
 
         [Separator("Grip")]
-        [ReadOnly] public eGripCategories gripType = eGripCategories.Guard;
-        [ConditionalField(nameof(gripType), false, eGripCategories.Guard)] public eGuards guard = eGuards.None;
-        [ConditionalField(nameof(gripType), false, eGripCategories.Grip)] public eGrips grip = eGrips.None;
-        [ConditionalField(nameof(gripType), false, eGripCategories.Pole)] public ePoles pole = ePoles.None;
-        [ConditionalField(nameof(gripType), false, eGripCategories.Bolt)] public eBolts bolt = eBolts.None;
+        [ReadOnly] public GripsDB.eGripCategories gripType = GripsDB.eGripCategories.Guard;
+        [ConditionalField(nameof(gripType), false, GripsDB.eGripCategories.Guard)] public GripsDB.eGuards guard = GripsDB.eGuards.None;
+        [ConditionalField(nameof(gripType), false, GripsDB.eGripCategories.Grip)] public GripsDB.eGrips grip = GripsDB.eGrips.None;
+        [ConditionalField(nameof(gripType), false, GripsDB.eGripCategories.Pole)] public GripsDB.ePoles pole = GripsDB.ePoles.None;
+        [ConditionalField(nameof(gripType), false, GripsDB.eGripCategories.Bolt)] public GripsDB.eBolts bolt = GripsDB.eBolts.None;
 
         [Separator("Gems")]
         [ReadOnly] public uint gemSlot = 0;
         [HideInInspector] public bool gemSlot1 = false;
         [HideInInspector] public bool gemSlot2 = false;
         [HideInInspector] public bool gemSlot3 = false;
-        [ConditionalField(nameof(gemSlot1))] public eGems gem1 = eGems.None;
-        [ConditionalField(nameof(gemSlot2))] public eGems gem2 = eGems.None;
-        [ConditionalField(nameof(gemSlot3))] public eGems gem3 = eGems.None;
+        [ConditionalField(nameof(gemSlot1))] public GemsDB.eGems gem1 = GemsDB.eGems.None;
+        [ConditionalField(nameof(gemSlot2))] public GemsDB.eGems gem2 = GemsDB.eGems.None;
+        [ConditionalField(nameof(gemSlot3))] public GemsDB.eGems gem3 = GemsDB.eGems.None;
 
 
         [Separator("Statistics")]
@@ -272,12 +60,12 @@ namespace VS.ComponentScript
             bool reloadModel = false;
 
             statistics = new Statistics();
-            if (material != eMaterials.None)
+            if (material != MaterialsDB.eMaterials.None)
             {
                 statistics += MaterialsDB.List[(int)material].statistics;
             }
 
-            if (category == eWeaponCategories.Dagger && dagger != eDaggerBlades.None)
+            if (category == BladesDB.eBladeCategory.Dagger && dagger != BladesDB.eDaggerBlades.None)
             {
                 statistics += BladesDB.List[(int)dagger].statistics;
                 if (_modelId != BladesDB.List[(int)dagger].wepID)
@@ -286,7 +74,7 @@ namespace VS.ComponentScript
                     reloadModel = true;
                 }
             }
-            else if (category == eWeaponCategories.Sword && sword != eSwordBlades.None)
+            else if (category == BladesDB.eBladeCategory.Sword && sword != BladesDB.eSwordBlades.None)
             {
                 statistics += BladesDB.List[(int)sword].statistics;
                 if (_modelId != BladesDB.List[(int)sword].wepID)
@@ -295,7 +83,7 @@ namespace VS.ComponentScript
                     reloadModel = true;
                 }
             }
-            else if (category == eWeaponCategories.Great_Sword && greatSword != eGreatSwordBlades.None)
+            else if (category == BladesDB.eBladeCategory.Great_Sword && greatSword != BladesDB.eGreatSwordBlades.None)
             {
                 statistics += BladesDB.List[(int)greatSword].statistics;
                 if (_modelId != BladesDB.List[(int)greatSword].wepID)
@@ -304,7 +92,7 @@ namespace VS.ComponentScript
                     reloadModel = true;
                 }
             }
-            else if (category == eWeaponCategories.Axe && axe != eAxeBlades.None)
+            else if (category == BladesDB.eBladeCategory.Axe && axe != BladesDB.eAxeBlades.None)
             {
                 statistics += BladesDB.List[(int)axe].statistics;
                 if (_modelId != BladesDB.List[(int)axe].wepID)
@@ -313,7 +101,7 @@ namespace VS.ComponentScript
                     reloadModel = true;
                 }
             }
-            else if (category == eWeaponCategories.Mace && mace != eMaceBlades.None)
+            else if (category == BladesDB.eBladeCategory.Mace && mace != BladesDB.eMaceBlades.None)
             {
                 statistics += BladesDB.List[(int)mace].statistics;
                 if (_modelId != BladesDB.List[(int)mace].wepID)
@@ -322,7 +110,7 @@ namespace VS.ComponentScript
                     reloadModel = true;
                 }
             }
-            else if (category == eWeaponCategories.Great_Axe && greatAxe != eGreatAxeBlades.None)
+            else if (category == BladesDB.eBladeCategory.Great_Axe && greatAxe != BladesDB.eGreatAxeBlades.None)
             {
                 statistics += BladesDB.List[(int)greatAxe].statistics;
                 if (_modelId != BladesDB.List[(int)greatAxe].wepID)
@@ -331,7 +119,7 @@ namespace VS.ComponentScript
                     reloadModel = true;
                 }
             }
-            else if (category == eWeaponCategories.Staff && staff != eStaffBlades.None)
+            else if (category == BladesDB.eBladeCategory.Staff && staff != BladesDB.eStaffBlades.None)
             {
                 statistics += BladesDB.List[(int)staff].statistics;
                 if (_modelId != BladesDB.List[(int)staff].wepID)
@@ -340,7 +128,7 @@ namespace VS.ComponentScript
                     reloadModel = true;
                 }
             }
-            else if (category == eWeaponCategories.Heavy_Mace && heavyMace != eHeavyMaceBlades.None)
+            else if (category == BladesDB.eBladeCategory.Heavy_Mace && heavyMace != BladesDB.eHeavyMaceBlades.None)
             {
                 statistics += BladesDB.List[(int)heavyMace].statistics;
                 if (_modelId != BladesDB.List[(int)heavyMace].wepID)
@@ -349,7 +137,7 @@ namespace VS.ComponentScript
                     reloadModel = true;
                 }
             }
-            else if (category == eWeaponCategories.Polearm && polearm != ePolearmBlades.None)
+            else if (category == BladesDB.eBladeCategory.Polearm && polearm != BladesDB.ePolearmBlades.None)
             {
                 statistics += BladesDB.List[(int)polearm].statistics;
                 if (_modelId != BladesDB.List[(int)polearm].wepID)
@@ -358,7 +146,7 @@ namespace VS.ComponentScript
                     reloadModel = true;
                 }
             }
-            else if (category == eWeaponCategories.Crossbow && crossbow != eCrossbowBlades.None)
+            else if (category == BladesDB.eBladeCategory.Crossbow && crossbow != BladesDB.eCrossbowBlades.None)
             {
                 statistics += BladesDB.List[(int)crossbow].statistics;
                 if (_modelId != BladesDB.List[(int)crossbow].wepID)
@@ -367,7 +155,7 @@ namespace VS.ComponentScript
                     reloadModel = true;
                 }
             }
-            else if (category == eWeaponCategories.Shield && shield != eShields.None)
+            else if (category == BladesDB.eBladeCategory.Shield && shield != ArmorsDB.eShields.None)
             {
                 statistics += ArmorsDB.ShieldList[(int)shield].statistics;
                 if (_modelId != ArmorsDB.ShieldList[(int)shield].wepID)
@@ -377,15 +165,14 @@ namespace VS.ComponentScript
                 }
             }
 
-            if (category == eWeaponCategories.Dagger || category == eWeaponCategories.Sword || category == eWeaponCategories.Great_Sword)
+            if (category == BladesDB.eBladeCategory.Dagger || category == BladesDB.eBladeCategory.Sword || category == BladesDB.eBladeCategory.Great_Sword)
             {
-                gripType = eGripCategories.Guard;
-                //guard = eGuards.None;
-                grip = eGrips.None;
-                pole = ePoles.None;
-                bolt = eBolts.None;
+                gripType = GripsDB.eGripCategories.Guard;
+                grip = GripsDB.eGrips.None;
+                pole = GripsDB.ePoles.None;
+                bolt = GripsDB.eBolts.None;
 
-                if (guard != eGuards.None)
+                if (guard != GripsDB.eGuards.None)
                 {
                     gemSlot = GripsDB.List[(int)guard].gemSlots;
                     statistics += GripsDB.List[(int)guard].statistics;
@@ -397,14 +184,14 @@ namespace VS.ComponentScript
 
                 RefreshGemSlots();
             }
-            else if (category == eWeaponCategories.Axe || category == eWeaponCategories.Mace || category == eWeaponCategories.Great_Axe || category == eWeaponCategories.Staff || category == eWeaponCategories.Heavy_Mace)
+            else if (category == BladesDB.eBladeCategory.Axe || category == BladesDB.eBladeCategory.Mace || category == BladesDB.eBladeCategory.Great_Axe 
+                || category == BladesDB.eBladeCategory.Staff || category == BladesDB.eBladeCategory.Heavy_Mace)
             {
-                gripType = eGripCategories.Grip;
-                guard = eGuards.None;
-                //grip = eGrips.None;
-                pole = ePoles.None;
-                bolt = eBolts.None;
-                if (grip != eGrips.None)
+                gripType = GripsDB.eGripCategories.Grip;
+                guard = GripsDB.eGuards.None;
+                pole = GripsDB.ePoles.None;
+                bolt = GripsDB.eBolts.None;
+                if (grip != GripsDB.eGrips.None)
                 {
                     gemSlot = GripsDB.List[(int)grip].gemSlots; statistics += GripsDB.List[(int)grip].statistics;
                 }
@@ -415,14 +202,13 @@ namespace VS.ComponentScript
 
                 RefreshGemSlots();
             }
-            else if (category == eWeaponCategories.Polearm)
+            else if (category == BladesDB.eBladeCategory.Polearm)
             {
-                gripType = eGripCategories.Pole;
-                guard = eGuards.None;
-                grip = eGrips.None;
-                //pole = ePoles.None;
-                bolt = eBolts.None;
-                if (pole != ePoles.None) { gemSlot = GripsDB.List[(int)pole].gemSlots; statistics += GripsDB.List[(int)pole].statistics; }
+                gripType = GripsDB.eGripCategories.Pole;
+                guard = GripsDB.eGuards.None;
+                grip = GripsDB.eGrips.None;
+                bolt = GripsDB.eBolts.None;
+                if (pole != GripsDB.ePoles.None) { gemSlot = GripsDB.List[(int)pole].gemSlots; statistics += GripsDB.List[(int)pole].statistics; }
                 else
                 {
                     gemSlot = 0;
@@ -430,14 +216,13 @@ namespace VS.ComponentScript
 
                 RefreshGemSlots();
             }
-            else if (category == eWeaponCategories.Crossbow)
+            else if (category == BladesDB.eBladeCategory.Crossbow)
             {
-                gripType = eGripCategories.Bolt;
-                guard = eGuards.None;
-                grip = eGrips.None;
-                pole = ePoles.None;
-                //bolt = eBolts.None;
-                if (bolt != eBolts.None) { gemSlot = GripsDB.List[(int)bolt].gemSlots; statistics += GripsDB.List[(int)bolt].statistics; }
+                gripType = GripsDB.eGripCategories.Bolt;
+                guard = GripsDB.eGuards.None;
+                grip = GripsDB.eGrips.None;
+                pole = GripsDB.ePoles.None;
+                if (bolt != GripsDB.eBolts.None) { gemSlot = GripsDB.List[(int)bolt].gemSlots; statistics += GripsDB.List[(int)bolt].statistics; }
                 else
                 {
                     gemSlot = 0;
@@ -445,15 +230,19 @@ namespace VS.ComponentScript
 
                 RefreshGemSlots();
             }
-            else if (category == eWeaponCategories.Shield)
+            else if (category == BladesDB.eBladeCategory.Shield)
             {
-                gripType = eGripCategories.None;
-                guard = eGuards.None;
-                grip = eGrips.None;
-                pole = ePoles.None;
-                bolt = eBolts.None;
+                // shields have no grip, but have gem slots
+                gripType = GripsDB.eGripCategories.None;
+                guard = GripsDB.eGuards.None;
+                grip = GripsDB.eGrips.None;
+                pole = GripsDB.ePoles.None;
+                bolt = GripsDB.eBolts.None;
 
-                if (shield != eShields.None) { gemSlot = ArmorsDB.ShieldList[(int)shield].gemSlots; }
+                if (shield != ArmorsDB.eShields.None)
+                {
+                    gemSlot = ArmorsDB.ShieldList[(int)shield].gemSlots;
+                }
                 else
                 {
                     gemSlot = 0;
@@ -463,11 +252,11 @@ namespace VS.ComponentScript
             }
             else
             {
-                gripType = eGripCategories.None;
-                guard = eGuards.None;
-                grip = eGrips.None;
-                pole = ePoles.None;
-                bolt = eBolts.None;
+                gripType = GripsDB.eGripCategories.None;
+                guard = GripsDB.eGuards.None;
+                grip = GripsDB.eGrips.None;
+                pole = GripsDB.ePoles.None;
+                bolt = GripsDB.eBolts.None;
                 gemSlot = 0;
                 RefreshGemSlots();
             }
@@ -497,29 +286,38 @@ namespace VS.ComponentScript
 
             if (!gemSlot1)
             {
-                gem1 = eGems.None;
+                gem1 = GemsDB.eGems.None;
             }
             else
             {
-                if(gem1 != eGems.None) statistics += GemsDB.List[(int)gem1].statistics;
+                if (gem1 != GemsDB.eGems.None)
+                {
+                    statistics += GemsDB.List[(int)gem1].statistics;
+                }
             }
 
             if (!gemSlot2)
             {
-                gem2 = eGems.None;
+                gem2 = GemsDB.eGems.None;
             }
             else
             {
-                if (gem2 != eGems.None) statistics += GemsDB.List[(int)gem2].statistics;
+                if (gem2 != GemsDB.eGems.None)
+                {
+                    statistics += GemsDB.List[(int)gem2].statistics;
+                }
             }
 
             if (!gemSlot3)
             {
-                gem3 = eGems.None;
+                gem3 = GemsDB.eGems.None;
             }
             else
             {
-                if (gem3 != eGems.None) statistics += GemsDB.List[(int)gem3].statistics;
+                if (gem3 != GemsDB.eGems.None)
+                {
+                    statistics += GemsDB.List[(int)gem3].statistics;
+                }
             }
         }
     }

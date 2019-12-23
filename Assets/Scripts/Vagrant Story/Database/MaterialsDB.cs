@@ -5,6 +5,8 @@ namespace VagrantStory.Database
 
     public class MaterialsDB
     {
+        public enum eMaterials { None, Wood, Leather, Bronze, Iron, Hagane, Silver, Damascus };
+
         public static readonly SmithMaterial Wood = new SmithMaterial("Wood", 1, 0, 0, 0, 0, 0, 0, 4, -6, 8, 8, -6, -4, -4, 5, 8, 0);
         public static readonly SmithMaterial Leather = new SmithMaterial("Leather", 2, 0, 0, 0, 0, 0, 0, 2, 5, 5, -1, -1, -5, -5, 1, 6, 0);
         public static readonly SmithMaterial Bronze = new SmithMaterial("Bronze", 3, -1, -1, 2, -1, -1, -5, 8, -5, -5, 3, 3, -2, -2, 3, 2, -2);

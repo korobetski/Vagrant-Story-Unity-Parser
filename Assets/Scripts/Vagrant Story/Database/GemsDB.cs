@@ -5,6 +5,17 @@ namespace VagrantStory.Database
 {
     public class GemsDB : MonoBehaviour
     {
+        public enum eGems
+        {
+            None,
+            Talos_Feldspear, Titan_Malachite, Sylphid_Topaz, Djinn_Amber, Salamander_Ruby, Ifrit_Carnelian, Gnome_Emerald, Dao_Moonstone,
+            Undine_Jasper, Marid_Aquamarine, Angel_Pearl, Seraphim_Diamond, Morlock_Jet, Berial_Black_Pearl, Haeralis, Orlandu,
+            Orion, Ogmius, Iocus, Balvus, Trinity, Beowulf, Dragonite, Sigguld,
+            Demonia, Altema, Polaris, Basivalin, Galerian, Vedivier, Berion, Gervin,
+            Tertia, Lancer, Arturos, Braveheart, Hellraiser, Nightkiller, Manabreaker, Powerfist,
+            Brainshield, Speedster, Silent_Queen, Dark_Queen, Death_Queen, White_Queen,
+        };
+
         public static Gem Talos_Feldspear = new Gem("Talos", "Pierre envoûtée par les pouvoirs de Talos. Augmente légèrement la puissance des attaques.", "MAJOR", "PHYSICAL");
         public static Gem Titan_Malachite = new Gem("Malachite", "Une âme de titan a été scellée dans cette Malachite. Augmente la puissance des attaques.", "MINOR", "PHYSICAL");
         public static Gem Sylphid_Topaz = new Gem("Topaze", "Topaze imprégnée du pouvoir des Sylphides. Augmente la liaison Air.", "MINOR", "AIR");

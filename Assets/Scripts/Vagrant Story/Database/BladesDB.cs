@@ -5,6 +5,140 @@ namespace VagrantStory.Database
 {
     public class BladesDB
     {
+        public enum eBladeCategory { None, Dagger, Sword, Great_Sword, Axe, Mace, Great_Axe, Staff, Heavy_Mace, Polearm, Crossbow, Shield };
+
+        public enum eDaggerBlades
+        {
+            None = 0,
+            Battle_Knife = 1,
+            Scramasax,
+            Dirk,
+            Throwing_Knife,
+            Kudi,
+            Cinquedea,
+            Kris,
+            Hatchet,
+            Khukuri,
+            Baselard,
+            Stiletto,
+            Jamadhar
+        };
+        public enum eSwordBlades
+        {
+            None = 0,
+            Spatha = 13,
+            Scimitar,
+            Rapier,
+            Short_Sword,
+            Firangi,
+            Shamshir,
+            Falchion,
+            Shotel,
+            Khora,
+            Khophish,
+            Wakizashi,
+            Rhomphaia
+        };
+        public enum eGreatSwordBlades
+        {
+            None = 0,
+            Broad_Sword = 25,
+            Norse_Sword,
+            Katana,
+            Executioner,
+            Claymore,
+            Schiavona,
+            Bastard_Sword,
+            Nodachi,
+            Rune_Blade,
+            Holy_Wind
+        };
+        public enum eAxeBlades
+        {
+            None = 0,
+            Hand_Axe = 35,
+            Battle_Axe,
+            Francisca,
+            Tabarzin,
+            Chamkaq,
+            Tabar,
+            Bullova,
+            Crescent
+        };
+        public enum eMaceBlades
+        {
+            None = 0,
+            Goblin_Club = 43,
+            Spiked_Club,
+            Ball_Mace,
+            Footmans_Mace,
+            Morning_Star,
+            War_Hammer,
+            Bec_de_Corbin,
+            War_Maul
+
+        };
+        public enum eGreatAxeBlades
+        {
+            None = 0,
+            Guisarme = 51,
+            Large_Crescent,
+            Sabre_Halberd,
+            Balbriggin,
+            Double_Blade,
+            Halberd
+        };
+        public enum eStaffBlades
+        {
+            None = 0,
+            Wizard_Staff = 57,
+            Clergy_Rod,
+            Summoner_Baton,
+            Shamanic_Staff,
+            Bishops_Crosier,
+            Sages_Cane
+        };
+        public enum eHeavyMaceBlades
+        {
+            None = 0,
+            Langdebeve = 63,
+            Sabre_Mace,
+            Footmans_Mace,
+            Gloomwing,
+            Mjolnir,
+            Griever,
+            Destroyer,
+            Hand_Of_Light
+        };
+        public enum ePolearmBlades
+        {
+            None = 0,
+            Spear = 71,
+            Glaive,
+            Scorpion,
+            Corcesca,
+            Trident,
+            Awl_Pike,
+            Boar_Spear,
+            Fauchard,
+            Voulge,
+            Pole_Axe,
+            Bardysh,
+            Brandestoc
+        };
+        public enum eCrossbowBlades
+        {
+            None = 0,
+            Gastraph_Bow = 83,
+            Light_Crossbow,
+            Target_Bow,
+            Windlass,
+            Cranquein,
+            Lug_Crossbow,
+            Siege_Bow,
+            Arbalest
+        };
+
         public static Blade Battle_Knife = new Blade("Dagger", "Dague simple, pour novice.", 1, 1, 1, 2, 1, 4, 0, 0, 1, 0);
         public static Blade Scramasax = new Blade("Stabber", "Poignard ordinaire.", 2, 3, 1, 3, 1, 6, 0, 0, 1, 0);
         public static Blade Dirk = new Blade("Combat King", "Bon poignard de combat.", 3, 4, 1, 2, 1, 8, 0, 0, 1, 0);

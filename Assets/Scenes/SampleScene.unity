@@ -150,31 +150,51 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b99239704787aa341b844cde5d2598f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  material: 7
-  category: 2
-  dagger: 3
-  sword: 23
-  greatSword: 0
+  material: 0
+  category: 0
+  dagger: 2
+  sword: 13
+  greatSword: 25
   axe: 2
-  mace: 0
-  greatAxe: 0
+  mace: 47
+  greatAxe: 54
   staff: 0
   heavyMace: 4
-  polearm: 0
-  crossbow: 83
-  shield: 13
-  gripType: 1
-  guard: 8
+  polearm: 81
+  crossbow: 86
+  shield: 15
+  gripType: 0
+  guard: 0
   grip: 0
   pole: 0
   bolt: 0
-  gemSlot: 2
-  gemSlot1: 1
-  gemSlot2: 1
+  gemSlot: 0
+  gemSlot1: 0
+  gemSlot2: 0
   gemSlot3: 0
   gem1: 0
   gem2: 0
   gem3: 0
+  statistics:
+    STRValue: 0
+    INTValue: 0
+    AGIValue: 0
+    HUMANValue: 0
+    BEASTValue: 0
+    UNDEADValue: 0
+    PHANTOMValue: 0
+    DRAGONValue: 0
+    EVILValue: 0
+    PHYSICALValue: 0
+    AIRValue: 0
+    FIREValue: 0
+    EARTHValue: 0
+    WATERValue: 0
+    LIGHTValue: 0
+    DARKValue: 0
+    BLUNTValue: 0
+    EDGEDValue: 0
+    PIERCINGValue: 0
 --- !u!4 &1323361274
 Transform:
   m_ObjectHideFlags: 0

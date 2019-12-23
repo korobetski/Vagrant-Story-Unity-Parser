@@ -97,11 +97,11 @@
     <Reference Include="Unity.TextMeshPro">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEditor.UI">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/UnityEditor.UI.dll</HintPath>
-    </Reference>
     <Reference Include="MyBox">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/MyBox.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.UI">
+      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/UnityEditor.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.3.0f1/Editor/Data/Managed/UnityEngine/UnityEngine.AIModule.dll</HintPath>

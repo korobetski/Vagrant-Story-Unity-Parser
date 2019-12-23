@@ -5,6 +5,12 @@ namespace VagrantStory.Database
 
     public class GripsDB
     {
+        public enum eGripCategories { None, Guard, Grip, Pole, Bolt };
+        public enum eGuards { None = 0, Short_Hilt = 1, Swept_Hilt, Cross_Guard, Knuckle_Guard, Counter_Guard, Side_Ring, Power_Palm, Murderers_Hilt, Spiral_Hilt }
+        public enum eGrips { None = 0, Wooden_Grip = 10, Sand_Face, Czekan_Type, Sarissa_Grip, Gendarme, Heavy_Grip, Runkastyle, Bhuj_Type, Grimoire_Grip, Elephant }
+        public enum ePoles { None = 0, Wooden_Pole = 20, Spiculum_Pole, Winged_Pole, Framea_Pole, Ahlspies, Spiral_Pole }
+        public enum eBolts { None = 0, Simple_Bolt = 26, Steel_Bolt, Javelin_Bolt, Falarica_Bolt, Stone_Bullet, Sonic_Bullet }
+
         // type 0 -> dagger, sword, great sword
         public static Grip Short_Hilt = new Grip("Chêne", "Poignée en bois recouverte de cuir.", 0, 1, 0, -1, 0, 4, 1, 0);
         public static Grip Swept_Hilt = new Grip("Métal", "Poignée à garde de métal.", 0, 1, 1, -1, 0, 2, 4, 0);
