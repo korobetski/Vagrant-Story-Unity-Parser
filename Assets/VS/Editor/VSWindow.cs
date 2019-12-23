@@ -117,6 +117,17 @@ public class VSWindow : EditorWindow
                     // ENDING.XA
                     // ILLUST06.BIN -> ILLUST16.BIN
                     // NULL.DAT
+                    switch (ext)
+                    {
+                        case "BIN":
+                            TIM parser = new TIM();
+                            parser.ParseIllust(VSPath + FilePath);
+                            break;
+                    }
+                    break;
+                case "EVENT":
+                    // ****.EVT
+                    ParseEVT(VSPath + FilePath, true);
                     break;
                 case "MAP":
                     // MAP***.MPD
@@ -149,9 +160,7 @@ public class VSWindow : EditorWindow
                     switch (ext)
                     {
                         case "SHP":
-                            string[] h = FilePath.Split("/"[0]);
-                            string filename = h[h.Length - 1];
-                            ParseSHP(VSPath + FilePath, filename, false, true);
+                            ParseSHP(VSPath + FilePath, fileName, false, true);
                             break;
                         case "WEP":
                             ParseWEP(VSPath + FilePath, true);
@@ -477,7 +486,8 @@ public class VSWindow : EditorWindow
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                EVT evt = new EVT(file);
+
+                ParseEVT(file, false);
                 fileParsed++;
             }
 
@@ -530,6 +540,11 @@ public class VSWindow : EditorWindow
 
     }
 
+    private void ParseEVT(string path, bool UseDebug)
+    {
+        EVT evt = new EVT(path, UseDebug);
+    }
+
     private void BuildDatabase()
     {
         BIN DB = new BIN();
@@ -555,34 +570,34 @@ public class VSWindow : EditorWindow
     }
     private void ParseSHP(string path, string filename, bool UseDebug, bool erase = false)
     {
-        // excp = list of models with a weird polygons section, impossible to build rigth now
+        // excp = list of models with colored vertex polygons section
         List<string> excp = new List<string>();
-        excp.Add("26.SHP"); // 26.SHP is a Mimic : http://chrysaliswiki.com/bestiary:mimic#VS
-        excp.Add("3A.SHP"); // D'Tok first Wyvern like Z006U00.ZUD
-        excp.Add("3B.SHP"); // a Wyvern
-        excp.Add("65.SHP"); // 65.SHP is Damascus Golem  : http://chrysaliswiki.com/bestiary:damascus-golem#VS
-        excp.Add("6A.SHP");
-        excp.Add("6B.SHP");
-        excp.Add("AC.SHP"); 
-        excp.Add("B1.SHP"); // Platform During Final Battle
-        excp.Add("B2.SHP"); // Stone
-        excp.Add("B3.SHP"); // Stone
-        excp.Add("B4.SHP"); // Stone
-        excp.Add("B5.SHP"); // Lever / Switch (Opens Door in Wine Cellar)
-        excp.Add("B6.SHP"); // Lever / Switch (Opens Door in Wine Cellar)
-        excp.Add("B7.SHP"); // Stone
-        excp.Add("B8.SHP"); // Stone
-        excp.Add("B9.SHP"); // Stone
-        excp.Add("BA.SHP"); // Stone
-        excp.Add("BB.SHP"); // Stone
-        excp.Add("BC.SHP"); // Stone
-        excp.Add("BD.SHP"); // Stone
-        excp.Add("BE.SHP"); // Stone
-        excp.Add("BF.SHP"); // Stone
-        excp.Add("C0.SHP"); // Stone
-        excp.Add("C1.SHP"); // Stone
-        excp.Add("C2.SHP"); // Stone
-        excp.Add("C3.SHP"); // Stone
+        excp.Add("26"); // 26.SHP is a Mimic : http://chrysaliswiki.com/bestiary:mimic#VS
+        excp.Add("3A"); // D'Tok first Wyvern same as Z006U00.ZUD
+        excp.Add("3B"); // a Wyvern same as Z050U00.ZUD
+        excp.Add("65"); // 65.SHP is Damascus Golem  : http://chrysaliswiki.com/bestiary:damascus-golem#VS
+        excp.Add("6A");
+        excp.Add("6B");
+        excp.Add("AC");
+        excp.Add("B1"); // Platform During Final Battle
+        excp.Add("B2"); // Stone
+        excp.Add("B3"); // Stone
+        excp.Add("B4"); // Stone
+        excp.Add("B5"); // Lever / Switch (Opens Door in Wine Cellar)
+        excp.Add("B6"); // Lever / Switch (Opens Door in Wine Cellar)
+        excp.Add("B7"); // Stone
+        excp.Add("B8"); // Stone
+        excp.Add("B9"); // Stone
+        excp.Add("BA"); // Stone
+        excp.Add("BB"); // Stone
+        excp.Add("BC"); // Stone
+        excp.Add("BD"); // Stone
+        excp.Add("BE"); // Stone
+        excp.Add("BF"); // Stone
+        excp.Add("C0"); // Stone
+        excp.Add("C1"); // Stone
+        excp.Add("C2"); // Stone
+        excp.Add("C3"); // Stone
 
         SHP parser = new SHP();
         if (!excp.Contains(filename))
@@ -611,15 +626,15 @@ public class VSWindow : EditorWindow
     private void ParseZUD(string path, string filename, bool UseDebug)
     {
         List<string> excp = new List<string>();
-        excp.Add("Z006U00.ZUD");
-        excp.Add("Z050U00.ZUD");
-        excp.Add("Z050U11.ZUD");
-        excp.Add("Z051U21.ZUD");
-        excp.Add("Z054U00.ZUD");
-        excp.Add("Z054U01.ZUD");
-        excp.Add("Z055U04.ZUD");
-        excp.Add("Z055U05.ZUD");
-        excp.Add("Z234U16.ZUD");
+        excp.Add("Z006U00"); // same as 3A.SHP
+        excp.Add("Z050U00"); // same as 3B.SHP
+        excp.Add("Z050U11"); // same as 26.SHP
+        excp.Add("Z051U21"); // same as 26.SHP
+        excp.Add("Z054U00"); // same as 65.SHP
+        excp.Add("Z054U01"); // same as 65.SHP
+        excp.Add("Z055U04"); // same as 3B.SHP (red color)
+        excp.Add("Z055U05"); // same as 3B.SHP (yellow color)
+        excp.Add("Z234U16"); // same as 3B.SHP (without SEQ attached)
 
         if (!excp.Contains(filename))
         {

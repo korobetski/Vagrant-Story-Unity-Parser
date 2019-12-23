@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using VS.Utils;
@@ -61,6 +62,7 @@ namespace VS.Parser
 
         public void ParseIllust(string filePath)
         {
+
             if (!filePath.EndsWith(".BIN"))
             {
                 return;
@@ -69,7 +71,8 @@ namespace VS.Parser
             PreParse(filePath);
             // i don't know how to decode this for the moment
 
-            buffer.ReadBytes(20);
+            byte[] by = buffer.ReadBytes(20);
+            Debug.Log(BitConverter.ToString(by));
 
             Color[] col = new Color[256];
             for (int i = 0; i < 256; ++i)
@@ -77,7 +80,7 @@ namespace VS.Parser
                 col[i] = ToolBox.BitColorConverter(buffer.ReadUInt16());
             }
 
-            width = 128;
+            width = 256;
             int height = 15;
             int numBlocks = (int)(FileSize - buffer.BaseStream.Position) / (width * height);
             List<Color> cluts = new List<Color>();
@@ -89,8 +92,8 @@ namespace VS.Parser
                     for (uint y = 0; y < width; y++)
                     {
                         byte b = buffer.ReadByte();
-                        cl2.Add(col[b]);
-                        //cl2.Add(new Color32(b, b, b, 255));
+                        //cl2.Add(col[b]);
+                        cl2.Add(new Color32(b, b, b, 255));
                     }
                     cl2.Reverse();
                     cluts.AddRange(cl2);
@@ -283,8 +286,11 @@ namespace VS.Parser
             numColors = buffer.ReadByte();
 
 
-            if (UseDebug) Debug.LogWarning(string.Concat("Parse SHP Texture => texMapSize : ", texMapSize, "   unk : ", unk,
+            if (UseDebug)
+            {
+                Debug.LogWarning(string.Concat("Parse SHP Texture => texMapSize : ", texMapSize, "   unk : ", unk,
                 "   width : ", width, "   height : ", height, "   numColors : ", numColors));
+            }
 
             // Parse SHP 37 Texture => texMapSize : 33156   unk : 1   width : 128   height : 256   numColors : 160
             // Parse SHP 65 Texture => texMapSize : 32804   unk : 16   width : 128   height : 256   numColors : 16
@@ -341,7 +347,8 @@ namespace VS.Parser
                     tex.Apply();
                     textures.Add(tex);
                 }
-            } else
+            }
+            else
             {
                 numPallets = 2;
                 List<List<Color32>> pallets = new List<List<Color32>>();
@@ -382,7 +389,7 @@ namespace VS.Parser
                     List<Color> colors = new List<Color>();
                     for (int y = 0; y < height; y++)
                     {
-                        for (int x = 0; x < width*2; x++)
+                        for (int x = 0; x < width * 2; x++)
                         {
                             if (cluts[(int)((y * width * 2) + x)] < numColors)
                             {
@@ -395,7 +402,7 @@ namespace VS.Parser
                         }
                     }
 
-                    Texture2D tex = new Texture2D(width*2, height, TextureFormat.ARGB32, false);
+                    Texture2D tex = new Texture2D(width * 2, height, TextureFormat.ARGB32, false);
                     tex.SetPixels(colors.ToArray());
                     tex.Apply();
                     textures.Add(tex);
@@ -441,8 +448,8 @@ namespace VS.Parser
             if (CreatePNG)
             {
                 byte[] bytes = tex.EncodeToPNG();
-                ToolBox.DirExNorCreate("Assets/Resources/Obj/");
-                File.WriteAllBytes("Assets/Resources/Obj/" + FileName + "_tex.png", bytes);
+                ToolBox.DirExNorCreate("Assets/Resources/Weapon/");
+                File.WriteAllBytes("Assets/Resources/Weapon/WEP_" + FileName + "_tex.png", bytes);
             }
             tex.Compress(true);
             return tex;

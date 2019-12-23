@@ -243,7 +243,8 @@ namespace VS.Parser
 
             if (excpFaces)
             {
-                if (UseDebug) {
+                if (UseDebug)
+                {
                     Debug.LogWarning("-------------   TRIANGLES    ----------------------");
                     Debug.LogWarning(buffer.BaseStream.Position);
                 }
@@ -282,7 +283,8 @@ namespace VS.Parser
                         faces.Add(ParseColoredFace(buffer, 4));
                     }
                 }
-            } else
+            }
+            else
             {
                 for (uint i = 0; i < numFaces; i++)
                 {
@@ -333,7 +335,7 @@ namespace VS.Parser
                             Debug.Log("vId : " + j + " - " + vId);
                         }
                     }
-                     
+
                     // 6 or 8 bytes
                     for (uint j = 0; j < face.verticesCount; j++)
                     {
@@ -548,7 +550,7 @@ namespace VS.Parser
                     uv4 = new Vector2(buffer.ReadByte(), buffer.ReadByte());
 
                     //Debug.LogWarning(string.Concat("uv1 : ", uv1, "  uv2 : ", uv2, "  uv3 : ", uv3, "  uv4 : ", uv4));
-                    
+
                     face.uv.Add(uv1);
                     face.uv.Add(uv2);
                     face.uv.Add(uv3);
@@ -841,7 +843,8 @@ namespace VS.Parser
                 mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
                 mat.SetTextureScale("_MainTex", new Vector2(1, -1));
 
-            } else
+            }
+            else
             {
                 Shader shader = Shader.Find("Standard");
                 mat = new Material(shader);
@@ -895,10 +898,12 @@ namespace VS.Parser
             mr.rootBone = meshBones[0];
             mr.sharedMesh = shapeMesh;
 
+            mesh = shapeMesh;
+
             this.shapeGo = shapeGo;
 
             string modFolder = "Assets/Resources/Prefabs/Models/";
-            string modFilename = string.Concat( modFolder, "SHP_", FileName,".prefab");
+            string modFilename = string.Concat(modFolder, "SHP_", FileName, ".prefab");
 
 
 
@@ -993,7 +998,7 @@ namespace VS.Parser
 
                                 //AssetDatabase.RemoveObjectFromAsset(mesh);
                                 AssetDatabase.AddObjectToAsset(baked, modFilename);
-                                
+
                             }
 
                             AnimationClip[] clips = _seq.BuildAnimationClips(shpBase);
@@ -1030,6 +1035,7 @@ namespace VS.Parser
             }
 
 #endif
+            mesh = shapeMesh;
         }
 
     }

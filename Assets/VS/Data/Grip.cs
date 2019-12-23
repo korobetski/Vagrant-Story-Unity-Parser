@@ -130,7 +130,8 @@ namespace VS.Data
         public static List<Grip> list = new List<Grip>();
         public static List<Grip> GripList()
         {
-            IEnumerable<Grip> l = new List<Grip>() { new Grip("Short Hilt", 0, 1, 0, -1, 0, 4, 1, 0),
+            IEnumerable<Grip> l = new List<Grip>() {
+            new Grip("Short Hilt", 0, 1, 0, -1, 0, 4, 1, 0),
             new Grip("Swept Hilt", 0, 1, 1, -1, 0, 2, 4, 0),
             new Grip("Cross Guard", 1, 2, 1, -1, 8, 6, 2, 0),
             new Grip("Knuckle Guard", 2, 2, 2, -2, 0, 5, 9, 0),

@@ -7,9 +7,9 @@ namespace VS.Parser
     {
 
 
-        public EVT(string path)
+        public EVT(string path, bool debug)
         {
-            UseDebug = true;
+            UseDebug = debug;
             Parse(path);
         }
 

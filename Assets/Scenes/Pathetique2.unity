@@ -336,9 +336,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bankSource:
-    streamingAssetPath: Resources/Sounds/SF2/MUSIC000.sf2
+    streamingAssetPath: Resources/Sounds/SF2/MUSIC040.sf2
   midiSource:
-    streamingAssetPath: Resources/Sounds/MUSIC000.mid
+    streamingAssetPath: Resources/Sounds/MUSIC040.mid
   loadOnAwake: 1
   playOnAwake: 1
   channel: 2

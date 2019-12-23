@@ -1,8 +1,9 @@
 {
   "dependencies": {
     "com.autodesk.fbx": "3.0.0-preview.1",
-    "com.unity.formats.fbx": "file:../../com.unity.formats.fbx/com.unity.formats.fbx",
+    "com.mybox": "https://github.com/Deadcows/MyBox.git",
     "com.unity.collab-proxy": "1.2.16",
+    "com.unity.formats.fbx": "file:../../com.unity.formats.fbx/com.unity.formats.fbx",
     "com.unity.ide.rider": "1.1.0",
     "com.unity.ide.vscode": "1.1.3",
     "com.unity.test-framework": "1.1.3",
@@ -40,5 +41,11 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
+  },
+  "lock": {
+    "com.mybox": {
+      "revision": "HEAD",
+      "hash": "a45e85e91c44213e4f64eb61006f5a6241786212"
+    }
   }
 }

@@ -250,32 +250,6 @@ namespace VS.Parser
                     if (faces[i].side != 4)
                     {
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
-                        meshTrianglesUV.Add(faces[i].uv[1]);
-                        meshTrianglesUV.Add(faces[i].uv[0]);
-
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[3]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[1]);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
-                        meshTrianglesUV.Add(faces[i].uv[3]);
-
-                        meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[0]].position);
                         meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
@@ -300,6 +274,32 @@ namespace VS.Parser
                         meshTrianglesUV.Add(faces[i].uv[3]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[1]);
+
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[3]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshTrianglesUV.Add(faces[i].uv[3]);
+                        meshTrianglesUV.Add(faces[i].uv[0]);
+
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[3]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshTrianglesUV.Add(faces[i].uv[3]);
+                        meshTrianglesUV.Add(faces[i].uv[1]);
+                        meshTrianglesUV.Add(faces[i].uv[0]);
                     }
                     else
                     {

@@ -286,6 +286,32 @@ namespace VS.Utils
             return null;
         }
 
+        internal static void DestroyChildren(GameObject gameObject, bool coroutine = false)
+        {
+            int cc = gameObject.transform.childCount;
+            if (cc > 0)
+            {
+                    foreach (Transform child in gameObject.transform)
+                    {
+#if UNITY_EDITOR
+                        if (coroutine)
+                        {
+                            UnityEditor.EditorApplication.delayCall += () =>
+                            {
+                                GameObject.DestroyImmediate(child.gameObject);
+                            };
+                        } else
+                        {
+                        GameObject.DestroyImmediate(child.gameObject);
+                    }
+#else
+                    GameObject.Destroy(child.gameObject);
+#endif
+
+                }
+
+            }
+        }
 
         public static void WriteJSON(string path, string data)
         {

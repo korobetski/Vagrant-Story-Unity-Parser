@@ -68,6 +68,40 @@
     <Compile Include="Assets\Scripts\MainMenu.cs" />
     <Compile Include="Assets\Scripts\MiniMapsViewver.cs" />
     <Compile Include="Assets\Scripts\SceneSwitcher.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Core\Affinity.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Core\Attribute.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Core\BreakArt.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Core\BreakArtEffect.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Core\Class.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Core\CombatTech.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Core\DamageType.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Core\PlayerInfos.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Core\SmithMaterial.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Core\Spell.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Core\SpellEffect.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Core\Statistics.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Core\UIScript.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Database\ArmorsDB.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Database\BladesDB.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Database\BreakArtsDB.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Database\CombatTechsDB.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Database\GemsDB.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Database\GrimoiresDB.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Database\GripsDB.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Database\KeysDB.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Database\MaterialsDB.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Database\MiscItemsDB.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Database\SpellsDB.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Database\WeaponDB.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Items\Armor.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Items\Blade.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Items\Gem.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Items\Grimoire.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Items\Grip.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Items\Item.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Items\Key.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Items\Misc.cs" />
+    <Compile Include="Assets\Scripts\Vagrant Story\Items\Weapon.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\AssetManager.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\Components\Effects\Chorus.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\Components\Effects\Delay.cs" />
@@ -170,6 +204,7 @@
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\Scripts\MemoryAsset.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\Scripts\MidiPlayer.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\Scripts\StreamingAssetResouce.cs" />
+    <Compile Include="Assets\VS\ComponentScript\CouteauSuisse.cs" />
     <Compile Include="Assets\VS\Core\Core.cs" />
     <Compile Include="Assets\VS\Core\Memory.cs" />
     <Compile Include="Assets\VS\Core\Opcode.cs" />
@@ -284,6 +319,9 @@
     </Reference>
     <Reference Include="UnityEditor.UI">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/UnityEditor.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="MyBox">
+      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/MyBox.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.3.0f1/Editor/Data/Managed/UnityEngine/UnityEngine.AIModule.dll</HintPath>
