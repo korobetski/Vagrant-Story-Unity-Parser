@@ -286,9 +286,7 @@
     <Compile Include="Assets\VS\Utils\L10n.cs" />
     <Compile Include="Assets\VS\Utils\ToolBox.cs" />
     <Compile Include="Assets\VS\Utils\Util.cs" />
-    <None Include="Assets\Resources\JSON\BLADE.txt" />
     <None Include="Assets\UnityMidi\ProjectSettings\ProjectVersion.txt" />
-    <None Include="Assets\Resources\JSON\ARMOR.txt" />
     <None Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\ReadMe.txt" />
     <Reference Include="Unity.Timeline.Editor">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>

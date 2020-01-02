@@ -136,6 +136,7 @@ namespace VS.Parser.Effect
                     return;
                 }
             }
+
             if (UseDebug)
             {
                 Debug.Log("## 3 loop ends " + buffer.BaseStream.Position); // 70C

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using VS.Utils;
@@ -72,15 +71,15 @@ namespace VS.Parser
             // i don't know how to decode this for the moment
 
             byte[] by = buffer.ReadBytes(20);
-            Debug.Log(BitConverter.ToString(by));
+            //Debug.Log(BitConverter.ToString(by));
 
-            Color[] col = new Color[256];
-            for (int i = 0; i < 256; ++i)
+            Color[] col = new Color[16];
+            for (int i = 0; i < 16; ++i)
             {
                 col[i] = ToolBox.BitColorConverter(buffer.ReadUInt16());
             }
 
-            width = 256;
+            width = 128;
             int height = 15;
             int numBlocks = (int)(FileSize - buffer.BaseStream.Position) / (width * height);
             List<Color> cluts = new List<Color>();
@@ -91,16 +90,21 @@ namespace VS.Parser
                     List<Color> cl2 = new List<Color>();
                     for (uint y = 0; y < width; y++)
                     {
-                        byte b = buffer.ReadByte();
-                        //cl2.Add(col[b]);
-                        cl2.Add(new Color32(b, b, b, 255));
+                        byte id = buffer.ReadByte();
+                        //cl2.Add(col[id]);
+                        //cl2.Add(new Color32(id, id, id, 255));
+
+                        byte l = (byte)Mathf.RoundToInt(id / 16);
+                        byte r = (byte)(id % 16);
+                        cl2.Add(col[r]);
+                        cl2.Add(col[l]);
                     }
                     cl2.Reverse();
                     cluts.AddRange(cl2);
                 }
                 cluts.Reverse();
             }
-            Texture2D tex = new Texture2D(width, height * numBlocks, TextureFormat.ARGB32, false);
+            Texture2D tex = new Texture2D(width * 2, height * numBlocks, TextureFormat.ARGB32, false);
             tex.SetPixels(cluts.ToArray());
             tex.Apply();
 

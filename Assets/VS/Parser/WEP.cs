@@ -88,7 +88,7 @@ namespace VS.Parser
                 VSBone bone = new VSBone();
                 bone.index = i;
                 bone.name = "bone_" + i;
-                bone.length = -buffer.ReadInt16();
+                bone.length = buffer.ReadInt16();
                 buffer.ReadUInt16(); // always 0xFFFF
                 bone.parentIndex = buffer.ReadByte();
                 byte[] offset = buffer.ReadBytes(3);
@@ -145,7 +145,7 @@ namespace VS.Parser
                 int y = buffer.ReadInt16();
                 int z = buffer.ReadInt16();
                 buffer.ReadInt16();
-                vertex.position = new Vector3(x, y, z) / 100;
+                vertex.position = -new Vector3(x, y, z) / 100;
                 vertices.Add(vertex);
             }
 
@@ -250,84 +250,84 @@ namespace VS.Parser
                     if (faces[i].side != 4)
                     {
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);
                         meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[0]);
-                        meshTrianglesUV.Add(faces[i].uv[1]);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
-
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[3]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[3]);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
-                        meshTrianglesUV.Add(faces[i].uv[1]);
-
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[3]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
-                        meshTrianglesUV.Add(faces[i].uv[3]);
-                        meshTrianglesUV.Add(faces[i].uv[0]);
-
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[3]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
                         meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[0]].position);
                         meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[3]);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[1]);
                         meshTrianglesUV.Add(faces[i].uv[0]);
+
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[3]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
+                        meshTrianglesUV.Add(faces[i].uv[1]);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshTrianglesUV.Add(faces[i].uv[3]);
+
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[3]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshTrianglesUV.Add(faces[i].uv[0]);
+                        meshTrianglesUV.Add(faces[i].uv[3]);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
+
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[3]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
+                        meshTrianglesUV.Add(faces[i].uv[0]);
+                        meshTrianglesUV.Add(faces[i].uv[1]);
+                        meshTrianglesUV.Add(faces[i].uv[3]);
                     }
                     else
                     {
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
-                        meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[0]].position);
                         meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
-                        meshTrianglesUV.Add(faces[i].uv[1]);
-                        meshTrianglesUV.Add(faces[i].uv[0]);
-
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
                         meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);
                         meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshTrianglesUV.Add(faces[i].uv[0]);
+                        meshTrianglesUV.Add(faces[i].uv[1]);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
+
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[3]].position);
                         meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[1]);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshTriangles.Add(meshVertices.Count);
+                        meshVertices.Add(vertices[faces[i].vertices[1]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
                         meshTrianglesUV.Add(faces[i].uv[3]);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshTrianglesUV.Add(faces[i].uv[1]);
                     }
                 }
                 else if (faces[i].type == 0x24)
@@ -335,45 +335,45 @@ namespace VS.Parser
                     if (faces[i].side != 4)
                     {
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
                         meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[0]);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
                         meshTrianglesUV.Add(faces[i].uv[1]);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshTrianglesUV.Add(faces[i].uv[0]);
 
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
                         meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
-                        meshTrianglesUV.Add(faces[i].uv[1]);
+                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
                         meshTrianglesUV.Add(faces[i].uv[0]);
+                        meshTrianglesUV.Add(faces[i].uv[1]);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
                     }
                     else
                     {
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
                         meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
                         meshTriangles.Add(meshVertices.Count);
-                        meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
-                        meshTrianglesUV.Add(faces[i].uv[0]);
-                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshVertices.Add(vertices[faces[i].vertices[2]].position);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
                         meshTrianglesUV.Add(faces[i].uv[1]);
+                        meshTrianglesUV.Add(faces[i].uv[2]);
+                        meshTrianglesUV.Add(faces[i].uv[0]);
                     }
                 }
             }

@@ -4,7 +4,8 @@ using UnityEngine;
 using VS.Entity;
 using VS.Utils;
 
-//http://datacrystal.romhacking.net/wiki/Vagrant_Story:ARM_files
+// http://datacrystal.romhacking.net/wiki/Vagrant_Story:ARM_files
+// http://datacrystal.romhacking.net/wiki/Vagrant_Story:areas_list
 // MINI MAP File format in SMALL/ folder
 // This File Format is near 100% explored
 

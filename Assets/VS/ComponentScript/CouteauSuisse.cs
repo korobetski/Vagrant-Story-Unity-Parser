@@ -184,7 +184,7 @@ namespace VS.ComponentScript
 
                 RefreshGemSlots();
             }
-            else if (category == BladesDB.eBladeCategory.Axe || category == BladesDB.eBladeCategory.Mace || category == BladesDB.eBladeCategory.Great_Axe 
+            else if (category == BladesDB.eBladeCategory.Axe || category == BladesDB.eBladeCategory.Mace || category == BladesDB.eBladeCategory.Great_Axe
                 || category == BladesDB.eBladeCategory.Staff || category == BladesDB.eBladeCategory.Heavy_Mace)
             {
                 gripType = GripsDB.eGripCategories.Grip;

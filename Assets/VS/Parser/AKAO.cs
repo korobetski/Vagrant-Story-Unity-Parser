@@ -559,9 +559,12 @@ namespace VS.Parser
                     WAV nw = sample.ConvertToWAV();
                     nw.SetName(FileName);
 
-                    ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Sounds/Effects/");
-                    nw.WriteFile(Application.dataPath + "/../Assets/Resources/Sounds/Effects/" + FileName + ".wav", nw.Write());
 
+                    if (UseDebug && bWAV)
+                    {
+                        ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Sounds/Effects/");
+                        nw.WriteFile(Application.dataPath + "/../Assets/Resources/Sounds/Effects/" + FileName + ".wav", nw.Write());
+                    }
                     break;
             }
 

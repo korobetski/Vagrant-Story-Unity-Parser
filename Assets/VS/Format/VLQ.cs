@@ -47,7 +47,17 @@ namespace VS.Format
 
         private uint FromVlqCollection(List<byte> bytes)
         {
-            throw new NotImplementedException();
+            int value = 0;
+            int byteval = 0;
+            int shift = 0;
+
+            for (int i = 0; i < bytes.Count; i++)
+            {
+                byteval = (bytes[i] & 0x80);
+                value |= ((byteval & 0x7F) << shift);
+                shift += 7;
+            }
+            return (uint)(value | (byteval << shift));
         }
 
         private List<byte> ToVlqCollection(uint integer)

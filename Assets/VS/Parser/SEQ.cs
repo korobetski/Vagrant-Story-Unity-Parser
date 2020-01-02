@@ -22,6 +22,7 @@ namespace VS.Parser
         {
 
         }
+
         public void Parse(string filePath)
         {
             PreParse(filePath);
@@ -61,9 +62,6 @@ namespace VS.Parser
 
         public void FirstPoseModel(GameObject model)
         {
-
-            int t = 0;
-
             for (int j = 0; j < numBones; j++)
             {
                 if (j < animations[0].keyframes.Length)
@@ -73,10 +71,8 @@ namespace VS.Parser
                     int rx = (int)pose.x * 2;
                     int ry = (int)pose.y * 2;
                     int rz = (int)pose.z * 2;
-                    t = 0;
                     int k = 0;
                     int f = keyframes[k].w;
-                    t += f;
                     if (keyframes[k].x == 256)
                     {
                         keyframes[k].x = keyframes[k - 1].x;
@@ -104,14 +100,6 @@ namespace VS.Parser
 
                     GameObject bone = ToolBox.findBoneIn("bone_" + j, model);
                     bone.transform.localRotation = aquat;
-                    /*
-                    if (j == 0)
-                    {
-                        // Upside down root bone
-                        Vector3 rot = bone.transform.eulerAngles;
-                        bone.transform.eulerAngles = new Vector3(rot.x + 180, rot.y, rot.z);
-                    }
-                    */
                 }
             }
         }
@@ -175,16 +163,7 @@ namespace VS.Parser
                             Quaternion qv = ToolBox.quatFromAxisAnle(Vector3.up, ToolBox.rot13toRad(ry));
                             Quaternion qw = ToolBox.quatFromAxisAnle(Vector3.forward, ToolBox.rot13toRad(rz));
                             Quaternion quat = qw * qv * qu;
-                            /*
-                            if (j == 0)
-                            {
-                                keysRX.Add(new Keyframe((float)((t) * 0.06), (quat.x + 180f))); // flip the root bone
-                            }
-                            else
-                            {
-                                keysRX.Add(new Keyframe((float)((t) * 0.06), quat.x));
-                            }
-                            */
+
                             keysRX.Add(new Keyframe((float)((t) * 0.06), quat.x));
                             keysRY.Add(new Keyframe((float)((t) * 0.06), quat.y));
                             keysRZ.Add(new Keyframe((float)((t) * 0.06), quat.z));
