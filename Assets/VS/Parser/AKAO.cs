@@ -360,7 +360,7 @@ namespace VS.Parser
                     // Additionnal Collection, somztimes usefull for drum kit or A1 program change
                     if (SampleColl64.articulations.Length < 64)
                     {
-                        hash[hash.Length - 1] = "WAVE0069.DAT";
+                        hash[hash.Length - 1] = "WAVE0091.DAT";
                         AKAO addiColl = new AKAO();
                         addiColl.UseDebug = UseDebug;
                         addiColl.Parse(String.Join("/", hash), AKAO.SOUND);
@@ -733,8 +733,8 @@ namespace VS.Parser
                                     // http://linuxmao.org/SoundFont+specification+SF2
                                     sf2.AddInstrumentBag();
                                     sf2.AddInstrumentGenerator(SF2Generator.KeyRange, new SF2GeneratorAmount { LowByte = region.lowRange, HighByte = region.hiRange });
-                                    sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = region.lowVel, HighByte = region.hiVel }); // not sure
-                                    //sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = 0, HighByte = 127 });
+                                    //sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = region.lowVel, HighByte = region.hiVel }); // not sure
+                                    sf2.AddInstrumentGenerator(SF2Generator.VelRange, new SF2GeneratorAmount { LowByte = 0, HighByte = 127 });
                                     /* C'est l'atténuation, en centibels, pour laquelle une note est atténuée en dessous de la valeur maximum prévue.
                                     Si = 0, il n'y a aucune atténuation, la note sera jouée au maximum prévu.
                                     Ex : 60 indique que la note sera jouée à 6 dB en-dessous du maximum prévu pour la note.

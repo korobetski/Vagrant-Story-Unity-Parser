@@ -153,6 +153,7 @@ namespace VS.Parser
                     bone.parentIndex = -1;
                 }
                 //Debug.LogWarning("bone.parentIndex : " + bone.parentIndex);
+                // https://github.com/morris/vstools/blob/master/src/WEPBone.js
                 byte[] offset = buffer.ReadBytes(3);
                 bone.offset = new Vector3(offset[0], offset[1], offset[2]);
                 bone.mode = buffer.ReadByte();

@@ -13,12 +13,16 @@ using VS.Utils;
 
 //Minoru Akao
 //https://github.com/vgmtrans/vgmtrans/blob/master/src/main/formats/AkaoSeq.cpp
+//https://github.com/vgmtrans/vgmtrans/blob/7b48bd60de62ade22ed8c471a354e04c62b7df3f/src/main/formats/AkaoSeq.cpp 
 // Akao in MUSIC folder contains musical instructions like a Midi file but also some synthetizer controls.
 // Two different instruments cannot play in the same channel at the same time
 
 
-
+// MUSIC020 -> OST Graylands Incident Climax part ~8' (there is a little mistake to correct)
+// MUSIC021 -> OST Graylands Incident Climax part 10'25
+// MUSIC022 -> OST Temple of Kiltia
 // MUSIC023 -> OST Snowfly Forest
+// MUSIC024 -> Unfinished music
 // MUSIC026 -> OST Part of Graylands Incident Climax ()
 // MUSIC027 -> OST Part of Graylands Incident Climax (At ~1:50)
 // MUSIC028 -> Not in OST
@@ -30,7 +34,7 @@ using VS.Utils;
 // MUSIC034 -> OST Tieger & Neesa
 // MUSIC035 -> OST Kali
 // MUSIC036 -> OST Banquet of Transmigration
-// MUSIC037 -> OST Rosencrantz
+// MUSIC037 -> OST Lizardman
 // MUSIC038 -> OST Nightmare
 // MUSIC039 -> OST Grotesque Creature
 // MUSIC040 -> OST Factory

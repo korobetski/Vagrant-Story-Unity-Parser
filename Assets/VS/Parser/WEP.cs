@@ -91,6 +91,7 @@ namespace VS.Parser
                 bone.length = buffer.ReadInt16();
                 buffer.ReadUInt16(); // always 0xFFFF
                 bone.parentIndex = buffer.ReadByte();
+                // https://github.com/morris/vstools/blob/master/src/WEPBone.js
                 byte[] offset = buffer.ReadBytes(3);
                 bone.offset = new Vector3(offset[0], offset[1], offset[2]);
                 bone.mode = buffer.ReadByte();

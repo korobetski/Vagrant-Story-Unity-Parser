@@ -6,7 +6,7 @@ namespace VS.Parser.Akao
     {
         public byte articulationId;
         public byte lowRange = 0;
-        public byte hiRange = 127; // 179
+        public byte hiRange = 179; // 179
         public byte lowVel = 0;
         public byte hiVel = 127;
         public byte unk1;
