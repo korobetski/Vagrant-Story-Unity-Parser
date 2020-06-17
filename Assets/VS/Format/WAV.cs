@@ -16,12 +16,13 @@ namespace VS.Format
         public double compressionRatio = 3.5;
         public bool Riff = true;
         public bool hasLoop = false;
-        private Loop loop;
+        private uint loopStart;
+        private uint loopEnd;
         private LCInfo _info;
         private Chunk fmt;
         private Chunk data;
 
-        public WAV(List<byte> datas, ushort AF = 1, ushort NC = 1, uint SR = 44100, ushort BPS = 16) : base("WAVE")
+        public WAV(List<byte> datas, ushort AF = 1, ushort NC = 1, uint SR = 44100, ushort BPS = 16, bool HL = false, uint LS = 0, uint LE = 0) : base("WAVE")
         {
             AudioFormat = AF;
             NumChannels = NC;
@@ -29,6 +30,9 @@ namespace VS.Format
             ByteRate = SampleRate * NumChannels * BitsPerSample / 8;
             BlockAlign = (ushort)(NumChannels * BitsPerSample / 8);
             BitsPerSample = BPS;
+            hasLoop = HL;
+            loopStart = LS;
+            loopEnd = LE;
 
             fmt = new Chunk("fmt ");
             fmt.SetDataCapacity(16);
@@ -47,29 +51,9 @@ namespace VS.Format
             data.SetDataCapacity(datas.Count);
             AddChunk(data);
 
-            /*
+            
             if (hasLoop)
             {
-                int origFormatBytesPerSamp = BitsPerSample / 8;
-
-                // If the sample loops, but the loop length is 0, then assume the length should
-                // extend to the end of the sample.
-                uint loopLength = loop.loopLength;
-                if (loop.loopStatus > 0 && loop.loopLength == 0)
-                {
-                    loopLength = (uint)datas.Count - loop.loopStart;
-                }
-
-                uint loopStart =
-                    (!loop.loopAll) ?
-                    (uint)((loop.loopStart * compressionRatio) / origFormatBytesPerSamp) :
-                    loop.loopStart;
-                uint loopLenInSamp =
-                    (!loop.loopAll) ?
-                    (uint)((loopLength * compressionRatio) / origFormatBytesPerSamp) :
-                    loopLength;
-                uint loopEnd = loopStart + loopLenInSamp;
-
                 Chunk smpl = new Chunk("smpl");
                 List<byte> smplb = new List<byte>();
                 smplb.AddRange(BitConverter.GetBytes((uint)0));      // manufacturer
@@ -92,7 +76,7 @@ namespace VS.Format
                 smpl.SetData(smplb);
                 AddChunk(smpl);
             }
-            */
+            
         }
 
         public void SetName(string inam)
@@ -104,13 +88,6 @@ namespace VS.Format
             }
             _info.SetName(name);
         }
-
-
-        public void SetLoop(Loop lp)
-        {
-            loop = lp;
-        }
-
 
         public new List<byte> Write()
         {

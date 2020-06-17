@@ -467,8 +467,8 @@ namespace VS.Parser
                         {
                             if (samPtr.Count > 0)
                             {
-                                //samEPtr.Add(buffer.BaseStream.Position - 0x20); 
-                                samEPtr.Add(buffer.BaseStream.Position - 0x10);
+                                //samEPtr.Add(buffer.BaseStream.Position - 0x20);
+                                samEPtr.Add(buffer.BaseStream.Position);
                             }
                             //samPtr.Add(buffer.BaseStream.Position - 0x10);
                             samPtr.Add(buffer.BaseStream.Position);
@@ -704,7 +704,7 @@ namespace VS.Parser
                                     }
 
                                     region.fineTune = (short)cents;
-                                    sample.loopStart = articulation.loopPt;
+                                    sample.loopStart = (uint)(articulation.loopPt * 1.75);
                                     sample.unityKey = (byte)region.unityKey;
 
                                     if (!Samples.Contains(sample))
@@ -802,7 +802,6 @@ namespace VS.Parser
                     dls.AddWave(nw);
 
                     short[] pcm = AKAOsmp.WAVDatas.ToArray();
-                    AKAOsmp.loopStart = (uint)(AKAOsmp.loopStart * 1.75);
                     sf2.AddSample(pcm, AKAOsmp.name, (AKAOsmp.loopStart > 0), AKAOsmp.loopStart, 44100, AKAOsmp.unityKey, 0);
                 }
             }

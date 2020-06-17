@@ -47,7 +47,9 @@ namespace VS.Parser.Akao
             {
                 WAVDatas = DecompressDatas();
             }
-            WAV wav = new WAV(From16bTo8b(WAVDatas), 1, 1, 44100, 16);
+            bool looping = (loopStart > 0) ? true : false;
+            uint lend = (uint)(size*1.75);
+            WAV wav = new WAV(From16bTo8b(WAVDatas), 1, 1, 44100, 16, looping, loopStart, lend);
             return wav;
         }
 
