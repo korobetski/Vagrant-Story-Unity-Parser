@@ -468,10 +468,10 @@ namespace VS.Parser
                             if (samPtr.Count > 0)
                             {
                                 //samEPtr.Add(buffer.BaseStream.Position - 0x20);
-                                samEPtr.Add(buffer.BaseStream.Position);
+                                samEPtr.Add(buffer.BaseStream.Position - 0x10);
                             }
-                            //samPtr.Add(buffer.BaseStream.Position - 0x10);
-                            samPtr.Add(buffer.BaseStream.Position);
+                            samPtr.Add(buffer.BaseStream.Position - 0x10);
+                            //samPtr.Add(buffer.BaseStream.Position);
                         }
                     }
                     samEPtr.Add(buffer.BaseStream.Length);
@@ -504,8 +504,8 @@ namespace VS.Parser
                     {
                         for (uint l = 0; l < samples.Length; l++)
                         {
-                            //if (articulations[i].sampleOff + samStart == samples[l].offset)
-                            if (articulations[i].sampleOff + samStart + 0x10 == samples[l].offset)
+                            //if (articulations[i].sampleOff + samStart + 0x10 == samples[l].offset)
+                            if (articulations[i].sampleOff + samStart == samples[l].offset)
                             {
                                 articulations[i].sampleNum = l;
                                 articulations[i].sample = samples[l];

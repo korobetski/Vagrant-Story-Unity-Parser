@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 using VS.Format;
 
 //Minoru Akao
@@ -37,7 +38,7 @@ namespace VS.Parser.Akao
             NumBlocks = (uint)(size / 0x10);
             offset = off;
 
-            //Debug.Log(string.Concat("AKAOSample => ", name, "   Size : ", size, "   numBlocks : ", NumBlocks, "   offset : ", offset));
+            Debug.Log(string.Concat("AKAOSample => ", name, "   Size : ", size, "   numBlocks : ", NumBlocks, "   offset : ", offset));
         }
 
 
