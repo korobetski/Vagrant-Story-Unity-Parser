@@ -115,6 +115,52 @@ namespace VS.Parser
                 AnimationClip clip = new AnimationClip();
                 clip.name = FileName + "_c_" + i;
 
+                // Translation
+                int tkl = animations[i].transKeys.Count;
+                List<NVector4> keyframes = animations[i].transKeys;
+                int tx = (int)animations[i].trans.x/64;
+                int ty = (int)animations[i].trans.y/64;
+                int tz = (int)animations[i].trans.z/64;
+
+                List<Keyframe> keysTX = new List<Keyframe>();
+                List<Keyframe> keysTY = new List<Keyframe>();
+                List<Keyframe> keysTZ = new List<Keyframe>();
+
+                t = 0;
+                for (int k = 0; k < tkl; k++)
+                {
+                    int f = (int)keyframes[k].f;
+                    t += f;
+                    if (keyframes[k].x == null)
+                    {
+                        keyframes[k].x = keyframes[k - 1].x;
+                    }
+
+                    if (keyframes[k].y == null)
+                    {
+                        keyframes[k].y = keyframes[k - 1].y;
+                    }
+
+                    if (keyframes[k].z == null)
+                    {
+                        keyframes[k].z = keyframes[k - 1].z;
+                    }
+
+
+                    tx += (int)keyframes[k].x/64 * f;
+                    ty += (int)keyframes[k].y/64 * f;
+                    tz += (int)keyframes[k].z/64 * f;
+
+                    keysTX.Add(new Keyframe((float)((t) * 0.04), tx));
+                    keysTY.Add(new Keyframe((float)((t) * 0.04), ty));
+                    keysTZ.Add(new Keyframe((float)((t) * 0.04), tz));
+
+                }
+                clip.SetCurve("", typeof(Transform), "localPosition.x", new AnimationCurve(keysTX.ToArray()));
+                clip.SetCurve("", typeof(Transform), "localPosition.y", new AnimationCurve(keysTY.ToArray()));
+                clip.SetCurve("", typeof(Transform), "localPosition.z", new AnimationCurve(keysTZ.ToArray()));
+
+
                 for (int j = 0; j < numBones; j++)
                 {
                     List<Keyframe> keysRX = new List<Keyframe>();
@@ -129,7 +175,7 @@ namespace VS.Parser
 
                     if (j < animations[i].rotationKeysPerBone.Length)
                     {
-                        List<NVector4> keyframes = animations[i].rotationKeysPerBone[j];
+                        keyframes = animations[i].rotationKeysPerBone[j];
                         Vector3 pose = baseAnim.rotationPerBone[j];
                         int rx = (int)pose.x * 2;
                         int ry = (int)pose.y * 2;
@@ -226,7 +272,7 @@ namespace VS.Parser
         public uint[] ptrBoneScales;
         public uint numBones;
         public Vector3 trans;
-        private List<NVector4> transKeys;
+        public List<NVector4> transKeys;
         public VSAnim baseAnim;
         public List<VSAction> actions;
         public Vector3[] rotationPerBone;
