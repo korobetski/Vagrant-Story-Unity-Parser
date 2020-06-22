@@ -118,9 +118,15 @@ namespace VS.Parser
                 // Translation
                 int tkl = animations[i].transKeys.Count;
                 List<NVector4> keyframes = animations[i].transKeys;
+                /*
+                Debug.Log("animations["+i+"].trans : "+ animations[i].trans.ToString());
                 int tx = (int)animations[i].trans.x/64;
                 int ty = (int)animations[i].trans.y/64;
                 int tz = (int)animations[i].trans.z/64;
+                */
+                float tx = 0;
+                float ty = 0;
+                float tz = 0;
 
                 List<Keyframe> keysTX = new List<Keyframe>();
                 List<Keyframe> keysTY = new List<Keyframe>();
@@ -147,9 +153,9 @@ namespace VS.Parser
                     }
 
 
-                    tx += (int)keyframes[k].x/64 * f;
-                    ty += (int)keyframes[k].y/64 * f;
-                    tz += (int)keyframes[k].z/64 * f;
+                    tx += (float)keyframes[k].x/512 * f;
+                    ty += (float)keyframes[k].y/512 * f;
+                    tz += (float)keyframes[k].z/512 * f;
 
                     keysTX.Add(new Keyframe((float)((t) * 0.04), tx));
                     keysTY.Add(new Keyframe((float)((t) * 0.04), ty));
@@ -160,7 +166,7 @@ namespace VS.Parser
                 clip.SetCurve("", typeof(Transform), "localPosition.y", new AnimationCurve(keysTY.ToArray()));
                 clip.SetCurve("", typeof(Transform), "localPosition.z", new AnimationCurve(keysTZ.ToArray()));
 
-
+                // Bones rotation and scale
                 for (int j = 0; j < numBones; j++)
                 {
                     List<Keyframe> keysRX = new List<Keyframe>();

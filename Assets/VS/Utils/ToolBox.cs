@@ -89,7 +89,7 @@ namespace VS.Utils
             q.Normalize();
             return q;
         }
-        public static float rot13toRad(int angle)
+        public static float rot13toRad(float angle)
         {
             float f = Mathf.PI / 4096;
             return (float)(f * angle);
