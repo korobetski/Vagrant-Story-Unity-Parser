@@ -283,6 +283,7 @@ namespace VS.Parser.Akao
             bool playingNote = false;
             uint prevKey = 0;
             ushort delta = 0;
+            ushort deltaplane = 0;
             byte channel = 0;
             uint octave = 0;
             byte currentExpr = 0;
@@ -306,6 +307,7 @@ namespace VS.Parser.Akao
                 tracks[t] = new AKAOTrack();
                 AKAOTrack curTrack = tracks[t];
 
+                deltaplane = 0;
                 delta = 0;
                 channel = 0;
                 /*
@@ -336,6 +338,12 @@ namespace VS.Parser.Akao
                         k *= 4;
                         k -= i;
                         k = STATUS_BYTE - k;
+
+                        if (deltaplane > 0)
+                        {
+                            delta = deltaplane;
+                            deltaplane = 0;
+                        }
 
                         if (STATUS_BYTE < 0x83) // Note On
                         {
@@ -435,10 +443,10 @@ namespace VS.Parser.Akao
                                 }
                                 delta = 0;
                                 break;
-                            case 0xA2: // often in MUSIC062, MUSIC074  (0xA2-0xE1-0xBB) when unk3 = -1
-                                byte pause = buffer.ReadByte();
-                                delta += pause;
-                                curTrack.AddEvent(new EvUnknown(STATUS_BYTE, pause));
+                            case 0xA2: // Delta plane
+                                byte time = buffer.ReadByte();
+                                deltaplane = time;
+                                curTrack.AddEvent(new EvDeltaplane(STATUS_BYTE, time));
                                 break;
                             case 0xA3:// Volume
                                 uint volume = buffer.ReadByte();
@@ -470,7 +478,7 @@ namespace VS.Parser.Akao
                                 curTrack.AddEvent(new EvExpr(STATUS_BYTE, channel, expression, delta));
                                 delta = 0;
                                 break;
-                            case 0xA9:// Expression Slide
+                            case 0xA9:// Expression Slide MUSIC050
                                 uint duration = buffer.ReadByte();
                                 expression = buffer.ReadByte();
                                 /*
@@ -556,7 +564,7 @@ namespace VS.Parser.Akao
                             case 0xBA: // LFO Expression Off
                                 curTrack.AddEvent(new EvLFOExprOff(STATUS_BYTE));
                                 break;
-                            case 0xBB: // ??? occur when AKAO MUSIC unk3 is 255 or -1 (MUSIC074, 75, 76, 77, ...) (0xA2-0xE1-0xBB)
+                            case 0xBB: // ADSR_SUSTAIN_MODE occur when AKAO MUSIC unk3 is 255 or -1 (MUSIC074, 75, 76, 77, ...) (0xA2-0xE1-0xBB)
                                 b = buffer.ReadBytes(2);
                                 curTrack.AddEvent(new EvUnknown(STATUS_BYTE, b));
                                 break;
@@ -662,7 +670,7 @@ namespace VS.Parser.Akao
                                 }
                                 curTrack.AddEvent(new EvRepeatEnd(STATUS_BYTE, repeatIndex));
                                 break;
-                            case 0xCB: // Unknown
+                            case 0xCB: // RESET_VOICE_EFFECTS
                                 curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
                                 break;
                             case 0xCC: // Slur On
@@ -671,10 +679,10 @@ namespace VS.Parser.Akao
                             case 0xCD: // Slur Off
                                 curTrack.AddEvent(new EvSlurOff(STATUS_BYTE));
                                 break;
-                            case 0xCE: // Unknown
+                            case 0xCE: // NOISE_ON_DELAY_TOGGLE
                                 curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
                                 break;
-                            case 0xCF: // Unknown
+                            case 0xCF: // NOISE_DELAY_TOGGLE;
                                 curTrack.AddEvent(new EvUnknown(STATUS_BYTE));
                                 break;
                             case 0xD0: // Note Off
@@ -1957,6 +1965,17 @@ namespace VS.Parser.Akao
 
 
         #region Non MIDI EVENTS
+
+        private class EvDeltaplane : AKAOEvent
+        {
+            public EvDeltaplane(byte STATUS_BYTE, uint duration)
+            {
+                if (UseDebugFull)
+                {
+                    Debug.Log(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  ->  EvDeltaplane : " + duration));
+                }
+            }
+        }
 
         private class EvTieTime : AKAOEvent
         {

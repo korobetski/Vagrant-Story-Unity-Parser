@@ -8,7 +8,7 @@ WEP ++
 
 SHP +
 
-SEQ =
+SEQ ++ (from great work of morris : https://github.com/morris/vstools)
 
 ARM ++
 
