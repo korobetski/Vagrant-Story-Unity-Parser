@@ -153,9 +153,9 @@ namespace VS.Parser
                     }
 
 
-                    tx += (float)keyframes[k].x/512 * f;
-                    ty += (float)keyframes[k].y/512 * f;
-                    tz += (float)keyframes[k].z/512 * f;
+                    tx += (float)keyframes[k].x/64 * f;
+                    ty += (float)keyframes[k].y/64 * f;
+                    tz += (float)keyframes[k].z/64 * f;
 
                     keysTX.Add(new Keyframe((float)((t) * 0.04), tx));
                     keysTY.Add(new Keyframe((float)((t) * 0.04), ty));
@@ -241,9 +241,9 @@ namespace VS.Parser
                             if (key.y == null) key.y = scaleKeys[i - 1].y;
                             if (key.z == null) key.z = scaleKeys[i - 1].z;
                             t += f;
-                            scale.x += (int)key.x / 64 * f;
-                            scale.y += (int)key.y / 64 * f;
-                            scale.z += (int)key.z / 64 * f;
+                            scale.x += (float)key.x / 64 * f;
+                            scale.y += (float)key.y / 64 * f;
+                            scale.z += (float)key.z / 64 * f;
 
                             keysSX.Add(new Keyframe((float)((t) * 0.04), scale.x));
                             keysSY.Add(new Keyframe((float)((t) * 0.04), scale.y));
