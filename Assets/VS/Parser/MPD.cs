@@ -296,12 +296,15 @@ namespace VS.Parser
                     for (uint i = 0; i < numLights; i++)
                     {
                         string lgtMat = "";
-                        ushort[] matrix = new ushort[10];
+                        short[] matrix = new short[10];
+
+                        byte[] hexa = buffer.ReadBytes(20);
+                        buffer.BaseStream.Position -= 20;
 
                         for (uint j = 0; j < 10; j++)
                         {
-                            matrix[j] = buffer.ReadUInt16();
-                            lgtMat += (matrix[j]) + " - ";
+                            matrix[j] = buffer.ReadInt16();
+                            lgtMat += (matrix[j]) + " | ";
                         }
 
 
@@ -310,7 +313,7 @@ namespace VS.Parser
                         Color32 colorY = new Color32(cols[4], cols[5], cols[6], cols[7]);
                         Color32 colorZ = new Color32(cols[8], cols[9], cols[10], cols[11]);
 
-                        Color32 main = Color.white;
+                        Color32 main = Color.black;
                         if (colorX.r != mc.r && colorX.g != mc.g && colorX.b != mc.b)
                         {
                             main = colorX;
@@ -325,13 +328,16 @@ namespace VS.Parser
                         }
                         main.a = 255;
 
-                        lightsDebug += string.Concat("Light # ", i, "  :  ", lgtMat, "  |  ", colorX, ", ", colorY, ", ", colorZ, "\r\n");
-
+                        lightsDebug += string.Concat("Light # ", i, "  :  ", BitConverter.ToString(hexa), "  ->  ", lgtMat, "  |  ", colorX, ", ", colorY, ", ", colorZ, "\r\n");
                         GameObject lgo = new GameObject("Point Light");
-                        // this isn't the best way do to this...
-                        lgo.transform.position = new Vector3(-0.2f - matrix[0] / 90, 5 + matrix[2] / 1024, -0.2f - matrix[1] / 90);
+                        Rect lightRect = new Rect();
+                        lightRect.xMin = -matrix[0] / 100;
+                        lightRect.yMin = -matrix[1] / 100;
+                        lightRect.xMax = -matrix[2] / 100;
+                        lightRect.yMax = -matrix[3] / 100;
+                        // i need to find a way to get Y axe
+                        lgo.transform.position = new Vector3(lightRect.center.x, 5f, lightRect.center.y);
                         lgo.transform.localScale = Vector3.one;
-
                         Light l = lgo.AddComponent<Light>();
                         l.name = "l" + i;
                         l.type = LightType.Point;
