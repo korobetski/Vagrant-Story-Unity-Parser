@@ -341,8 +341,8 @@ namespace VS.Parser
                         Light l = lgo.AddComponent<Light>();
                         l.name = "l" + i;
                         l.type = LightType.Point;
-                        l.range = 10f;
-                        l.intensity = 1.5f;
+                        l.range = Vector2.Distance(lightRect.center, lightRect.min);
+                        l.intensity = 2f;
                         l.color = main;
                         l.shadows = LightShadows.Soft;
                         lights.Add(lgo);
@@ -894,11 +894,11 @@ namespace VS.Parser
             v1.position = new Vector3(buffer.ReadInt16(), buffer.ReadInt16(), buffer.ReadInt16());
             v2.position = new Vector3(buffer.ReadSByte(), buffer.ReadSByte(), buffer.ReadSByte());
             v3.position = new Vector3(buffer.ReadSByte(), buffer.ReadSByte(), buffer.ReadSByte());
-            v1.color = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 0);
+            v1.color = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255);
             type = buffer.ReadByte();
-            v2.color = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 0);
+            v2.color = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255);
             v1.uv.x = buffer.ReadByte();
-            v3.color = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 0);
+            v3.color = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255);
             v1.uv.y = buffer.ReadByte();
             v2.uv = new Vector2(buffer.ReadByte(), buffer.ReadByte());
 
@@ -910,7 +910,7 @@ namespace VS.Parser
             {
                 v4.position = new Vector3(buffer.ReadSByte(), buffer.ReadSByte(), buffer.ReadSByte());
                 v4.uv.x = buffer.ReadByte();
-                v4.color = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 0);
+                v4.color = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255);
                 v4.uv.y = buffer.ReadByte();
                 v4.position = v4.position * group.scale + v1.position;
             }

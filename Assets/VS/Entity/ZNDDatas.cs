@@ -90,21 +90,17 @@ namespace VS.Entity
                         buffer.Close();
                         fileStream.Close();
 
-                        Shader shader = Shader.Find("Standard");
+                        Shader shader = Shader.Find("Particles/Standard Unlit");
                         Material mat = new Material(shader);
                         mat.SetTexture("_MainTex", texture);
-                        mat.SetFloat("_Mode", 1);
-                        mat.SetFloat("_Cutoff", 0.5f);
-                        mat.SetFloat("_Glossiness", 0.0f);
-                        mat.SetFloat("_SpecularHighlights", 0.0f);
-                        mat.SetFloat("_GlossyReflections", 0.0f);
+                        mat.SetFloat("_Mode", 0);
+                        mat.SetFloat("_ColorMode", 0);
                         mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
                         mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
                         mat.SetInt("_ZWrite", 1);
                         mat.EnableKeyword("_ALPHATEST_ON");
                         mat.DisableKeyword("_ALPHABLEND_ON");
                         mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-
 
                         List<Material> mats = new List<Material>(materials);
                         mats.Add(mat);
