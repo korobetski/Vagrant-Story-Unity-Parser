@@ -330,35 +330,44 @@ namespace VS.Parser
                 Debug.Log(buffer.BaseStream.Position);
 
             }
+            else if (FileName == "BATTLE")
+            {
+                GreyScaleHexa(256);
+            }
             else
             {
-                int width = 128;
-                int height = (int)FileSize / width;
-                List<Color> cluts = new List<Color>();
-                for (uint x = 0; x < height; x++)
-                {
-                    List<Color> cl2 = new List<Color>();
-                    for (uint y = 0; y < width; y++)
-                    {
-                        byte b = buffer.ReadByte();
-                        cl2.Add(new Color32(b, b, b, 255));
-                    }
-                    cl2.Reverse();
-                    cluts.AddRange(cl2);
-                }
-                cluts.Reverse();
-                Texture2D tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
-                tex.SetPixels(cluts.ToArray());
-                tex.Apply();
-                byte[] bytes = tex.EncodeToPNG();
-                ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/Ex/");
-                File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Ex/" + FileName + ".png", bytes);
+                GreyScaleHexa();
             }
 
 
 
 
             buffer.BaseStream.Close();
+        }
+
+        public void GreyScaleHexa(int _w = 128)
+        {
+            int width = _w;
+            int height = (int)FileSize / width;
+            List<Color> cluts = new List<Color>();
+            for (uint x = 0; x < height; x++)
+            {
+                List<Color> cl2 = new List<Color>();
+                for (uint y = 0; y < width; y++)
+                {
+                    byte b = buffer.ReadByte();
+                    cl2.Add(new Color32(b, b, b, 255));
+                }
+                cl2.Reverse();
+                cluts.AddRange(cl2);
+            }
+            cluts.Reverse();
+            Texture2D tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
+            tex.SetPixels(cluts.ToArray());
+            tex.Apply();
+            byte[] bytes = tex.EncodeToPNG();
+            ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/Ex/");
+            File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Ex/" + FileName + ".png", bytes);
         }
     }
 }

@@ -237,7 +237,7 @@ namespace VS.Data
         {
             name = _name;
         }
-        public Gem(string _name, ClassAffinityType cat)
+        public Gem(string _name = "Gem", ClassAffinityType cat = null)
         {
             name = _name;
             Human = cat.Human;

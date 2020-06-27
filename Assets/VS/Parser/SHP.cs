@@ -304,10 +304,9 @@ namespace VS.Parser
                      * 24-10-04-00-D406-E006-DC06-13-78-13-6D-0F-78
                      * 24-10-04-00-D406-D806-E006-0F-78-13-6D-0C-78
                      * */
-                    if (UseDebug)
-                    {
-                        Debug.Log(string.Concat("#####   At : ", polyDec, " face# ", i, "   face.type : ", face.type, "   face.size : ", face.size, "   face.side : ", face.side, "   face.alpha : ", face.alpha));
-                    }
+                    
+                    // if (UseDebug)Debug.Log(string.Concat("#####   At : ", polyDec, " face# ", i, "   face.type : ", face.type, "   face.size : ", face.size, "   face.side : ", face.side, "   face.alpha : ", face.alpha));
+                    
 
                     uint[] table = new uint[256];
                     table[36] = 3;
@@ -331,10 +330,8 @@ namespace VS.Parser
                     {
                         int vId = buffer.ReadUInt16() / 4;
                         face.vertices.Add(vId);
-                        if (UseDebug)
-                        {
-                            Debug.Log("vId : " + j + " - " + vId);
-                        }
+
+                        // if (UseDebug) Debug.Log("vId : " + j + " - " + vId);
                     }
 
                     // 6 or 8 bytes
@@ -343,10 +340,7 @@ namespace VS.Parser
                         int u = buffer.ReadByte();
                         int v = buffer.ReadByte();
                         face.uv.Add(new Vector2(u, v));
-                        if (UseDebug)
-                        {
-                            //Debug.Log("u : " + u + "    v : " + v);
-                        }
+                        // if (UseDebug) Debug.Log("u : " + u + "    v : " + v);
                     }
                     faces.Add(face);
                 }

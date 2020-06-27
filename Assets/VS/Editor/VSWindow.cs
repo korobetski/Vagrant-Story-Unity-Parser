@@ -85,6 +85,7 @@ public class VSWindow : EditorWindow
             string fileName = h2[0];
             string ext = h2[1];
 
+
             switch (folder)
             {
                 case "BATTLE":
@@ -92,6 +93,13 @@ public class VSWindow : EditorWindow
                     // BOG.DAT
                     // INITBTL.PRG
                     // SYSTEM.DAT
+                    switch (ext)
+                    {
+                        case "PRG":
+                            PRG parser = new PRG();
+                            parser.Parse(VSPath + FilePath);
+                            break;
+                    }
                     break;
                 case "BG":
                     // 001OP01A.FAR & TIM
@@ -160,7 +168,7 @@ public class VSWindow : EditorWindow
                     switch (ext)
                     {
                         case "SHP":
-                            ParseSHP(VSPath + FilePath, fileName, false, true);
+                            ParseSHP(VSPath + FilePath, fileName, true, true);
                             break;
                         case "WEP":
                             ParseWEP(VSPath + FilePath, true);

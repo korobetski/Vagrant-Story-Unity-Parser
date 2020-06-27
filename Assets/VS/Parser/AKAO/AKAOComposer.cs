@@ -97,7 +97,7 @@ namespace VS.Parser.Akao
         public void Synthetize(bool bMid, bool bWav, SF2 soundfont = null)
         {
             SyncTracksChannels();
-
+            //MergePolyTracks();
 
             List<byte> midiByte = new List<byte>();
             midiByte.AddRange(new byte[] { 0x4D, 0x54, 0x68, 0x64 }); // MThd Header
@@ -194,6 +194,105 @@ namespace VS.Parser.Akao
             }
         }
 
+        private void MergePolyTracks()
+        {
+            // here we are trying to get all tracks of the same instrument and pan in the same Midi track (15 +1)
+            AKAOTrack[] MidiTracks = new AKAOTrack[16];
+            uint lastEmpty = 0;
+            for (uint i = 0; i < numTrack; i++)
+            {
+                AKAOTrack trk = tracks[i];
+                if(trk.programs.Count == 1)
+                {
+                    if (trk.drumTrack)
+                    {
+                        if (MidiTracks[9] == null) MidiTracks[9] = new AKAOTrack();
+                        MidiTracks[9].InsertAllEvents(trk.Events);
+                    } else
+                    {
+                        bool instrTrackFound = false;
+                        if (lastEmpty > 0)
+                        {
+                            // check for the same instrument track if exist
+                            for (uint j = 0; j < lastEmpty; j++)
+                            {
+                                if (j == 9)
+                                {
+                                    j++;
+                                    if (j == lastEmpty) break;
+                                }
+                                if (MidiTracks[j].mainProg == trk.mainProg && MidiTracks[j].trackPan == trk.trackPan)
+                                {
+                                    instrTrackFound = true;
+                                    MidiTracks[j].InsertAllEvents(trk.Events);
+                                    break;
+                                }
+                            }
+
+                        }
+                        // if not we put events in a new track
+                        if (!instrTrackFound)
+                        {
+                            if (lastEmpty == 9) lastEmpty++;
+                            MidiTracks[lastEmpty] = new AKAOTrack();
+                            MidiTracks[lastEmpty].InsertAllEvents(trk.Events);
+                            MidiTracks[lastEmpty].mainProg = trk.mainProg;
+                            MidiTracks[lastEmpty].trackPan = trk.trackPan;
+                            lastEmpty++;
+                            if (lastEmpty == 9) lastEmpty++;
+                        }
+                    }
+                } else
+                {
+                    for (int k = 0; k < trk.programs.Count; k++)
+                    {
+                        bool instrTrackFound = false;
+                        if (lastEmpty > 0)
+                        {
+                            // check for the same instrument track if exist
+                            for (uint j = 0; j < lastEmpty; j++)
+                            {
+                                if (j == 9)
+                                {
+                                    j++;
+                                    if (j == lastEmpty) break;
+                                }
+                                if (MidiTracks[j].mainProg == trk.programs[k] && MidiTracks[j].trackPan == trk.trackPan)
+                                {
+                                    instrTrackFound = true;
+                                    MidiTracks[j].InsertAllEvents(trk.GetInstrumentEvents(trk.programs[k]));
+                                    break;
+                                }
+                            }
+
+                        }
+                        // if not we put events in a new track
+                        if (!instrTrackFound)
+                        {
+                            if (lastEmpty == 9) lastEmpty++;
+                            MidiTracks[lastEmpty] = new AKAOTrack();
+                            MidiTracks[lastEmpty].InsertAllEvents(trk.GetInstrumentEvents(trk.programs[k]));
+                            MidiTracks[lastEmpty].mainProg = trk.programs[k];
+                            MidiTracks[lastEmpty].trackPan = trk.trackPan;
+                            lastEmpty++;
+                            if (lastEmpty == 9) lastEmpty++;
+                        }
+
+                    }
+                }
+            }
+
+            for (int i = 0; i < lastEmpty; i++)
+            {
+                if (MidiTracks[i] != null)
+                {
+                    MidiTracks[i].ResetChannelTo((byte)i);
+                }
+            }
+
+            tracks = MidiTracks;
+        }
+
         private void SyncTracksChannels()
         {
             uint[] chanStat = new uint[16];
@@ -277,7 +376,6 @@ namespace VS.Parser.Akao
         private void SetTracks()
         {
             long beginOffset = buffer.BaseStream.Position;
-
             tracks = new AKAOTrack[numTrack];
 
             bool playingNote = false;
@@ -310,26 +408,13 @@ namespace VS.Parser.Akao
                 deltaplane = 0;
                 delta = 0;
                 channel = 0;
-                /*
-                channel = (byte)Math.Floor((decimal)(t / 2));
-                if (channel == 9)
-                {
-                    channel++;
-                }
-                if (channel > 15)
-                {
-                    channel = 0;
-                }
-                */
                 curTrack.channel = channel;
                 long trackEnd = (t < numTrack - 1) ? tracksPtr[t + 1] : end;
 
                 while (buffer.BaseStream.Position < trackEnd)
                 {
-
                     byte STATUS_BYTE = buffer.ReadByte();
                     int i, k;
-
                     if (STATUS_BYTE <= 0x9A)
                     {
                         i = STATUS_BYTE / 11;
@@ -338,24 +423,19 @@ namespace VS.Parser.Akao
                         k *= 4;
                         k -= i;
                         k = STATUS_BYTE - k;
-
                         if (deltaplane > 0)
                         {
                             delta = deltaplane;
                             deltaplane = 0;
                         }
-
                         if (STATUS_BYTE < 0x83) // Note On
                         {
-
                             if (playingNote)
                             {
                                 curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
                                 delta = 0;
                                 playingNote = false;
                             }
-
-
                             uint relativeKey = (uint)i;
                             uint baseKey = octave * 12;
                             uint key = baseKey + relativeKey;
@@ -372,14 +452,12 @@ namespace VS.Parser.Akao
                         }
                         else // Rest
                         {
-
                             if (playingNote == true)
                             {
                                 curTrack.AddEvent(new EvNoteOff(STATUS_BYTE, channel, prevKey, delta));
                                 delta = 0;
                                 playingNote = false;
                             }
-
                             ushort duration = delta_time_table[k];
                             delta += (ushort)duration;
                             curTrack.AddEvent(new EvRest(STATUS_BYTE, delta));
@@ -942,7 +1020,7 @@ namespace VS.Parser.Akao
         private class AKAOTrack
         {
             public string name = "AKAOTrack";
-            public byte channel;
+            public byte channel = 0;
             public short mainProg = -1;
             public List<byte> programs;
             public bool drumTrack = false;
@@ -1061,6 +1139,69 @@ namespace VS.Parser.Akao
                 OrderByAbsTime();
             }
 
+            internal void InsertAllEvents(List<AKAOEvent> iev)
+            {
+                for (int i = 0; i < iev.Count; i++)
+                {
+                    AKAOEvent lEv = iev[i];
+                    if (events == null)
+                    {
+                        events = new List<AKAOEvent>();
+                    }
+                    if (lEv.GetType() == typeof(EvPan))
+                    {
+                        trackPan = (byte)lEv.midiArg2;
+                    }
+                    if (lEv.GetType() == typeof(EvProgramChange))
+                    {
+                        programs.Add((byte)lEv.midiArg1);
+                    }
+                    if (lEv.GetType() == typeof(EvBank))
+                    {
+                        programs.Add((byte)lEv.midiArg2);
+                    }
+                    if (lEv.GetType() == typeof(EvDrumKitOn))
+                    {
+                        drumTrack = true;
+                    }
+                    events.Add(lEv);
+                }
+                OrderByAbsTime();
+            }
+
+            internal List<AKAOEvent> GetInstrumentEvents(uint instrumentId)
+            {
+                List<AKAOEvent> instrEvents = new List<AKAOEvent>();
+                bool inInstrEvents = false;
+
+                if (events != null && events.Count > 1)
+                {
+                    for (int i = 0; i < events.Count; i++)
+                    {
+                        AKAOEvent lEv = events[i];
+                        if (lEv.GetType() == typeof(EvProgramChange))
+                        {
+                            if (lEv.midiArg1 == instrumentId)
+                            {
+                                inInstrEvents = true;
+                                instrEvents.Add(lEv);
+                            } else
+                            {
+                                inInstrEvents = false;
+                            }
+                        } else
+                        {
+                            if (inInstrEvents)
+                            {
+                                instrEvents.Add(lEv);
+                            }
+                        }
+                    }
+                }
+
+                return instrEvents;
+            }
+
 
             private void RecomputeDeltas()
             {
@@ -1093,7 +1234,6 @@ namespace VS.Parser.Akao
                 if (events != null && events.Count > 0)
                 {
                     return events[events.Count - 1];
-
                 }
                 else
                 {
@@ -1350,13 +1490,13 @@ namespace VS.Parser.Akao
             {
                 double val = Math.Round(Math.Sqrt((volume / 127.0f)) * 127.0f);
                 byte velocity = (byte)val;
-
+                /*
                 this.channel = channel;
                 deltaTime = delta;
                 midiStatusByte = (byte)(0xB0 + channel);
                 midiArg1 = 0x07;
                 midiArg2 = (byte)velocity;
-
+                */
                 if (AKAOComposer.UseDebug)
                 {
                     Debug.LogWarning(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  ->  EvVolume : ", volume, "   channel : ", channel, "    delta : ", delta));

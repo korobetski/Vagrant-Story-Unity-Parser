@@ -26,15 +26,15 @@
         "exportModelSettingsSerialize": {
             "exportFormat": 1,
             "animatedSkinnedMesh": true,
-            "mayaCompatibleNaming": true,
+            "mayaCompatibleNaming": false,
             "include": 0,
-            "lodLevel": 0,
+            "lodLevel": 1,
             "objectPosition": 1,
-            "exportUnrendered": true
+            "exportUnrendered": false
         },
         "convertToPrefabSettingsSerialize": {
             "exportFormat": 1,
-            "animatedSkinnedMesh": false,
+            "animatedSkinnedMesh": true,
             "mayaCompatibleNaming": false
         }
     }
