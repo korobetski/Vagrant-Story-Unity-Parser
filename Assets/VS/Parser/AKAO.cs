@@ -16,13 +16,14 @@ namespace VS.Parser
 
     public class AKAO : FileParser
     {
-        public enum AKAOType { UNKNOWN, SOUND, MUSIC, PROG, SAMPLE }
+        public enum AKAOType { UNKNOWN, SOUND, MUSIC, PROG, SAMPLE, EFFECT}
 
         public static readonly AKAOType UNKNOWN = AKAOType.UNKNOWN;
         public static readonly AKAOType SOUND = AKAOType.SOUND;
         public static readonly AKAOType MUSIC = AKAOType.MUSIC;
         public static readonly AKAOType PROG = AKAOType.PROG;
         public static readonly AKAOType SAMPLE = AKAOType.SAMPLE;
+        public static readonly AKAOType EFFECT = AKAOType.EFFECT;
 
 
         public static bool CheckHeader(byte[] bytes)
@@ -109,7 +110,7 @@ namespace VS.Parser
                 }
                 else if (v3 == 0xC8)
                 {
-                    _type = AKAOType.PROG;
+                    _type = AKAOType.EFFECT;
                 }
                 else if (v2 > 0 && v2 == buffer.BaseStream.Length)
                 {
@@ -538,6 +539,24 @@ namespace VS.Parser
                     //composer = new AKAOComposer(buffer, buffer.BaseStream.Position, limit, 0, 1, new ushort[] { (ushort)buffer.BaseStream.Position }, FileName, true);
                     //composer.Synthetize(true, false);
                     break;
+                case AKAOType.EFFECT:
+                    //https://github.com/vgmtrans/vgmtrans/blob/akao-ps1/src/main/formats/AkaoSeq.cpp
+                    header = buffer.ReadBytes(4);// AKAO
+                    id = buffer.ReadUInt16();
+                    byteLen = buffer.ReadUInt16();
+                    reverb = buffer.ReadUInt16();
+                    bnumt = buffer.ReadInt32();
+                    numTrack = ToolBox.GetNumPositiveBits(bnumt);
+
+                    buffer.ReadBytes(6);
+
+                    Debug.Log(string.Concat("AKAO EFFECT : id : ", id, "  byteLen : ", byteLen, "  reverb : ", reverb, "  numTrack : ", numTrack));
+
+                    composer = new AKAOComposer(buffer, buffer.BaseStream.Position, limit, 0, 1, new ushort[] { (ushort)buffer.BaseStream.Position }, FileName, true);
+                    Debug.Log(string.Concat("composer.A1Calls.Count : ", composer.A1Calls.Count));
+                    
+                    composer.Synthetize(true, false);
+                    break;
                 case AKAOType.SAMPLE:
                     // similar to AKAOType.SOUND without articulations, we can output a WAV file
                     // header datas
@@ -557,7 +576,6 @@ namespace VS.Parser
                     AKAOSample sample = new AKAOSample(FileName, buffer.ReadBytes((int)(limit - buffer.BaseStream.Position)), (ulong)buffer.BaseStream.Position);
                     WAV nw = sample.ConvertToWAV();
                     nw.SetName(FileName);
-
 
                     if (UseDebug && bWAV)
                     {

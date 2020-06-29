@@ -36,7 +36,9 @@ namespace VS.Parser.Effect
                 List<Color> cl2 = new List<Color>();
                 for (uint y = 0; y < width; y++)
                 {
-                    cl2.Add(_pallets[0, buffer.ReadByte()]);
+                    Color32 c = _pallets[0, buffer.ReadByte()];
+                    c.a = (byte)((c.r + c.g + c.b) / 3); // make alpha with grey scale
+                    cl2.Add(c);
                 }
                 cl2.Reverse();
                 cluts.AddRange(cl2);

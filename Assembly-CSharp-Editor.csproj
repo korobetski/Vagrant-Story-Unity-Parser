@@ -631,8 +631,14 @@
     <Reference Include="Unity.Formats.Fbx.Editor">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Formats.Fbx.Editor.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.Recorder.Editor">
+      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Recorder.Editor.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Recorder">
+      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Recorder.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/UnityEngine.UI.dll</HintPath>
@@ -666,12 +672,6 @@
     </Reference>
     <Reference Include="UnityEditor.UI">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/UnityEditor.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Recorder.Editor">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Recorder.Editor.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Recorder">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Recorder.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

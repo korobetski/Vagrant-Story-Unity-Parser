@@ -6,11 +6,12 @@ namespace VS.Parser.Effect
 {
     public class P : FileParser
     {
-
+        public List<EffectFrame> frames;
 
         public P(string path)
         {
             UseDebug = true;
+            frames = new List<EffectFrame>();
             Parse(path);
         }
 
@@ -28,19 +29,17 @@ namespace VS.Parser.Effect
             int n2 = buffer.ReadByte(); // related to frame length, maybe duration in sec
             int wid = buffer.ReadUInt16(); // 0100
             int hei = buffer.ReadUInt16(); // 0100
-            int n3 = buffer.ReadByte(); // ptr
-            int n4 = buffer.ReadByte(); // ptr
+            int framePtr = buffer.ReadUInt16(); // ptr
             int n5 = buffer.ReadByte(); // 08
             int n6 = buffer.ReadByte(); // 00
             int p = buffer.ReadInt16(); // 0000
 
             if (UseDebug)
             {
-                Debug.Log(string.Concat("n1 : ", n1, "  n2 : ", n2, "  wid : ", wid, "  hei : ", hei, "  n3 : ", n3, "  n4 : ", n4, "  n5 : ", n5, "  n6 : ", n6, "  p : ", p));
+                Debug.Log(string.Concat("n1 : ", n1, "  n2 : ", n2, "  wid : ", wid, "  hei : ", hei, "  framePtr : ", framePtr, "  n5 : ", n5, "  n6 : ", n6, "  p : ", p));
             }
 
-            // frames ? 
-            int ptr1 = n4 * 256 + n3 + 4;
+            int ptr1 = framePtr + 4;
             int loop = (int)(ptr1 - buffer.BaseStream.Position) / 4;
 
             if (UseDebug)
@@ -53,12 +52,14 @@ namespace VS.Parser.Effect
                 if (buffer.BaseStream.Position + 4 <= buffer.BaseStream.Length)
                 {
 
-                    ushort layer = buffer.ReadUInt16(); // 0100
+                    ushort tex = buffer.ReadUInt16(); // texture id (maybe not)
                     ushort id = buffer.ReadUInt16(); // frame id
+
+                    frames.Add(new EffectFrame(id, tex));
 
                     if (UseDebug)
                     {
-                        Debug.Log(string.Concat("layer : ", layer, "   ID : ", id));
+                        Debug.Log(string.Concat("tex : ", tex, "   ID : ", id));
                     }
                 }
                 else
@@ -71,41 +72,58 @@ namespace VS.Parser.Effect
                 Debug.Log("## 1 loop ends " + buffer.BaseStream.Position);
             }
 
-            //int i1, i2, i5, i6, i7, i8, i9, iA, iB, iC;
-
             for (int i = 0; i < loop; i++)
             {
                 if (buffer.BaseStream.Position + 24 <= buffer.BaseStream.Length)
                 {
-                    /*
-                    i1 = buffer.ReadInt16();
-                    i2 = buffer.ReadInt16();
-                    //int i3 = buffer.ReadInt16();
-                    //int i4 = buffer.ReadInt16();
-                    byte b1 = buffer.ReadByte();
-                    byte b2 = buffer.ReadByte();
-                    byte b3 = buffer.ReadByte();
-                    byte b4 = buffer.ReadByte();
-                    i5 = buffer.ReadInt16();
-                    i6 = buffer.ReadInt16();
-                    i7 = buffer.ReadInt16();
-                    i8 = buffer.ReadInt16();
-                    i9 = buffer.ReadInt16();
-                    iA = buffer.ReadInt16();
-                    iB = buffer.ReadInt16();
-                    iC = buffer.ReadInt16();
+                    byte uk1 = buffer.ReadByte();
+                    byte uk2 = buffer.ReadByte();
+                    byte uk3 = buffer.ReadByte(); // Tex id helper
+                    byte uk4 = buffer.ReadByte(); // padding
 
-                    
-                    if (UseDebug) Debug.Log(string.Concat("i1 : ", i1, "   i2 : ", i2, "   b1 : ", b1,
-                        "   b2 : ", b2, "   b3 : ", b3, "   b4 : ", b4, "   i5 : ", i5,
-                        "   i6 : ", i6, "   i7 : ", i7, "   i8 : ", i8, "   i9 : ", i9,
-                        "   iA : ", iA, "   iB : ", iB, "   iC : ", iC
-                        ));
-                    */
+                    if (uk3 == 0xB9 || uk3 == 0xD9)
+                    {
+                        frames[i].texid = 1;
+                    }
+                    if (uk3 == 0xBA || uk3 == 0xDA)
+                    {
+                        frames[i].texid = 2;
+                    }
+                    if (uk3 == 0xBB || uk3 == 0xDB)
+                    {
+                        frames[i].texid = 3;
+                    }
+                    if (uk3 == 0xBC || uk3 == 0xDC)
+                    {
+                        frames[i].texid = 4;
+                    }
+                    if (uk3 == 0xBD || uk3 == 0xDD)
+                    {
+                        frames[i].texid = 5;
+                    }
+
+
+                    byte posx = buffer.ReadByte();
+                    byte posy = buffer.ReadByte();
+                    byte width = buffer.ReadByte();
+                    byte height = buffer.ReadByte();
+
+                    // Rect vertices
+                    short x1 = buffer.ReadInt16();
+                    short y1 = buffer.ReadInt16();
+                    short x2 = buffer.ReadInt16();
+                    short y2 = buffer.ReadInt16();
+                    short x3 = buffer.ReadInt16();
+                    short y3 = buffer.ReadInt16();
+                    short x4 = buffer.ReadInt16();
+                    short y4 = buffer.ReadInt16();
+
+                    frames[i].SetTexRect(posx, posy, width, height);
+                    frames[i].SetDestRect(x1, x2, y1, y3);
 
                     if (UseDebug)
                     {
-                        Debug.Log(BitConverter.ToString(buffer.ReadBytes(24)));
+                        Debug.Log(string.Concat("# ", i, "  uk1 : ", uk1, "  ,  uk2 : ", uk2, "  ,  uk3 : ", uk3, "(", BitConverter.ToString(new byte[]{uk3}) , ")", "  ,  uk4 : ", uk4, "  ,  posx : ", posx, "  ,  posy : ", posy, "  ,  width : ", width, "  ,  height : ", height, "  |  x1 : ", x1, "  ,  y1 : ", y1, "  ,  x2 : ", x2, "  ,  y2 : ", y2, "  ,  x3 : ", x3, "  ,  y3 : ", y3, "  ,  x4 : ", x4, "  ,  y4 : ", y4));
                     }
                 }
                 else
@@ -119,91 +137,11 @@ namespace VS.Parser.Effect
                 Debug.Log("## 2 loop ends " + buffer.BaseStream.Position);
             }
 
-            for (int i = 0; i < loop; i++)
-            {
-                if (buffer.BaseStream.Position + 4 <= buffer.BaseStream.Length)
-                {
-                    ushort s1 = buffer.ReadUInt16();
-                    byte s2 = buffer.ReadByte();
-                    byte s3 = buffer.ReadByte();
-                    if (UseDebug)
-                    {
-                        Debug.Log(string.Concat("s1 : ", s1, "   s2 : ", s2, "   s3 : ", s3));
-                    }
-                }
-                else
-                {
-                    return;
-                }
-            }
+            // Lots of unknown things here
 
-            if (UseDebug)
-            {
-                Debug.Log("## 3 loop ends " + buffer.BaseStream.Position); // 70C
-            }
-
-
-            /*
-            for (int i = 0; i < 24; i++)
-            {
-                if (buffer.BaseStream.Position + 8 <= buffer.BaseStream.Length)
-                {
-                    if (UseDebug)
-                    {
-                        Debug.Log("## 8B  ->    " + BitConverter.ToString(buffer.ReadBytes(8)));
-                    }
-                }
-                else
-                {
-                    return;
-                }
-            }
-            if (UseDebug)
-            {
-                Debug.Log("## 4 loop ends " + buffer.BaseStream.Position);
-            }
-
-            for (int i = 0; i < 24; i++)
-            {
-                if (buffer.BaseStream.Position + 8 <= buffer.BaseStream.Length)
-                {
-                    if (UseDebug)
-                    {
-                        Debug.Log("## 8B  ->    " + BitConverter.ToString(buffer.ReadBytes(8)));
-                    }
-                }
-                else
-                {
-                    return;
-                }
-            }
-
-            if (UseDebug)
-            {
-                Debug.Log("## 5 loop ends " + buffer.BaseStream.Position);
-                Debug.Log("## 16B  ->    " + BitConverter.ToString(buffer.ReadBytes(16)));
-            }
-
-            for (int i = 0; i < loop; i++)
-            {
-                if (buffer.BaseStream.Position + 19 <= buffer.BaseStream.Length)
-                {
-                    byte[] b = buffer.ReadBytes(19);
-                }
-                else
-                {
-                    return;
-                }
-            }
-            if (UseDebug)
-            {
-                Debug.Log("## 6 loop ends " + buffer.BaseStream.Position);
-                Debug.Log(FileName);
-                Debug.Log("## AKAO Section" + buffer.BaseStream.Position);
-            }
-            */
 
             // AKAO Section for the moment i'll crawl all the file to find the magic word AKAO (41 4B 41 4F)
+            // AKAO instructions seems to be in an older version and then there is a sample
             List<long> akaoStarts = new List<long>();
             List<long> akaoEnds = new List<long>();
             while (buffer.BaseStream.Position < buffer.BaseStream.Length)
@@ -231,6 +169,7 @@ namespace VS.Parser.Effect
             {
                 AKAO akaoFx = new AKAO();
                 akaoFx.FileName = string.Concat(FileName, "_akao_", i);
+                akaoFx.UseDebug = true;
                 buffer.BaseStream.Position = akaoStarts[i];
                 akaoFx.Parse(buffer, AKAO.UNKNOWN, akaoEnds[i]);
             }

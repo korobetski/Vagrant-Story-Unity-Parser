@@ -8,7 +8,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <ProjectGuid>{9CE08B41-AF5E-DD00-2666-5E475BD4855D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -205,6 +206,7 @@
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\Scripts\MidiPlayer.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\Scripts\StreamingAssetResouce.cs" />
     <Compile Include="Assets\VS\ComponentScript\CouteauSuisse.cs" />
+    <Compile Include="Assets\VS\ComponentScript\SpriteAnimator.cs" />
     <Compile Include="Assets\VS\Core\Core.cs" />
     <Compile Include="Assets\VS\Core\Memory.cs" />
     <Compile Include="Assets\VS\Core\Opcode.cs" />
@@ -262,6 +264,7 @@
     <Compile Include="Assets\VS\Parser\ESQ.cs" />
     <Compile Include="Assets\VS\Parser\ETM.cs" />
     <Compile Include="Assets\VS\Parser\EVT.cs" />
+    <Compile Include="Assets\VS\Parser\Effect\EffectFrame.cs" />
     <Compile Include="Assets\VS\Parser\Effect\FBC.cs" />
     <Compile Include="Assets\VS\Parser\Effect\FBT.cs" />
     <Compile Include="Assets\VS\Parser\Effect\P.cs" />
@@ -834,8 +837,14 @@
     <Reference Include="Unity.Formats.Fbx.Editor">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Formats.Fbx.Editor.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.Recorder.Editor">
+      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Recorder.Editor.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Recorder">
+      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Recorder.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/UnityEngine.UI.dll</HintPath>
@@ -870,14 +879,9 @@
     <Reference Include="UnityEditor.UI">
       <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/UnityEditor.UI.dll</HintPath>
     </Reference>
-    <Reference Include="Unity.Recorder.Editor">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Recorder.Editor.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Recorder">
-      <HintPath>B:/Documents/Projets/VS_Parser/Library/ScriptAssemblies/Unity.Recorder.dll</HintPath>
-    </Reference>
   </ItemGroup>
-  <ItemGroup></ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
