@@ -4,7 +4,6 @@ using UnityEngine;
 using VS.Core;
 using VS.Parser.Effect;
 using VS.Utils;
-using DaVikingCode.AssetPacker;
 using UnityEditor;
 
 namespace VS.Parser

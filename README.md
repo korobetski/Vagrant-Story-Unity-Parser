@@ -18,6 +18,8 @@ MPD =
 
 ZUD +
 
+EFFECTS = .FBC (100%) contains colors, .FBT (100%) textures and .P (40%) build the frame animation many things remains unknown
+
 AKAO ++
 Akao's file formats is finally relatively well known now, so it's now possible to convert music instruction into a MIDI file, and create a sf2 soundfont to go with.
 Here is some examples of re-sampled musics using this tool (and some other fonts to try to get a better sound): https://www.youtube.com/playlist?list=PLLk6oPkqLHuGNvKgo8T2zjSt-O8oo6Eky
