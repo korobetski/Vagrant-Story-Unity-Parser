@@ -28,7 +28,7 @@ namespace VS.Parser
         private uint lenEnemySection;
         private uint ptrTreasureSection;
         private uint lenTreasureSection;
-        // One unknown section must be used for traps, one for crates
+
         private uint lenGeometrySection;
         private uint lenCollisionSection;
         private uint lenSubSection03;
@@ -37,23 +37,22 @@ namespace VS.Parser
         private uint lenSubSection06;
         private uint lenSubSection07;
         private uint lenSubSection08;
-        private uint lenSubSection09;
+        private uint lenTrapSection;
         private uint lenSubSection0A;
         private uint lenSubSection0B;
         private uint lenTextureEffectsSection;
-
         private uint lenSubSection0D;
         private uint lenSubSection0E;
-        private uint lenSubSection0F;
+        private uint lenMiniMapSection;
         private uint lenSubSection10;
         private uint lenSubSection11;
-        private uint lenSubSection12;
-        private uint lenSubSection13;
+        private uint lenFloatingStoneSection;
+        private uint lenChestInteractionSection;
         private uint lenAKAOSubSection;
         private uint lenSubSection15;
         private uint lenSubSection16;
         private uint lenSubSection17;
-        private uint lenSubSection18;
+        private uint lenCameraAreaSection;
 
         uint numGroups;
         MPDGroup[] groups;
@@ -96,22 +95,22 @@ namespace VS.Parser
             lenSubSection06 = buffer.ReadUInt32();
             lenSubSection07 = buffer.ReadUInt32();
             lenSubSection08 = buffer.ReadUInt32();
-            lenSubSection09 = buffer.ReadUInt32();
+            lenTrapSection = buffer.ReadUInt32();
             lenSubSection0A = buffer.ReadUInt32();
             lenSubSection0B = buffer.ReadUInt32();
             lenTextureEffectsSection = buffer.ReadUInt32();
             lenSubSection0D = buffer.ReadUInt32();
             lenSubSection0E = buffer.ReadUInt32();
-            lenSubSection0F = buffer.ReadUInt32();
+            lenMiniMapSection = buffer.ReadUInt32();
             lenSubSection10 = buffer.ReadUInt32();
             lenSubSection11 = buffer.ReadUInt32();
-            lenSubSection12 = buffer.ReadUInt32();
-            lenSubSection13 = buffer.ReadUInt32();
+            lenFloatingStoneSection = buffer.ReadUInt32();
+            lenChestInteractionSection = buffer.ReadUInt32();
             lenAKAOSubSection = buffer.ReadUInt32();
             lenSubSection15 = buffer.ReadUInt32();
             lenSubSection16 = buffer.ReadUInt32();
             lenSubSection17 = buffer.ReadUInt32();
-            lenSubSection18 = buffer.ReadUInt32();
+            lenCameraAreaSection = buffer.ReadUInt32();
 
 
             if (UseDebug)
@@ -131,22 +130,22 @@ namespace VS.Parser
                 Debug.Log("lenSubSection06 :" + lenSubSection06);
                 Debug.Log("lenSubSection07 :" + lenSubSection07);
                 Debug.Log("lenSubSection08 :" + lenSubSection08);
-                Debug.Log("lenSubSection09 :" + lenSubSection09);
+                Debug.Log("lenTrapSection :" + lenTrapSection);
                 Debug.Log("lenSubSection0A :" + lenSubSection0A);
                 Debug.Log("lenSubSection0B :" + lenSubSection0B);
                 Debug.Log("lenTextureEffectsSection :" + lenTextureEffectsSection);
                 Debug.Log("lenSubSection0D :" + lenSubSection0D);
                 Debug.Log("lenSubSection0E :" + lenSubSection0E);
-                Debug.Log("lenSubSection0F :" + lenSubSection0F);
+                Debug.Log("lenMiniMapSection :" + lenMiniMapSection);
                 Debug.Log("lenSubSection10 :" + lenSubSection10);
                 Debug.Log("lenSubSection11 :" + lenSubSection11);
-                Debug.Log("lenSubSection12 :" + lenSubSection12);
-                Debug.Log("lenSubSection13 :" + lenSubSection13);
+                Debug.Log("lenFloatingStoneSection :" + lenFloatingStoneSection);
+                Debug.Log("lenChestInteractionSection :" + lenChestInteractionSection);
                 Debug.Log("lenAKAOSubSection :" + lenAKAOSubSection);
                 Debug.Log("lenSubSection15 :" + lenSubSection15);
                 Debug.Log("lenSubSection16 :" + lenSubSection16);
                 Debug.Log("lenSubSection17 :" + lenSubSection17);
-                Debug.Log("lenSubSection18 :" + lenSubSection18);
+                Debug.Log("lenCameraAreaSection :" + lenCameraAreaSection);
             }
 
             // ROOM section
@@ -168,8 +167,21 @@ namespace VS.Parser
                     for (uint i = 0; i < numGroups; i++)
                     {
                         groups[i] = new MPDGroup();
-                        groups[i].header = buffer.ReadBytes(64);
-                        if ((groups[i].header[1] & 0x08) > 0)
+                        //groups[i].header = buffer.ReadBytes(64);
+                        groups[i].display = buffer.ReadByte();
+                        groups[i]._scale = buffer.ReadByte();
+                        groups[i].overlapping = buffer.ReadUInt16();
+                        groups[i].decX = buffer.ReadInt16();
+                        buffer.ReadInt16();
+                        groups[i].decY = buffer.ReadInt16();
+                        buffer.ReadInt16();
+                        groups[i].decZ = buffer.ReadInt16();
+                        buffer.ReadInt16();
+
+                        groups[i].header = buffer.ReadBytes(48);
+
+
+                        if ((groups[i]._scale & 0x08) > 0)
                         {
                             groups[i].scale = 1;
                         }
@@ -199,34 +211,40 @@ namespace VS.Parser
                 if (lenCollisionSection > 0)
                 {
                     long collisionPtr = buffer.BaseStream.Position;
+                    Debug.Log("Collision Section at  : " + collisionPtr);
                     uint TyleWidth = buffer.ReadUInt16();
                     uint TyleHeight = buffer.ReadUInt16();
+                    uint unk1 = buffer.ReadUInt16();
+                    uint unk2 = buffer.ReadUInt16();
                     if (UseDebug)
                     {
                         Debug.Log("TyleWidth : " + TyleWidth + "  TyleHeight : " + TyleHeight);
+                        Debug.Log("unk1 : " + unk1 + "  unk2 : " + unk2);
                     }
 
-                    uint unk1 = buffer.ReadUInt16();
-                    uint unk2 = buffer.ReadUInt16();
-                    uint[] FloorHeight = new uint[TyleWidth * TyleHeight];
-                    uint[] CeilingHeight = new uint[TyleWidth * TyleHeight];
+                    int[] FloorHeight = new int[TyleWidth * TyleHeight];
+                    int[] FloorHeightMode = new int[TyleWidth * TyleHeight];
+                    int[] CeilingHeight = new int[TyleWidth * TyleHeight];
+                    int[] CeilingHeightMode = new int[TyleWidth * TyleHeight];
                     uint[] Incline = new uint[TyleWidth * TyleHeight];
                     //Debug.Log("Collision ptr : " + buffer.BaseStream.Position);
                     for (uint i = 0; i < TyleWidth * TyleHeight; i++)
                     {
-                        FloorHeight[i] = buffer.ReadUInt16();
+                        FloorHeight[i] = buffer.ReadByte();
+                        FloorHeightMode[i] = buffer.ReadByte();
                         if (UseDebug)
                         {
-                            //Debug.Log("FloorHeight[i] : " + FloorHeight[i]);
+                            Debug.Log("FloorHeight[i] : " + FloorHeight[i]+" -> "+ FloorHeightMode[i]);
                         }
                     }
 
                     for (uint i = 0; i < TyleWidth * TyleHeight; i++)
                     {
-                        CeilingHeight[i] = buffer.ReadUInt16();
+                        CeilingHeight[i] = buffer.ReadByte();
+                        CeilingHeightMode[i] = buffer.ReadByte();
                         if (UseDebug)
                         {
-                            //Debug.Log("CeilingHeight[i] : " + CeilingHeight[i]);
+                            Debug.Log("CeilingHeight[i] : " + CeilingHeight[i] + " -> " + CeilingHeightMode[i]);
                         }
                     }
 
@@ -243,8 +261,18 @@ namespace VS.Parser
                 //
                 if (lenSubSection03 > 0)
                 {
-                    Debug.Log("lenSubSection03 ptr : " + buffer.BaseStream.Position + "   lenSubSection03 : " + lenSubSection03);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection03;
+                    string output = mapName + "  lenSubSection03 ptr : " + buffer.BaseStream.Position + "   lenSubSection03 : " + lenSubSection03 + "\r\n";
+                    uint loop = lenSubSection03 / 4;
+                    for (uint i = 0; i < loop; i++)
+                    {
+                        byte[] unkn = buffer.ReadBytes(4);
+                        output += "  Unknown bytes : " + BitConverter.ToString(unkn) + "\r\n";
+                        //Debug.LogError(BitConverter.ToString(unkn));
+                    }
+
+                    //Debug.LogError(output);
+
+                    //buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection03;
                 }
 
                 // door section
@@ -329,6 +357,7 @@ namespace VS.Parser
                         main.a = 255;
 
                         lightsDebug += string.Concat("Light # ", i, "  :  ", BitConverter.ToString(hexa), "  ->  ", lgtMat, "  |  ", colorX, ", ", colorY, ", ", colorZ, "\r\n");
+                        /*
                         GameObject lgo = new GameObject("Point Light");
                         Rect lightRect = new Rect();
                         lightRect.xMin = -matrix[0] / 100;
@@ -346,7 +375,7 @@ namespace VS.Parser
                         l.color = main;
                         l.shadows = LightShadows.Soft;
                         lights.Add(lgo);
-
+                        */
                     }
 
                     if (UseDebug)
@@ -380,10 +409,27 @@ namespace VS.Parser
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection08;
                 }
 
-                if (lenSubSection09 > 0)
+                if (lenTrapSection > 0)
                 {
-                    Debug.Log("SubSection09 ptr : " + buffer.BaseStream.Position + "   lenSubSection09 : " + lenSubSection09);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection09;
+                    Debug.Log("TrapSection ptr : " + buffer.BaseStream.Position + "   lenTrapSection : " + lenTrapSection);
+
+                    string output = "Traps in " + mapName + "\r\n";
+
+                    uint numTraps = (uint)(lenTrapSection / 12);
+                    for (uint i = 0; i < numTraps; i++)
+                    {
+                        ushort x = buffer.ReadUInt16();
+                        ushort y = buffer.ReadUInt16();
+                        ushort p = buffer.ReadUInt16();
+                        ushort skill_id = buffer.ReadUInt16(); // http://datacrystal.romhacking.net/wiki/Vagrant_Story:skills_list
+                        uint unk = buffer.ReadUInt32();
+
+                        output += "X : " + x + " Y : "+y +" P : "+p+" Skill : "+skill_id+"  Unknown bytes : " + BitConverter.ToString(BitConverter.GetBytes(unk)) + "\r\n";
+
+
+                    }
+                    //Debug.Log(output);
+                    // buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection09;
                 }
 
                 if (lenSubSection0A > 0)
@@ -416,10 +462,11 @@ namespace VS.Parser
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0E;
                 }
 
-                if (lenSubSection0F > 0)
+                if (lenMiniMapSection > 0)
                 {
-                    Debug.Log("SubSection0F ptr : " + buffer.BaseStream.Position + "   lenSubSection0F : " + lenSubSection0F);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0F;
+                    // ARM Format
+                    Debug.Log("MiniMapSection ptr : " + buffer.BaseStream.Position + "   lenMiniMapSection : " + lenMiniMapSection);
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenMiniMapSection;
                 }
 
                 if (lenSubSection10 > 0)
@@ -434,16 +481,16 @@ namespace VS.Parser
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection11;
                 }
 
-                if (lenSubSection12 > 0)
+                if (lenFloatingStoneSection > 0)
                 {
-                    Debug.Log("SubSection12 ptr : " + buffer.BaseStream.Position + "   lenSubSection12 : " + lenSubSection12);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection12;
+                    Debug.Log("FloatingStoneSection ptr : " + buffer.BaseStream.Position + "   lenFloatingStoneSection : " + lenFloatingStoneSection);
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenFloatingStoneSection;
                 }
 
-                if (lenSubSection13 > 0)
+                if (lenChestInteractionSection > 0)
                 {
-                    Debug.Log("SubSection13 ptr : " + buffer.BaseStream.Position + "   lenSubSection13 : " + lenSubSection13);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection13;
+                    Debug.Log("ChestInteractionSection ptr : " + buffer.BaseStream.Position + "   lenChestInteractionSection : " + lenChestInteractionSection);
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenChestInteractionSection;
                 }
 
                 if (lenAKAOSubSection > 0)
@@ -458,11 +505,12 @@ namespace VS.Parser
                     buffer.ReadUInt32(); // 0000 0000
                     buffer.ReadUInt32(); // 0C00 0000
 
-
+                    /*
                     AKAO audio = new AKAO();
                     audio.FileName = FileName;
                     audio.UseDebug = true;
                     audio.Parse(buffer, AKAO.UNKNOWN, akaoPtr + lenAKAOSubSection);
+                    */
                     buffer.BaseStream.Position = akaoPtr + lenAKAOSubSection;
                 }
 
@@ -484,10 +532,10 @@ namespace VS.Parser
                     buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection17;
                 }
 
-                if (lenSubSection18 > 0)
+                if (lenCameraAreaSection > 0)
                 {
-                    Debug.Log("SubSection18 ptr : " + buffer.BaseStream.Position + "   lenSubSection18 : " + lenSubSection18);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection18;
+                    Debug.Log("CameraAreaSection ptr : " + buffer.BaseStream.Position + "   lenCameraAreaSection : " + lenCameraAreaSection);
+                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenCameraAreaSection;
                 }
             }
             else
@@ -572,7 +620,7 @@ namespace VS.Parser
             }
         }
 
-        public void BuildPrefab(bool erase = false)
+        public void BuildPrefab(bool erase = true)
         {
             string zonesFolder = "Assets/Resources/Prefabs/Zones/";
             ToolBox.DirExNorCreate(zonesFolder);
@@ -657,10 +705,10 @@ namespace VS.Parser
                         MPDFace f = groups[i].meshes[j].faces[k];
                         if (f.isQuad)
                         {
-                            meshVertices.Add(-f.v1.position / 100);
-                            meshVertices.Add(-f.v2.position / 100);
-                            meshVertices.Add(-f.v3.position / 100);
-                            meshVertices.Add(-f.v4.position / 100);
+                            meshVertices.Add(-f.v1.position / 128);
+                            meshVertices.Add(-f.v2.position / 128);
+                            meshVertices.Add(-f.v3.position / 128);
+                            meshVertices.Add(-f.v4.position / 128);
                             meshColors.Add(f.v1.color);
                             meshColors.Add(f.v2.color);
                             meshColors.Add(f.v3.color);
@@ -685,9 +733,9 @@ namespace VS.Parser
                         }
                         else
                         {
-                            meshVertices.Add(-f.v1.position / 100);
-                            meshVertices.Add(-f.v2.position / 100);
-                            meshVertices.Add(-f.v3.position / 100);
+                            meshVertices.Add(-f.v1.position / 128);
+                            meshVertices.Add(-f.v2.position / 128);
+                            meshVertices.Add(-f.v3.position / 128);
                             meshColors.Add(f.v1.color);
                             meshColors.Add(f.v2.color);
                             meshColors.Add(f.v3.color);
@@ -799,6 +847,16 @@ namespace VS.Parser
     {
         public uint scale = 8;
         public byte[] header;
+        /*
+         *                                                              W  S  E N       W  S  E N
+                 bitwise visibility angles, FF = all time visible, C7 = 1100 0111, 7C = 0111 1100
+        */
+        public byte display;
+        public byte _scale;
+        public ushort overlapping;
+        public short decX;
+        public short decY;
+        public short decZ;
         public List<MPDMesh> meshes;
 
         public MPDGroup()
@@ -892,6 +950,7 @@ namespace VS.Parser
         {
 
             v1.position = new Vector3(buffer.ReadInt16(), buffer.ReadInt16(), buffer.ReadInt16());
+            v1.position += new Vector3(group.decX, group.decY, group.decZ);
             v2.position = new Vector3(buffer.ReadSByte(), buffer.ReadSByte(), buffer.ReadSByte());
             v3.position = new Vector3(buffer.ReadSByte(), buffer.ReadSByte(), buffer.ReadSByte());
             v1.color = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255);

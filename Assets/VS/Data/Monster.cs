@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace VS.Data
@@ -25,11 +26,15 @@ namespace VS.Data
         public uint id = 0;
         public byte shp1 = 0;
         public byte shp2 = 0;
+        public byte uk1 = 0;
+        public byte uk2 = 0;
 
         public Monster(byte[] rawDatas, uint id, string name = "", string desc = "")
         {
             shp1 = rawDatas[0];
+            uk1 = rawDatas[2];
             shp2 = rawDatas[4];
+            uk2 = rawDatas[6];
             this.id = id;
             this.name = name;
             this.desc = desc;
@@ -37,7 +42,7 @@ namespace VS.Data
 
         public new string ToString()
         {
-            return string.Concat("Monster #", id, " - ", name, " - ", desc, " - ", shp1, " - ", shp2);
+            return string.Concat("Monster #", id, " - ", name, " - ", desc, " - ", shp1, " - ", shp2, " - ", uk1, " - ", uk2);
         }
 
         public string ToJSON()

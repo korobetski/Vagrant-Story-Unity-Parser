@@ -27,31 +27,30 @@ public class Bestiary : MonoBehaviour
         {
             //Debug.Log(jsons[i]);
             monsters[i] = JsonUtility.FromJson<Monster>(jsons[i]);
-            //Debug.Log(monsters[i].ToString());
+            Debug.Log(monsters[i].ToString());
         }
 
-        int monsterId = 2;
+        int monsterId = 24;
 
-        /*
+        
         monterName.text = monsters[monsterId].name;
         monterDesc.text = monsters[monsterId].desc;
-        */
+        /*
         monterName.text = "";
         monterDesc.text = "";
-
+        */
         foreach (Transform child in container.transform)
         {
             Destroy(child.gameObject);
         }
-        string path = string.Concat("Prefabs/Models/", BitConverter.ToString(new byte[] { monsters[monsterId].shp1 }));
-        GameObject prefab = Resources.Load<GameObject>(path);
+        sbyte sb = (sbyte)monsters[monsterId].shp1;
+        string path = string.Concat("Prefabs/Models/SHP_", BitConverter.ToString(new byte[] { (byte)sb }));
+        GameObject prefab = Instantiate(Resources.Load<GameObject>(path));
 
-        GameObject shpGO = Instantiate(prefab);
-
-        shpGO.transform.parent = container.transform;
-        shpGO.transform.localPosition = Vector3.zero;
-        shpGO.transform.localRotation = new Quaternion(0, -180, 0, 0);
-        shpGO.transform.localScale = Vector3.one * 75;
+        prefab.transform.parent = container.transform;
+        prefab.transform.localPosition = Vector3.zero;
+        prefab.transform.localRotation = new Quaternion(0, -180, 0, 0);
+        prefab.transform.localScale = Vector3.one * 75;
 
 
         //Monster[] monsters = JsonHelper.FromJson<Monster>(json);

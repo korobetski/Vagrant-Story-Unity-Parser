@@ -10,7 +10,7 @@ namespace VS.Parser.Effect
 
         public P(string path)
         {
-            UseDebug = true;
+            UseDebug = false;
             frames = new List<EffectFrame>();
             Parse(path);
         }
@@ -34,7 +34,7 @@ namespace VS.Parser.Effect
             int n6 = buffer.ReadByte(); // 00
             int p = buffer.ReadInt16(); // 0000
 
-            if (UseDebug)
+            if (true)
             {
                 Debug.Log(string.Concat("n1 : ", n1, "  n2 : ", n2, "  wid : ", wid, "  hei : ", hei, "  framePtr : ", framePtr, "  n5 : ", n5, "  n6 : ", n6, "  p : ", p));
             }
@@ -142,6 +142,7 @@ namespace VS.Parser.Effect
 
             // AKAO Section for the moment i'll crawl all the file to find the magic word AKAO (41 4B 41 4F)
             // AKAO instructions seems to be in an older version and then there is a sample
+            /*
             List<long> akaoStarts = new List<long>();
             List<long> akaoEnds = new List<long>();
             while (buffer.BaseStream.Position < buffer.BaseStream.Length)
@@ -169,10 +170,11 @@ namespace VS.Parser.Effect
             {
                 AKAO akaoFx = new AKAO();
                 akaoFx.FileName = string.Concat(FileName, "_akao_", i);
-                akaoFx.UseDebug = true;
+                akaoFx.UseDebug = false;
                 buffer.BaseStream.Position = akaoStarts[i];
                 akaoFx.Parse(buffer, AKAO.UNKNOWN, akaoEnds[i]);
             }
+            */
 
 
         }

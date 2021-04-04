@@ -155,6 +155,16 @@ public class VSWindow : EditorWindow
                     }
                     break;
                 case "MENU":
+                    // *.SYD
+                    // *.BIN
+                    // *.PRG
+                    switch (ext)
+                    {
+                        case "PRG":
+                            PRG parser = new PRG();
+                            parser.Parse(VSPath + FilePath);
+                            break;
+                    }
                     break;
                 case "MOV":
                     break;
@@ -556,9 +566,9 @@ public class VSWindow : EditorWindow
     private void BuildDatabase()
     {
         BIN DB = new BIN();
-        List<string>[] texts = DB.BuildItems(VSPath + "MENU/ITEMNAME.BIN", VSPath + "MENU/ITEMHELP.BIN");
+        //List<string>[] texts = DB.BuildItems(VSPath + "MENU/ITEMNAME.BIN", VSPath + "MENU/ITEMHELP.BIN");
         DB.Parse(VSPath + "SMALL/MON.BIN");
-
+        /*
         string[] files = Directory.GetFiles(VSPath + "MENU/", "*.SYD");
         foreach (string file in files)
         {
@@ -566,6 +576,7 @@ public class VSWindow : EditorWindow
             //parser.UseDebug = true;
             parser.Parse(file, texts);
         }
+        */
     }
 
 
@@ -664,9 +675,9 @@ public class VSWindow : EditorWindow
     private void ParseMPD(string path, bool UseDebug)
     {
         MPD parser = new MPD();
-        parser.UseDebug = UseDebug;
+        parser.UseDebug = false;
         parser.Parse(path);
-        parser.BuildPrefab();
+        parser.BuildPrefab(true);
     }
 
     private void ParseAKAO(string path, AKAO.AKAOType type, bool UseDebug)

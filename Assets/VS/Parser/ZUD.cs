@@ -285,7 +285,7 @@ namespace VS.Parser
                     {
                         zudBatSeq.FirstPoseModel(shapeGO);
                     }
-
+                    
                     AnimationClip[] clips = zudBatSeq.BuildAnimationClips(shapeGO);
                     ac.AddLayer(FileName + "_BAT");
                     i++;
@@ -298,10 +298,12 @@ namespace VS.Parser
                             state.motion = clip;
                         }
                     }
+                    
                 }
             }
 
-            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(shapeGO, path, InteractionMode.AutomatedAction);
+            //GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(shapeGO, path, InteractionMode.AutomatedAction);
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(shapeGO, path);
             AssetDatabase.SaveAssets();
             GameObject.DestroyImmediate(shapeGO);
 #endif

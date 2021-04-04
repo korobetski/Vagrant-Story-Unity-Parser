@@ -12,6 +12,7 @@
         "integrationSavePath": "B:\\Documents\\Projets\\VS_Parser",
         "selectedDCCApp": 0,
         "prefabSavePaths": [
+            "Resources/Prefabs/Zones/Zone009",
             "Resources/Prefabs/Weapons",
             "."
         ],
@@ -20,14 +21,14 @@
             "."
         ],
         "selectedFbxPath": 0,
-        "selectedPrefabPath": 1,
+        "selectedPrefabPath": 2,
         "dccOptionNames": [],
         "dccOptionPaths": [],
         "exportModelSettingsSerialize": {
             "exportFormat": 1,
             "animatedSkinnedMesh": true,
             "mayaCompatibleNaming": false,
-            "include": 0,
+            "include": 2,
             "lodLevel": 1,
             "objectPosition": 1,
             "exportUnrendered": false

@@ -7,6 +7,7 @@ using UnityEditor.Animations;
 #endif
 using UnityEngine;
 using VS.Entity;
+using VS.Format;
 using VS.Utils;
 
 //http://datacrystal.romhacking.net/wiki/Vagrant_Story:SHP_files
@@ -383,7 +384,7 @@ namespace VS.Parser
                         AKAO akao = new AKAO();
                         akao.FileName = string.Concat(FileName, "_Akao_", j);
                         akao.UseDebug = true;
-                        akao.Parse(buffer, AKAO.UNKNOWN, limit);
+                        //akao.Parse(buffer, AKAO.UNKNOWN, limit);
                     }
                 }
                 else
@@ -392,7 +393,7 @@ namespace VS.Parser
                     AKAO akao = new AKAO();
                     akao.FileName = string.Concat(FileName, "_Akao_", j);
                     akao.UseDebug = true;
-                    akao.Parse(buffer, AKAO.UNKNOWN, limit);
+                    //akao.Parse(buffer, AKAO.UNKNOWN, limit);
                 }
 
 
@@ -993,6 +994,15 @@ namespace VS.Parser
 
                                 //AssetDatabase.RemoveObjectFromAsset(mesh);
                                 AssetDatabase.AddObjectToAsset(baked, modFilename);
+
+                                MTL mtl = new MTL(FileName + "_tex.png", string.Concat(FileName, ".mtl"), string.Concat("material_shp_", FileName));
+                                mtl.offset = new Vector3(0, 0, 0);
+                                mtl.scale = new Vector3(1f, 2f, 1f);
+                                mtl.Write();
+
+
+                                OBJ shpObj = new OBJ(baked, FileName, mtl);
+                                shpObj.Write();
 
                             }
 

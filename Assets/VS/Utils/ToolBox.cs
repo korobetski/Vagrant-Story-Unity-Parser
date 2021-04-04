@@ -83,7 +83,7 @@ namespace VS.Utils
             return newColors;
         }
 
-        public static Quaternion quatFromAxisAnle(Vector3 axis, float angle)
+        public static Quaternion quatFromAxisAngle(Vector3 axis, float angle)
         {
             Quaternion q = new Quaternion(axis.x * Mathf.Sin(angle / 2), axis.y * Mathf.Sin(angle / 2), axis.z * Mathf.Sin(angle / 2), Mathf.Cos(angle / 2));
             q.Normalize();

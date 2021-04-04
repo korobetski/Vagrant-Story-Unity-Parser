@@ -72,30 +72,34 @@ namespace VS.Parser
         {
             for (int j = 0; j < numBones; j++)
             {
-                if (j < animations[1].rotationKeysPerBone.Length)
+                if (animations.Length > 1)
                 {
-                    //Debug.Log("keyframes.Count : " + animations[0].rotationKeysPerBone.Length);
-                    List<NVector4> keyframes = animations[0].rotationKeysPerBone[j];
-                    Vector3 pose = animations[0].rotationPerBone[j];
-                    int rx = (int)pose.x * 2;
-                    int ry = (int)pose.y * 2;
-                    int rz = (int)pose.z * 2;
 
-                    //Debug.Log("keyframes.Count : "+keyframes.Count);
-                    int f = (int)keyframes[0].f;
+                    if (j < animations[1].rotationKeysPerBone.Length)
+                    {
+                        //Debug.Log("keyframes.Count : " + animations[0].rotationKeysPerBone.Length);
+                        List<NVector4> keyframes = animations[0].rotationKeysPerBone[j];
+                        Vector3 pose = animations[0].rotationPerBone[j];
+                        int rx = (int)pose.x * 2;
+                        int ry = (int)pose.y * 2;
+                        int rz = (int)pose.z * 2;
 
-                    rx += ((int)keyframes[0].x * f);
-                    ry += ((int)keyframes[0].y * f);
-                    rz += ((int)keyframes[0].z * f);
+                        //Debug.Log("keyframes.Count : "+keyframes.Count);
+                        int f = (int)keyframes[0].f;
 
-                    Quaternion qu = ToolBox.quatFromAxisAnle(Vector3.right, ToolBox.rot13toRad(rx));
-                    Quaternion qv = ToolBox.quatFromAxisAnle(Vector3.up, ToolBox.rot13toRad(ry));
-                    Quaternion qw = ToolBox.quatFromAxisAnle(Vector3.forward, ToolBox.rot13toRad(rz));
-                    Quaternion quat = qw * qv * qu;
-                    Quaternion aquat = new Quaternion(quat.x, quat.y, quat.z, quat.w);
+                        rx += ((int)keyframes[0].x * f);
+                        ry += ((int)keyframes[0].y * f);
+                        rz += ((int)keyframes[0].z * f);
 
-                    GameObject bone = ToolBox.findBoneIn("bone_" + j, model);
-                    bone.transform.localRotation = aquat;
+                        Quaternion qu = ToolBox.quatFromAxisAngle(Vector3.right, ToolBox.rot13toRad(rx));
+                        Quaternion qv = ToolBox.quatFromAxisAngle(Vector3.up, ToolBox.rot13toRad(ry));
+                        Quaternion qw = ToolBox.quatFromAxisAngle(Vector3.forward, ToolBox.rot13toRad(rz));
+                        Quaternion quat = qw * qv * qu;
+                        Quaternion aquat = new Quaternion(quat.x, quat.y, quat.z, quat.w);
+
+                        GameObject bone = ToolBox.findBoneIn("bone_" + j, model);
+                        bone.transform.localRotation = aquat;
+                    }
                 }
             }
         }
@@ -212,10 +216,20 @@ namespace VS.Parser
                             ry += ((int)keyframes[k].y * f);
                             rz += ((int)keyframes[k].z * f);
 
-                            Quaternion qu = ToolBox.quatFromAxisAnle(Vector3.right, ToolBox.rot13toRad(rx));
-                            Quaternion qv = ToolBox.quatFromAxisAnle(Vector3.up, ToolBox.rot13toRad(ry));
-                            Quaternion qw = ToolBox.quatFromAxisAnle(Vector3.forward, ToolBox.rot13toRad(rz));
+                            Vector3 rot = new Vector3(ToolBox.rot13toRad(rx), ToolBox.rot13toRad(ry), ToolBox.rot13toRad(rz));
+                            Vector3 degrot = rot * Mathf.Rad2Deg;
+
+                            Quaternion qu = ToolBox.quatFromAxisAngle(Vector3.right, ToolBox.rot13toRad(rx));
+                            Quaternion qv = ToolBox.quatFromAxisAngle(Vector3.up, ToolBox.rot13toRad(ry));
+                            Quaternion qw = ToolBox.quatFromAxisAngle(Vector3.forward, ToolBox.rot13toRad(rz));
                             Quaternion quat = qw * qv * qu;
+
+                            if (i == 0 && k == 0)
+                            {
+                                Debug.Log("Anim " + i + " B " + j + " f " + k + " -> Quat : ( " + quat.w + ", " + quat.x + ", " + quat.y + ", " + quat.z + ")");
+                                //Debug.Log("Anim " + i + " B " + j + " f " + k + " -> base : ( " + degrot.x + ", " + degrot.y + ", " + degrot.z + ")");
+                                //Debug.Log("Anim " + i + " B " + j + " f " + k + " -> euler : ( " + quat.eulerAngles.x +", "+ quat.eulerAngles.y + ", " + quat.eulerAngles.z + ")");
+                            }
 
                             keysRX.Add(new Keyframe((float)((t) * 0.04), quat.x));
                             keysRY.Add(new Keyframe((float)((t) * 0.04), quat.y));

@@ -202,6 +202,17 @@ namespace VS.Parser
             tim.ParseWEP(buffer);
             texture = tim.DrawPack(true);
 
+            // rotations
+            Debug.Log("WEP--");
+            for (uint i = 0; i < 3; i++)
+            {
+                int u1 = buffer.ReadInt16();
+                int u2 = buffer.ReadInt16();
+                int u3 = buffer.ReadInt16();
+                int u4 = buffer.ReadInt16();
+
+                Debug.Log(i+" -> "+u1+", "+u2 + ", " + u3 + ", " + u4);
+            }
             Parsed = true;
         }
         public GameObject BuildGameObject()
@@ -384,9 +395,7 @@ namespace VS.Parser
             weaponMesh.triangles = meshTriangles.ToArray();
             weaponMesh.uv = meshTrianglesUV.ToArray();
             weaponMesh.boneWeights = meshWeights.ToArray();
-            weaponMesh.RecalculateNormals();
-            weaponMesh.RecalculateTangents();
-            weaponMesh.RecalculateBounds();
+            weaponMesh.Optimize();
 
 
             Shader shader = Shader.Find("Standard");
@@ -471,10 +480,10 @@ namespace VS.Parser
             mtl.Write();
 
 
+            baked.Optimize();
             OBJ wepObj = new OBJ(baked, FileName, mtl);
             wepObj.Write();
 
-            baked.Optimize();
             mesh = baked;
 
             // Database 

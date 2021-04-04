@@ -14,6 +14,8 @@ using VS.Utils;
 //Minoru Akao
 //https://github.com/vgmtrans/vgmtrans/blob/master/src/main/formats/AkaoSeq.cpp
 //https://github.com/vgmtrans/vgmtrans/blob/7b48bd60de62ade22ed8c471a354e04c62b7df3f/src/main/formats/AkaoSeq.cpp 
+// https://w.atwiki.jp/sagafrontier/pages/43.html
+// https://wiki.ffrtt.ru/index.php?title=FF7/PSX/PSX_Sound
 // Akao in MUSIC folder contains musical instructions like a Midi file but also some synthetizer controls.
 // Two different instruments cannot play in the same channel at the same time
 
@@ -96,8 +98,8 @@ namespace VS.Parser.Akao
 
         public void Synthetize(bool bMid, bool bWav, SF2 soundfont = null)
         {
-            SyncTracksChannels();
-            //MergePolyTracks();
+            //SyncTracksChannels();
+            MergePolyTracks();
 
             List<byte> midiByte = new List<byte>();
             midiByte.AddRange(new byte[] { 0x4D, 0x54, 0x68, 0x64 }); // MThd Header
@@ -197,7 +199,7 @@ namespace VS.Parser.Akao
         private void MergePolyTracks()
         {
             // here we are trying to get all tracks of the same instrument and pan in the same Midi track (15 +1)
-            AKAOTrack[] MidiTracks = new AKAOTrack[16];
+            AKAOTrack[] MidiTracks = new AKAOTrack[48];
             uint lastEmpty = 0;
             for (uint i = 0; i < numTrack; i++)
             {
@@ -1810,17 +1812,16 @@ namespace VS.Parser.Akao
                 meta = true;
                 uint _num = num;
                 double _denom = Math.Round(Math.Log((double)(denom / 0.69314718055994530941723212145818)));
-                //byte _clocks = 0x20;
-                //byte _quart = 0x08;
 
                 /*
+                byte _clocks = 0x20;
+                byte _quart = 0x08;
                 deltaTime = 0x00;
                 midiStatusByte = 0xFF;
                 midiArg1 = 0x58;
                 midiArg2 = 0x04;
                 tail = new byte[] { (byte)_num, (byte)_denom, _clocks, _quart };
                 */
-
                 if (AKAOComposer.UseDebug)
                 {
                     Debug.LogWarning(string.Concat("0x", BitConverter.ToString(new byte[] { STATUS_BYTE }), "  ->  EvTimeSign : ", num, ", ", denom));

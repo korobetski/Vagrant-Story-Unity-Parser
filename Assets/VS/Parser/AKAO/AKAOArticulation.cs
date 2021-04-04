@@ -183,7 +183,6 @@ namespace VS.Parser.Akao
             timeInSecs = samples / sampleRate;
             A = timeInSecs;
 
-
             // Decay
             int envelope_level = 0x7FFFFFFF;
             bool bSustainLevFound = false;
@@ -274,8 +273,6 @@ namespace VS.Parser.Akao
             {
                 D = S;
             }
-
-
 
             // Release
             envelope_level = 0x7FFFFFFF;

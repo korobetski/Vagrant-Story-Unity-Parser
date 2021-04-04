@@ -170,12 +170,7 @@ namespace VS.Parser
                         tracksPtr[i + 1] = (ushort)((basePtr + i * 2) + buffer.ReadUInt16());
                     }
 
-
-
-
                     // music instuctions begin here, MIDI like format, we don't care yet, so let's jump
-
-
 
                     uint instrCount = 0;
                     // Instruments
@@ -559,6 +554,7 @@ namespace VS.Parser
                     break;
                 case AKAOType.SAMPLE:
                     // similar to AKAOType.SOUND without articulations, we can output a WAV file
+                    // maybe we need to seperate this into several samples but there is no pointers or padding :s
                     // header datas
                     header = buffer.ReadBytes(4);       // AKAO
                     buffer.ReadUInt16();

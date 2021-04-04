@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using VS.Data;
 using VS.Utils;
@@ -25,7 +26,11 @@ namespace VS.Parser
                 if (b == 0xE7)
                 {
                     string inam = L10n.Translate(bname.ToArray());
-                    Debug.Log(string.Concat(inam));
+                    Debug.Log(string.Concat(inam) + " at : "+ buffer.BaseStream.Position);
+
+
+
+
                     bname = new List<byte>();
                 }
                 else
@@ -49,9 +54,10 @@ namespace VS.Parser
             {
 
                 List<string> monsterNames = new List<string>();
+                string bytes  = "";
 
-                uint i = 0;
-                while (buffer.BaseStream.Position + 44 < 0xD68)
+                int i = 0;
+                while (buffer.BaseStream.Position < 0x19C8)
                 {
                     long ptr = buffer.BaseStream.Position;
                     byte[] monsterHeader = buffer.ReadBytes(16); // Monster variations 4*4 bytes (model id - ?? - model var - ??)
@@ -61,15 +67,48 @@ namespace VS.Parser
                     inam = inam.Split("\r\n"[0])[0];
                     monsterNames.Add(inam);
 
-                    Monster.list.Add(new Monster(monsterHeader, i, inam));
+                    Monster mon = new Monster(monsterHeader, (uint)i+1, inam);
+                    Monster.list.Add(mon);
 
+                    bytes = string.Concat(bytes, "\r\n", BitConverter.ToString(monsterHeader), "    ", inam, "   AT : ", ptr);
                     i++;
                 }
-                // true end of monsters names is 0x19C8 but the last entries are empty
 
+                // true end of monsters names is 0x19C8 , the last entries are empty
+
+                i = 0;
+                /*
+                List<int> pointers = new List<int>();
+                while (i < 150)
+                {
+                    pointers.Add(0x19C8+buffer.ReadUInt16());
+                    i++;
+                }
+                pointers.Add((int)buffer.BaseStream.Length);
+                */
 
                 buffer.BaseStream.Position = 0x1AF4;
-                List<string> monsterDescs = new List<string>();
+                /*
+                i = 0;
+                while (buffer.BaseStream.Position < buffer.BaseStream.Length)
+                {
+                    int descriptionLength = 0;
+                    if (i < 149)
+                    {
+                        descriptionLength = pointers[i + 1] - pointers[i];
+                    } else
+                    {
+                        descriptionLength = (int) (buffer.BaseStream.Length - buffer.BaseStream.Position);
+                    }
+
+                    Debug.Log("descriptionLength : "+ descriptionLength);
+                    string description = L10n.Translate(buffer.ReadBytes(descriptionLength));
+                    Debug.Log(description);
+                    Monster.list[i].desc = description;
+                    i++;
+                }
+                */
+
                 List<byte> bname = new List<byte>();
                 i = 0;
                 while (buffer.BaseStream.Position < buffer.BaseStream.Length)
@@ -78,14 +117,7 @@ namespace VS.Parser
                     if (b == 0xE7)
                     {
                         string inam = L10n.Translate(bname.ToArray());
-                        //Debug.Log(string.Concat(monsterDescs.Count, " : ", inam));
-                        inam = inam.Replace("\r\n", " ");
-                        monsterDescs.Add(inam);
-                        Monster.list[(int)i].desc = inam;
-                        if (monsterDescs.Count == monsterNames.Count)
-                        {
-                            break;
-                        }
+                        Monster.list[i].desc = inam;
                         bname = new List<byte>();
                         i++;
                     }
