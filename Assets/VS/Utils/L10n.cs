@@ -256,11 +256,11 @@ namespace VS.Utils
             table[0xE4] = "(0xE4)";
             table[0xE5] = "(0xE5)";
             table[0xE6] = "(0xE6)";
-            table[0xE7] = "\r\n";
-            table[0xE8] = "\r\n";
+            table[0xE7] = "|";  // End bubble
+            table[0xE8] = "\r\n";  // New line
             table[0xE9] = "(0xE9)";
             table[0xEA] = "(0xEA)";
-            table[0xEB] = "\n"; // New line ? 
+            table[0xEB] = "\n"; // End Dialogue
             table[0xEC] = "(0xEC)";
             table[0xED] = "(0xED)";
             table[0xEE] = "(0xEE)";

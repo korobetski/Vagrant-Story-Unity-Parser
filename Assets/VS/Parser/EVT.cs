@@ -39,10 +39,31 @@ namespace VS.Parser
                 if (ptrEndDial > ptrDial)
                 {
                     buffer.BaseStream.Position = ptrDial;
-                    string text = L10n.Translate(buffer.ReadBytes((int)(ptrEndDial - buffer.BaseStream.Position)));
+
+                    ushort numBubbles = buffer.ReadUInt16();
+                    ushort[] bubblesPtrs = new ushort[numBubbles+1];
+
+                    bubblesPtrs[0] = (ushort)(ptrDial + numBubbles * 2);
+                    if (numBubbles > 1) {
+                        // i = 1 because the first bubble doesn't need a ptr, its start just after the header
+                        for (int i = 1; i < numBubbles; i++)
+                        {
+                            bubblesPtrs[i] = (ushort)(ptrDial + numBubbles * 2 + buffer.ReadUInt16() + 4);
+                        }
+                    }
+                    bubblesPtrs[numBubbles] = ptrEndDial;
+                    // ptr arn't good in the SLES-02755
+                    // so we do another method
+
+                    string text = L10n.Translate(buffer.ReadBytes((int)(ptrEndDial +2 + numBubbles * 2 - ptrDial)));
+                    string[] subs = text.Split('|');
+
                     if (UseDebug)
                     {
-                        Debug.Log(text);
+                        for (int i = 0; i < numBubbles; i++)
+                        {
+                            Debug.Log($"{subs[i]}");
+                        }
                     }
                 }
             }

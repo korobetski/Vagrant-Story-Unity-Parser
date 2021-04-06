@@ -137,6 +137,10 @@ public class VSWindow : EditorWindow
                     // ****.EVT
                     ParseEVT(VSPath + FilePath, true);
                     break;
+                case "GIM":
+                    // ****.GIM
+                    ParseGIM(VSPath + FilePath, true);
+                    break;
                 case "MAP":
                     // MAP***.MPD
                     // Z***U**.ZUD
@@ -167,12 +171,15 @@ public class VSWindow : EditorWindow
                     }
                     break;
                 case "MOV":
+                    // TITLE.STR intro video
                     break;
                 case "MUSIC":
                     ParseAKAO(VSPath + FilePath, AKAO.MUSIC, true);
                     break;
                 case "OBJ":
                     // **.SHP
+                    // **.ESQ one by SHP
+                    // **.ETM one by SHP
                     // **.SEQ
                     // **.WEP
                     switch (ext)
@@ -185,8 +192,24 @@ public class VSWindow : EditorWindow
                             break;
                     }
                     break;
+                case "SE":
+                    // EFFECT00.DAT
+                    // EFFECT01.DAT
+                    // SEP000**.DAT
+                    break;
+                case "SMALL":
+                    // **.ARM
+                    // MON.BIN
+                    // **.DIS
+                    // HELP**.HF0
+                    // HELP**.HF1
+                    break;
                 case "SOUND":
+                    // WAVE0***.DAT
                     ParseAKAO(VSPath + FilePath, AKAO.SOUND, true);
+                    break;
+                case "TITLE":
+                    // TITLE.PRG
                     break;
             }
         }
@@ -689,5 +712,10 @@ public class VSWindow : EditorWindow
         parser.bDLS = dlsTrigger;
         parser.bWAV = wavTrigger;
         parser.Parse(path, type);
+    }
+
+    private void ParseGIM(string path, bool UseDebug)
+    {
+        GIM parser = new GIM(path);
     }
 }

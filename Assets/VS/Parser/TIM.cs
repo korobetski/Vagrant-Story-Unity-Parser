@@ -67,50 +67,8 @@ namespace VS.Parser
                 return;
             }
 
-            PreParse(filePath);
-            // i don't know how to decode this for the moment
-
-            byte[] by = buffer.ReadBytes(20);
-            //Debug.Log(BitConverter.ToString(by));
-
-            Color[] col = new Color[16];
-            for (int i = 0; i < 16; ++i)
-            {
-                col[i] = ToolBox.BitColorConverter(buffer.ReadUInt16());
-            }
-
-            width = 128;
-            int height = 15;
-            int numBlocks = (int)(FileSize - buffer.BaseStream.Position) / (width * height);
-            List<Color> cluts = new List<Color>();
-            for (int i = 0; i < numBlocks; i++)
-            {
-                for (uint x = 0; x < height; x++)
-                {
-                    List<Color> cl2 = new List<Color>();
-                    for (uint y = 0; y < width; y++)
-                    {
-                        byte id = buffer.ReadByte();
-                        //cl2.Add(col[id]);
-                        //cl2.Add(new Color32(id, id, id, 255));
-
-                        byte l = (byte)Mathf.RoundToInt(id / 16);
-                        byte r = (byte)(id % 16);
-                        cl2.Add(col[r]);
-                        cl2.Add(col[l]);
-                    }
-                    cl2.Reverse();
-                    cluts.AddRange(cl2);
-                }
-                cluts.Reverse();
-            }
-            Texture2D tex = new Texture2D(width * 2, height * numBlocks, TextureFormat.ARGB32, false);
-            tex.SetPixels(cluts.ToArray());
-            tex.Apply();
-
-            byte[] bytes = tex.EncodeToPNG();
-            ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/ILLUST/");
-            File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/ILLUST/" + FileName + ".png", bytes);
+            // ILLUST06.BIN to ILLUST16.BIN are not pictures but maybe scripts to controls credits (and pictures in background)
+            // Ending illustrations are in ENDING.PRG
 
         }
 
@@ -442,7 +400,7 @@ namespace VS.Parser
         {
             Texture2D tex = new Texture2D(width * 2, height * 4, TextureFormat.ARGB32, false);
             tex.PackTextures(textures.ToArray(), 0);
-            tex.filterMode = FilterMode.Trilinear;
+            tex.filterMode = FilterMode.Point;
             tex.anisoLevel = 4;
             tex.wrapMode = TextureWrapMode.Repeat;
 #if UNITY_EDITOR

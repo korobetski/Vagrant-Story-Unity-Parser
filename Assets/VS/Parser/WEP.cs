@@ -88,8 +88,7 @@ namespace VS.Parser
                 VSBone bone = new VSBone();
                 bone.index = i;
                 bone.name = "bone_" + i;
-                bone.length = buffer.ReadInt16();
-                buffer.ReadUInt16(); // always 0xFFFF
+                bone.length = buffer.ReadInt32();
                 bone.parentIndex = buffer.ReadByte();
                 // https://github.com/morris/vstools/blob/master/src/WEPBone.js
                 byte[] offset = buffer.ReadBytes(3);
@@ -146,7 +145,7 @@ namespace VS.Parser
                 int y = buffer.ReadInt16();
                 int z = buffer.ReadInt16();
                 buffer.ReadInt16();
-                vertex.position = -new Vector3(x, y, z) / 100;
+                vertex.position = -new Vector3(x, y, z) / 128;
                 vertices.Add(vertex);
             }
 
@@ -190,9 +189,22 @@ namespace VS.Parser
                 faces.Add(face);
             }
 
+            // hard fixes for staves 39.WEP to 3F.WEP
+            List<string> staves = new List<string> { "39", "3A", "3B", "3C", "3D", "3E", "3F" };
+            if (staves.Contains(FileName))
+            {
+                // its a staff, so we need to correct vertices of the first group
+                Debug.Log("groups[0].bone.length : "+groups[0].bone.length / 128);
+                for (int i = 0; i < groups[0].numVertices; i++)
+                {
+                    vertices[i].position.x = (groups[0].bone.length * 2 - vertices[i].position.x * 128) / 128;
+                    vertices[i].position.y = -vertices[i].position.y;
+                }
+            }
+
 
             // Textures section
-            if (buffer.BaseStream.Position != texturePtr)
+                if (buffer.BaseStream.Position != texturePtr)
             {
                 buffer.BaseStream.Position = texturePtr;
             }
@@ -243,8 +255,8 @@ namespace VS.Parser
             {
                 for (int j = 0; j < faces[i].verticesCount; j++)
                 {
-                    float u = faces[i].uv[j].x / tim.width;
-                    float v = faces[i].uv[j].y / tim.height;
+                    float u = faces[i].uv[j].x / (tim.width -1);
+                    float v = faces[i].uv[j].y / (tim.height -1);
                     faces[i].uv[j] = new Vector2(u, v);
                 }
             }
@@ -460,8 +472,8 @@ namespace VS.Parser
                 meshBones[i + numBones] = new GameObject(bones[(int)(i + numBones)].name).transform;
                 meshBones[i + numBones].parent = meshBones[bones[(int)(i + numBones)].parentIndex];
                 meshBones[i + numBones].localRotation = Quaternion.identity;
-                meshBones[i + numBones].localPosition = new Vector3((float)(bones[i].length) / 100, 0, 0);
-                bindPoses[i + numBones] = Matrix4x4.TRS(new Vector3((float)(bones[i].length) / 100, 0, 0), Quaternion.identity, Vector3.one);
+                meshBones[i + numBones].localPosition = new Vector3((float)(bones[i].length) / 128, 0, 0);
+                bindPoses[i + numBones] = Matrix4x4.TRS(new Vector3((float)(bones[i].length) / 128, 0, 0), Quaternion.identity, Vector3.one);
             }
             SkinnedMeshRenderer mr = weaponGo.AddComponent<SkinnedMeshRenderer>();
             mr.material = mat;
@@ -474,16 +486,18 @@ namespace VS.Parser
             mr.BakeMesh(baked);
             baked.RecalculateNormals();
 
+            /*
             MTL mtl = new MTL(FileName + "_tex.png", string.Concat(FileName, ".mtl"), string.Concat("material_wep_", FileName));
             mtl.offset = new Vector3(0, 0, 0);
             mtl.scale = new Vector3(2f, 2.5f, 1f);
             mtl.Write();
-
+            */
 
             baked.Optimize();
+            /*
             OBJ wepObj = new OBJ(baked, FileName, mtl);
             wepObj.Write();
-
+            */
             mesh = baked;
 
             // Database 
