@@ -37,7 +37,7 @@ namespace VS.FileFormats.MPD
                 Vector3 vertex4 = new Vector3(buffer.ReadSByte(), buffer.ReadSByte(), buffer.ReadSByte());
                 Vector2 uv4 = new Vector2(buffer.ReadByte(), 0);
                 Color32 color4 = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255);
-                uv1.y = buffer.ReadByte();
+                uv4.y = buffer.ReadByte();
 
                 vertices = new Vector3[] { vertex1 , vertex2, vertex3, vertex4 };
                 colors = new Color32[] { color1, color2, color3, color4 };

@@ -99,8 +99,8 @@ namespace VS.FileFormats.MPD
                             meshColors.Add(f.colors[3]);
                             meshTrianglesUV.Add(f.uvs[1] / 256);
                             meshTrianglesUV.Add(f.uvs[2] / 256);
-                            meshTrianglesUV.Add(f.uvs[3] / 256);
                             meshTrianglesUV.Add(f.uvs[0] / 256);
+                            meshTrianglesUV.Add(f.uvs[3] / 256);
 
                             //meshNormals.Add(f.n);
 
