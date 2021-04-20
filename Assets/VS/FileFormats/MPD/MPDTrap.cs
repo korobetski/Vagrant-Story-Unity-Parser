@@ -6,7 +6,7 @@ namespace VS.FileFormats.MPD
     [Serializable]
     public class MPDTrap
     {
-        public Vector2 position;
+        public Vector2Int position;
         //public ushort pad;
         public ushort skillId;
         public byte unk1;

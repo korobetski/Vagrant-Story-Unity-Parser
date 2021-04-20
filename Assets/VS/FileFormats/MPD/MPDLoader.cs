@@ -9,6 +9,7 @@ namespace VS.FileFormats.MPD
     {
         public MPD SerializedMPD;
         public ZND.ZND SerializedZND;
+        public bool generate_collision_mesh = true;
 
         private void Start()
         {
@@ -58,11 +59,14 @@ namespace VS.FileFormats.MPD
                         mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
                         mat.SetInt("_ZWrite", 1);
                         mat.EnableKeyword("_ALPHATEST_ON");
-                        mat.DisableKeyword("_ALPHABLEND_ON");
-                        mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                        //mat.DisableKeyword("_ALPHABLEND_ON");
+                        //mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
                         materials.Add(mat);
                     }
                 }
+
+                GameObject roomGO = new GameObject(string.Concat("Room_", SerializedMPD.Filename));
+                roomGO.transform.parent = gameObject.transform;
 
                 for (uint i = 0; i < SerializedMPD.numGroups; i++)
                 {
@@ -86,13 +90,21 @@ namespace VS.FileFormats.MPD
                         }
 
                         int subMeshIndex = meshMaterials.IndexOf(meshMaterials.Find(x => x.name.Equals(f.materialRef)));
+                        if (f.translucent)
+                        {
+                            meshMaterials[subMeshIndex].SetFloat("_Mode", 4);
+                        }
+                        if (f.doubleSided)
+                        {
+                            meshMaterials[subMeshIndex].SetFloat("_Cull", 0);
+                        }
 
                         if (f.isQuad)
                         {
-                            meshVertices.Add(-f.GetOpVertex(SerializedMPD.groups[i], 0) / 128);
-                            meshVertices.Add(-f.GetOpVertex(SerializedMPD.groups[i], 1) / 128);
-                            meshVertices.Add(-f.GetOpVertex(SerializedMPD.groups[i], 2) / 128);
-                            meshVertices.Add(-f.GetOpVertex(SerializedMPD.groups[i], 3) / 128);
+                            meshVertices.Add(f.GetOpVertex(SerializedMPD.groups[i], 0) / 128);
+                            meshVertices.Add(f.GetOpVertex(SerializedMPD.groups[i], 1) / 128);
+                            meshVertices.Add(f.GetOpVertex(SerializedMPD.groups[i], 2) / 128);
+                            meshVertices.Add(f.GetOpVertex(SerializedMPD.groups[i], 3) / 128);
                             meshColors.Add(f.colors[0]);
                             meshColors.Add(f.colors[1]);
                             meshColors.Add(f.colors[2]);
@@ -116,9 +128,9 @@ namespace VS.FileFormats.MPD
                         }
                         else
                         {
-                            meshVertices.Add(-f.GetOpVertex(SerializedMPD.groups[i], 2) / 128);
-                            meshVertices.Add(-f.GetOpVertex(SerializedMPD.groups[i], 1) / 128);
-                            meshVertices.Add(-f.GetOpVertex(SerializedMPD.groups[i], 0) / 128);
+                            meshVertices.Add(f.GetOpVertex(SerializedMPD.groups[i], 2) / 128);
+                            meshVertices.Add(f.GetOpVertex(SerializedMPD.groups[i], 1) / 128);
+                            meshVertices.Add(f.GetOpVertex(SerializedMPD.groups[i], 0) / 128);
                             meshColors.Add(f.colors[2]);
                             meshColors.Add(f.colors[1]);
                             meshColors.Add(f.colors[0]);
@@ -137,7 +149,7 @@ namespace VS.FileFormats.MPD
                         }
                     }
                     GameObject groupGO = new GameObject("Group_" + i);
-                    groupGO.transform.parent = gameObject.transform;
+                    groupGO.transform.parent = roomGO.transform;
 
                     Mesh mesh = new Mesh();
                     mesh.name = "mesh_" + i;
@@ -161,6 +173,72 @@ namespace VS.FileFormats.MPD
                     MeshRenderer mr = groupGO.AddComponent<MeshRenderer>();
                     mr.materials = meshMaterials.ToArray();
                 }
+
+
+
+                // Collision mesh
+                if (generate_collision_mesh)
+                {
+                    GameObject collisionGO = new GameObject("Collision");
+                    collisionGO.transform.parent = gameObject.transform;
+
+                    List<Vector3> colliVertices = new List<Vector3>();
+                    List<int> colliTriangles = new List<int>();
+                    for (uint y = 0; y < SerializedMPD.tileHeigth; y++)
+                    {
+                        for (uint x = 0; x < SerializedMPD.tileWidth; x++)
+                        {
+                            uint k = y * SerializedMPD.tileWidth + x;
+                            MPDTile tile = SerializedMPD.tiles[k];
+                            MPDTileMode floorMode = SerializedMPD.tileModes[tile.floorMode];
+
+                            float z = (float)tile.floorHeight / 16;
+                            int l = colliVertices.Count;
+                            Vector3[] vertices = new Vector3[4] {
+                                new Vector3(x       , z    , y),
+                                new Vector3(x + 1   , z    , y),
+                                new Vector3(x       , z    , y + 1),
+                                new Vector3(x + 1   , z    , y + 1)
+                            };
+                            float dec;
+                            switch (floorMode.mode)
+                            {
+                                case MPDTileMode.Mode.DECIMAL:
+                                    vertices[0].y = vertices[1].y = vertices[2].y = vertices[3].y = z + 0.5f;
+                                    break;
+                                case MPDTileMode.Mode.RAMPXP:
+                                    dec = (float)(floorMode.to - floorMode.from) / 6;
+                                    vertices[1].y = vertices[3].y = z + dec;
+                                    break;
+                                case MPDTileMode.Mode.RAMPXN:
+                                    dec = (float)(floorMode.from - floorMode.to) / 6;
+                                    vertices[0].y = vertices[2].y = z + dec;
+                                    break;
+                                case MPDTileMode.Mode.RAMPYP:
+                                    dec = (float)(floorMode.from -floorMode.to) / 6;
+                                    vertices[0].y = vertices[1].y = z + dec;
+                                    break;
+                                case MPDTileMode.Mode.RAMPYN:
+                                    dec = (float)(floorMode.to - floorMode.from) / 6;
+                                    vertices[2].y = vertices[3].y = z + dec;
+                                    break;
+                            }
+
+                            colliVertices.AddRange(vertices);
+                            colliTriangles.AddRange(new int[] { l + 2, l + 1, l + 0 });
+                            colliTriangles.AddRange(new int[] { l + 2, l + 3, l + 1 });
+                        }
+                    }
+                    Mesh colliMesh = new Mesh();
+                    colliMesh.name = "floor_collision";
+                    colliMesh.vertices = colliVertices.ToArray();
+                    colliMesh.triangles = colliTriangles.ToArray();
+
+                    MeshFilter mf = collisionGO.AddComponent<MeshFilter>();
+                    mf.mesh = colliMesh;
+
+                    MeshRenderer mr = collisionGO.AddComponent<MeshRenderer>();
+                } 
             }
         }
     }

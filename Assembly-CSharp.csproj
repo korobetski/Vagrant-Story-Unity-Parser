@@ -338,8 +338,10 @@
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\SampleDataAsset.cs" />
     <Compile Include="Assets\VS\FileFormats\GEOM\Group.cs" />
     <Compile Include="Assets\VS\Parser\ZND.cs" />
+    <Compile Include="Assets\VS\FileFormats\MPD\MPDEnemy.cs" />
   </ItemGroup>
   <ItemGroup>
+     <None Include="Assets\Shaders\StandardDoubleSide.shader" />
      <None Include="Assets\UnityMidi\ProjectSettings\ProjectVersion.txt" />
      <None Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\ReadMe.txt" />
     <Reference Include="UnityEngine">

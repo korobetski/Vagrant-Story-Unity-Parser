@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace VS.FileFormats.MPD
 {
@@ -9,7 +10,7 @@ namespace VS.FileFormats.MPD
         public byte zoneId;
         public byte roomId;
         public ushort tileIndex;
-        public ushort[] destination;
         public uint doorId;
+        public Vector2Int destination;
     }
 }

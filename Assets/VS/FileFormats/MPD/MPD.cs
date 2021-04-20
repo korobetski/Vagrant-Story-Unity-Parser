@@ -100,7 +100,7 @@ namespace VS.FileFormats.MPD
         public byte[] clearedSection;
         public EVT.EVT scriptSection;
         public byte[] doorSection;
-        public byte[][] enemySection;
+        public MPDEnemy[] enemies;
         public Treasure treasureSection;
 
         public string[] materialRefs;
@@ -232,22 +232,22 @@ namespace VS.FileFormats.MPD
                     for (uint i = 0; i < tileWidth * tileHeigth; i++)
                     {
                         MPDTile tile = new MPDTile();
-                        tile.floorHeight = buffer.ReadByte();
                         tile.floorMode = buffer.ReadByte();
+                        tile.floorHeight = buffer.ReadByte();
                         tiles[i] = tile;
                     }
 
                     for (uint i = 0; i < tileWidth * tileHeigth; i++)
                     {
-                        tiles[i].ceilHeight = buffer.ReadByte();
                         tiles[i].ceilMode = buffer.ReadByte();
+                        tiles[i].ceilHeight = buffer.ReadByte();
                     }
 
                     tileModes = new MPDTileMode[numTileModes];
                     for (uint i = 0; i < numTileModes; i++)
                     {
                         tileModes[i] = new MPDTileMode();
-                        tileModes[i].datas = buffer.ReadBytes(16);
+                        tileModes[i].SetDatas(buffer.ReadBytes(16));
                     }
 
                     if (buffer.BaseStream.Position != collisionPtr + lenCollisionSection)
@@ -288,7 +288,11 @@ namespace VS.FileFormats.MPD
                         door.zoneId = buffer.ReadByte();
                         door.roomId = buffer.ReadByte();
                         door.tileIndex = buffer.ReadUInt16();
-                        door.destination = new ushort[] { buffer.ReadUInt16(), buffer.ReadUInt16() };
+                        Vector2Int destination = new Vector2Int();
+                        // i'm sure its the destination tile, but i'm not sure how to treat values yet, y-x order
+                        destination.y = BitConverter.ToInt16(ToolBox.EndianSwitcher(buffer.ReadBytes(2)), 0);
+                        destination.x = BitConverter.ToInt16(ToolBox.EndianSwitcher(buffer.ReadBytes(2)), 0);
+                        door.destination = destination;
                         door.doorId = buffer.ReadUInt32();
                         roomDoors[i] = door;
                     }
@@ -378,10 +382,10 @@ namespace VS.FileFormats.MPD
                     for (uint i = 0; i < numTraps; i++)
                     {
                         traps[i] = new MPDTrap();
-                        traps[i].position = new Vector2(buffer.ReadUInt16(), buffer.ReadUInt16()); // grid based
+                        traps[i].position = new Vector2Int(buffer.ReadUInt16(), buffer.ReadUInt16()); // grid based
                         ushort p = buffer.ReadUInt16(); // padding
                         traps[i].skillId = buffer.ReadUInt16(); // http://datacrystal.romhacking.net/wiki/Vagrant_Story:skills_list
-                        traps[i].unk1 = buffer.ReadByte();
+                        traps[i].unk1 = buffer.ReadByte(); // maybe texture overlapping
                         traps[i].save = buffer.ReadByte();
                         traps[i].saveIndex = buffer.ReadByte();
                         traps[i].zero = buffer.ReadByte();
@@ -455,7 +459,7 @@ namespace VS.FileFormats.MPD
                 {
                     long ptrMiniMapSection = buffer.BaseStream.Position;
 
-                    // ARM Format
+                    // ARM Format, can be loaded in the ARMLoader
                     ARM.ARM arm = ScriptableObject.CreateInstance<ARM.ARM>();
                     arm.name = Filename + ".ARM";
                     arm.ParseFromBuffer(buffer, buffer.BaseStream.Position + lenMiniMapSection);
@@ -556,12 +560,21 @@ namespace VS.FileFormats.MPD
             if (lenEnemySection >= 40)
             {
                 uint numEnemy = lenEnemySection / 40;
-                List<byte[]> enemyDatas = new List<byte[]>();
+                enemies = new MPDEnemy[numEnemy];
                 for (uint i = 0; i < numEnemy; i++)
                 {
-                    enemyDatas.Add(buffer.ReadBytes(40));
+                    enemies[i] = new MPDEnemy();
+                    enemies[i].datas = (buffer.ReadBytes(40));
                 }
-                enemySection = enemyDatas.ToArray();
+                /* 
+enemies in MAP010.MPD:
+             id
+  - datas: 0000 0000 0000 0200 0a00 0000 0400 0602 1020 3f00 001d 0000 0000 0000 0000 0000 0000 0002 0000 0100
+  - datas: 0001 0000 0500 0300 0b00 0000 0500 0a03 0120 3f00 001d 0000 0000 0000 0000 4301 0000 3202 0000 0000
+  - datas: 0002 0000 0500 0301 0b00 b300 0100 0601 0220 3f00 001d 0000 0000 0000 0000 0000 0000 0002 0000 0000
+  - datas: 0003 0000 0a00 0302 0b00 b400 0300 0d02 1320 3f00 001d 0000 0000 0000 0000 4401 0000 2002 0000 0100
+  - datas: 0104 0000 0000 00ff ffff 0002 0000 0340 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+                */
             }
 
 
