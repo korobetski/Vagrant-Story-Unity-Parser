@@ -1,4 +1,4 @@
-﻿using MyBox;
+﻿/*
 using System;
 using UnityEngine;
 using VagrantStory.Core;
@@ -323,3 +323,4 @@ namespace VS.ComponentScript
     }
 
 }
+*/

@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿/*
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 #if UNITY_EDITOR
 using UnityEditor.Animations;
 #endif
 using UnityEngine;
-using VS.Entity;
+using VS.Serializable;
 using VS.Utils;
 
 
@@ -24,26 +25,7 @@ namespace VS.Parser
         public bool DrawPNG = false;
         public GameObject ZUDGO;
 
-        public int idCharacter;
-        public int idWeapon;
-        public int idWeaponCategory;
-        public int idWeaponMaterial;
-        public int idShield;
-        public int idShieldMaterial;
-        public int Unknown;
-        public int padding;
-
-        public List<VSBone> bones;
-        public List<VSGroup> groups;
-        public List<VSVertex> vertices;
-        public List<VSFace> faces;
-        public bool excpFaces = false;
-
-        SHP zudShape;
-        WEP zudWeapon;
-        WEP zudShield;
-        SEQ zudComSeq;
-        SEQ zudBatSeq;
+        public Serializable.ZUD so;
 
         public ZUD()
         {
@@ -62,62 +44,35 @@ namespace VS.Parser
         }
         public void Parse(BinaryReader buffer)
         {
-            idCharacter = buffer.ReadByte();
-            idWeapon = buffer.ReadByte();
-            idWeaponCategory = buffer.ReadByte();
-            idWeaponMaterial = buffer.ReadByte();
-            idShield = buffer.ReadByte();
-            idShieldMaterial = buffer.ReadByte();
-            Unknown = buffer.ReadByte();
-            padding = buffer.ReadByte();
+            so = ScriptableObject.CreateInstance<Serializable.ZUD>();
+            so.idCharacter = buffer.ReadByte();
+            so.idWeapon = buffer.ReadByte();
+            so.weaponCategory = (WeaponType) buffer.ReadByte();
+            so.weaponMaterial = (SmithMaterial.MaterialEnum)buffer.ReadByte();
+            so.idShield = buffer.ReadByte();
+            so.shieldMaterial = (SmithMaterial.MaterialEnum)buffer.ReadByte();
+            so.unk1 = buffer.ReadByte();
+            so.pad = buffer.ReadByte();
 
-            if (UseDebug)
-            {
-                Debug.Log(FileName);
-                Debug.Log("idCharacter : " + idCharacter);
-                Debug.Log("idWeapon : " + idWeapon);
-                Debug.Log("idWeaponCategory : " + idWeaponCategory);
-                Debug.Log("idWeaponMaterial : " + idWeaponMaterial);
-                Debug.Log("idShield : " + idShield);
-                Debug.Log("idShieldMaterial : " + idShieldMaterial);
-                Debug.Log("Unknown : " + Unknown);
-                Debug.Log("padding : " + padding);
-            }
             // pointers
-            long ptrCharacterSHP = buffer.ReadInt32();
-            long lenCharacterSHP = buffer.ReadInt32();
-            long ptrWeaponWEP = buffer.ReadInt32();
-            long lenWeaponWEP = buffer.ReadInt32();
-            long ptrShieldWEP = buffer.ReadInt32();
-            long lenShieldWEP = buffer.ReadInt32();
-            long ptrCommonSEQ = buffer.ReadInt32();
-            long lenCommonSEQ = buffer.ReadInt32();
-            long ptrBattleSEQ = buffer.ReadInt32();
-            long lenBattleSEQ = buffer.ReadInt32();
-
-            if (UseDebug)
-            {
-                Debug.Log("ptrCharacterSHP : " + ptrCharacterSHP);
-                Debug.Log("lenCharacterSHP : " + lenCharacterSHP);
-                Debug.Log("ptrWeaponWEP : " + ptrWeaponWEP);
-                Debug.Log("lenWeaponWEP : " + lenWeaponWEP);
-                Debug.Log("ptrShieldWEP : " + ptrShieldWEP);
-                Debug.Log("lenShieldWEP : " + lenShieldWEP);
-                Debug.Log("ptrCommonSEQ : " + ptrCommonSEQ);
-                Debug.Log("lenCommonSEQ : " + lenCommonSEQ);
-                Debug.Log("ptrBattleSEQ : " + ptrBattleSEQ);
-                Debug.Log("lenBattleSEQ : " + lenBattleSEQ);
-            }
-
-
+            so.ptrCharacterSHP = buffer.ReadUInt32();
+            so.lenCharacterSHP = buffer.ReadUInt32();
+            so.ptrWeaponWEP = buffer.ReadUInt32();
+            so.lenWeaponWEP = buffer.ReadUInt32();
+            so.ptrShieldWEP = buffer.ReadUInt32();
+            so.lenShieldWEP = buffer.ReadUInt32();
+            so.ptrCommonSEQ = buffer.ReadUInt32();
+            so.lenCommonSEQ = buffer.ReadUInt32();
+            so.ptrBattleSEQ = buffer.ReadUInt32();
+            so.lenBattleSEQ = buffer.ReadUInt32();
 
             // shape section
-            if (lenCharacterSHP > 0)
+            if (so.lenCharacterSHP > 0)
             {
-                if (buffer.BaseStream.Position != ptrCharacterSHP)
+                if (buffer.BaseStream.Position != so.ptrCharacterSHP)
                 {
                     Debug.LogWarning("le pointeur ptrCharacterSHP n'est pas à la bonne place : " + buffer.BaseStream.Position + " != " + ptrCharacterSHP);
-                    buffer.BaseStream.Position = ptrCharacterSHP;
+                    buffer.BaseStream.Position = so.ptrCharacterSHP;
                 }
                 zudShape = new SHP();
                 zudShape.excpFaces = excpFaces;
@@ -127,12 +82,12 @@ namespace VS.Parser
             }
 
             // weapon section
-            if (lenWeaponWEP > 0)
+            if (so.lenWeaponWEP > 0)
             {
-                if (buffer.BaseStream.Position != ptrWeaponWEP)
+                if (buffer.BaseStream.Position != so.ptrWeaponWEP)
                 {
                     Debug.LogWarning("le pointeur ptrWeaponWEP n'est pas à la bonne place : " + buffer.BaseStream.Position + " != " + ptrWeaponWEP);
-                    buffer.BaseStream.Position = ptrWeaponWEP;
+                    buffer.BaseStream.Position = so.ptrWeaponWEP;
                 }
                 zudWeapon = new WEP();
                 zudWeapon.FileName = ((byte)idWeapon).ToString();
@@ -141,12 +96,12 @@ namespace VS.Parser
             }
 
             // shield section
-            if (lenShieldWEP > 0)
+            if (so.lenShieldWEP > 0)
             {
-                if (buffer.BaseStream.Position != ptrShieldWEP)
+                if (buffer.BaseStream.Position != so.ptrShieldWEP)
                 {
                     Debug.LogWarning("le pointeur ptrShieldWEP n'est pas à la bonne place : " + buffer.BaseStream.Position + " != " + ptrShieldWEP);
-                    buffer.BaseStream.Position = ptrShieldWEP;
+                    buffer.BaseStream.Position = so.ptrShieldWEP;
                 }
                 zudShield = new WEP();
                 zudShield.FileName = ((byte)idShield).ToString();
@@ -155,12 +110,12 @@ namespace VS.Parser
             }
 
             // common anim section
-            if (lenCommonSEQ > 0)
+            if (so.lenCommonSEQ > 0)
             {
-                if (buffer.BaseStream.Position != ptrCommonSEQ)
+                if (buffer.BaseStream.Position != so.ptrCommonSEQ)
                 {
                     Debug.LogWarning("le pointeur ptrCommonSEQ n'est pas à la bonne place : " + buffer.BaseStream.Position + " != " + ptrCommonSEQ);
-                    buffer.BaseStream.Position = ptrCommonSEQ;
+                    buffer.BaseStream.Position = so.ptrCommonSEQ;
                 }
                 zudComSeq = new SEQ();
                 zudComSeq.FileName = FileName + "_COM_SEQ";
@@ -168,12 +123,12 @@ namespace VS.Parser
             }
 
             // battle anim section
-            if (lenBattleSEQ > 0)
+            if (so.lenBattleSEQ > 0)
             {
-                if (buffer.BaseStream.Position != ptrBattleSEQ)
+                if (buffer.BaseStream.Position != so.ptrBattleSEQ)
                 {
                     Debug.LogWarning("le pointeur ptrBattleSEQ n'est pas à la bonne place : " + buffer.BaseStream.Position + " != " + ptrBattleSEQ);
-                    buffer.BaseStream.Position = ptrBattleSEQ;
+                    buffer.BaseStream.Position = so.ptrBattleSEQ;
                 }
                 zudBatSeq = new SEQ();
                 zudBatSeq.FileName = FileName + "_BAT_SEQ";
@@ -310,3 +265,4 @@ namespace VS.Parser
         }
     }
 }
+*/

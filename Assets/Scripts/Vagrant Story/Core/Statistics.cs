@@ -1,5 +1,4 @@
-﻿using MyBox;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -60,28 +59,28 @@ namespace VagrantStory.Core
         public DamageType PIERCING { get => _PIERCING; set { _PIERCING = value; PIERCINGValue = value.value; } }
 
 
-        [ReadOnly] [Range(-255, 255)] public float STRValue;
-        [ReadOnly] [Range(-255, 255)] public float INTValue;
-        [ReadOnly] [Range(-255, 255)] public float AGIValue;
+        [Range(-255, 255)] public float STRValue;
+        [Range(-255, 255)] public float INTValue;
+        [Range(-255, 255)] public float AGIValue;
 
-        [ReadOnly] [Range(-100, 100)] public float HUMANValue;
-        [ReadOnly] [Range(-100, 100)] public float BEASTValue;
-        [ReadOnly] [Range(-100, 100)] public float UNDEADValue;
-        [ReadOnly] [Range(-100, 100)] public float PHANTOMValue;
-        [ReadOnly] [Range(-100, 100)] public float DRAGONValue;
-        [ReadOnly] [Range(-100, 100)] public float EVILValue;
+        [Range(-100, 100)] public float HUMANValue;
+        [Range(-100, 100)] public float BEASTValue;
+        [Range(-100, 100)] public float UNDEADValue;
+        [Range(-100, 100)] public float PHANTOMValue;
+        [Range(-100, 100)] public float DRAGONValue;
+        [Range(-100, 100)] public float EVILValue;
 
-        [ReadOnly] [Range(-100, 100)] public float PHYSICALValue;
-        [ReadOnly] [Range(-100, 100)] public float AIRValue;
-        [ReadOnly] [Range(-100, 100)] public float FIREValue;
-        [ReadOnly] [Range(-100, 100)] public float EARTHValue;
-        [ReadOnly] [Range(-100, 100)] public float WATERValue;
-        [ReadOnly] [Range(-100, 100)] public float LIGHTValue;
-        [ReadOnly] [Range(-100, 100)] public float DARKValue;
+        [Range(-100, 100)] public float PHYSICALValue;
+        [Range(-100, 100)] public float AIRValue;
+        [Range(-100, 100)] public float FIREValue;
+        [Range(-100, 100)] public float EARTHValue;
+        [Range(-100, 100)] public float WATERValue;
+        [Range(-100, 100)] public float LIGHTValue;
+        [Range(-100, 100)] public float DARKValue;
 
-        [ReadOnly] [Range(-100, 100)] public float BLUNTValue;
-        [ReadOnly] [Range(-100, 100)] public float EDGEDValue;
-        [ReadOnly] [Range(-100, 100)] public float PIERCINGValue;
+        [Range(-100, 100)] public float BLUNTValue;
+        [Range(-100, 100)] public float EDGEDValue;
+        [Range(-100, 100)] public float PIERCINGValue;
 
 
 

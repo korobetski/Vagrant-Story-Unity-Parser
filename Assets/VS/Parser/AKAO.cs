@@ -1,8 +1,8 @@
-﻿using System;
+﻿using FileFormats;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using VS.Format;
 using VS.Parser.Akao;
 using VS.Utils;
 
@@ -40,7 +40,7 @@ namespace VS.Parser
             }
         }
 
-
+        public bool UseDebug = false;
         public AKAOType _type;
         public List<AKAOInstrument> instruments;
         public AKAOArticulation[] articulations;
@@ -55,16 +55,10 @@ namespace VS.Parser
 
         public void Parse(string filePath, AKAOType type, long limit = long.MaxValue)
         {
-            PreParse(filePath);
             _type = type;
-            if (FileSize < 4)
-            {
-                return;
-            }
             Parse(buffer, type, limit);
 
-            buffer.Close();
-            fileStream.Close();
+            Close();
         }
 
         public void Parse(BinaryReader buffer, AKAOType type, long limit = long.MaxValue)

@@ -285,6 +285,13 @@ namespace VS.Utils
             return table[num];
         }
 
+        public static string CleanTranslate(byte[] raw)
+        {
+            string text = Translate(raw);
+            string[] subs = text.Split('|');
+            return subs[0];
+        }
+
         public static string Translate(byte[] raw)
         {
             string text = "";

@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿/*
+using System;
+using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
-using VS.Data;
 using VS.Utils;
-
 
 // MENU/ARMOR.SYD
 // MENU/BLADE.SYD
@@ -13,7 +14,7 @@ namespace VS.Parser
 {
     public class SYD : FileParser
     {
-        public void Parse(string filePath, List<string>[] texts)
+        public void Parse(string filePath)
         {
             PreParse(filePath);
 
@@ -51,50 +52,66 @@ namespace VS.Parser
 
 
                 case "SHIELD":
-                    //Debug.Log("VS/MENU/SHIELD.SYD");
-                    Shield.list = new List<Shield>();
+                    var so1 = ScriptableObject.CreateInstance<Serializable.ShieldWorkshop>();
                     buffer.BaseStream.Position = 0x0178;
                     for (var i = 0; i < 16; i++)
                     {
                         //ID|ID.WEP|armor type 01(shield)|gem slots|STR|INT|AGI|always 00
-                        Shield.list.Add(new Shield(buffer.ReadBytes(8), texts[0][shieldIdx.Key + i]));
+                        so1.Shields[i] = new Serializable.Shield();
+                        so1.Shields[i].SetDatasFromSYD(buffer.ReadBytes(8));
                     }
 
-                    ToolBox.DirExNorCreate("Assets/Resources/JSON/");
-                    ToolBox.WriteJSON("Assets/Resources/JSON/SHIELD.json", Shield.JSONlist());
+                    ToolBox.DirExNorCreate("Assets/");
+                    ToolBox.DirExNorCreate("Assets/Resources/");
+                    ToolBox.DirExNorCreate("Assets/Resources/Serialized/");
+                    ToolBox.DirExNorCreate("Assets/Resources/Serialized/Datas/");
+                    AssetDatabase.DeleteAsset("Assets/Resources/Serialized/Datas/SHIELD.SYD.yaml.asset");
+                    AssetDatabase.CreateAsset(so1, "Assets/Resources/Serialized/Datas/SHIELD.SYD.yaml.asset");
+                    AssetDatabase.SaveAssets();
+
                     break;
                 case "ARMOR":
-                    //Debug.Log("VS/MENU/ARMOR.SYD");
-                    Armor.list = new List<Armor>();
+                    var so2 = ScriptableObject.CreateInstance<Serializable.ArmorWorkshop>();
                     buffer.BaseStream.Position = 0x1498;
                     for (var i = 0; i < 80; i++)
                     {
                         //ID|ID.WEP|armor type[01-05]|00|STR|INT|AGI|always 00
-                        Armor.list.Add(new Armor(buffer.ReadBytes(8), texts[0][armorIdx.Key + i]));
+                        so2.Armors[i] = new Serializable.Armor();
+                        so2.Armors[i].SetDatasFromSYD(buffer.ReadBytes(8));
                     }
 
-                    ToolBox.DirExNorCreate("Assets/Resources/JSON/");
-                    ToolBox.WriteJSON("Assets/Resources/JSON/ARMOR.json", Armor.JSONlist());
-                    //ToolBox.WriteJSON("Assets/Resources/JSON/ARMOR.txt", Armor.CSlist());
+                    ToolBox.DirExNorCreate("Assets/");
+                    ToolBox.DirExNorCreate("Assets/Resources/");
+                    ToolBox.DirExNorCreate("Assets/Resources/Serialized/");
+                    ToolBox.DirExNorCreate("Assets/Resources/Serialized/Datas/");
+                    AssetDatabase.DeleteAsset("Assets/Resources/Serialized/Datas/ARMOR.SYD.yaml.asset");
+                    AssetDatabase.CreateAsset(so2, "Assets/Resources/Serialized/Datas/ARMOR.SYD.yaml.asset");
+                    AssetDatabase.SaveAssets();
+
                     break;
                 case "BLADE":
-                    //Debug.Log("VS/MENU/BLADE.SYD");
-                    Blade.list = new List<Blade>();
-                    Blade.list.Add(new Blade()); // Empty Blade, index start at 1
+                    var so3 = ScriptableObject.CreateInstance<Serializable.BladeWorkshop>();
                     buffer.BaseStream.Position = 0x2DE0;
                     for (var i = 0; i < 90; i++)
                     {
                         // Damage types : 1 = Blunt - 2 = Edged  -  3 = Piercing
                         //22   22         03          02    02  02  0000 23  00  FA  00  06  05   06       01       Holy Win
                         //ID|ID.WEP|weapon type|damage type|02|Risk|0000|STR|INT|AGI|00|Range|?|range|always 01
-                        Blade.list.Add(new Blade(buffer.ReadBytes(16), texts[0][bladeIdx.Key + i], texts[1][bladeIdx.Value + i]));
+                        so3.Blades[i] = new Serializable.Blade();
+                        so3.Blades[i].SetDatasFromSYD(buffer.ReadBytes(16));
                     }
 
-                    ToolBox.DirExNorCreate("Assets/Resources/JSON/");
-                    ToolBox.WriteJSON("Assets/Resources/JSON/BLADE.json", Blade.JSONlist());
-                    //ToolBox.WriteJSON("Assets/Resources/JSON/BLADE.txt", Blade.CSlist());
+                    ToolBox.DirExNorCreate("Assets/");
+                    ToolBox.DirExNorCreate("Assets/Resources/");
+                    ToolBox.DirExNorCreate("Assets/Resources/Serialized/");
+                    ToolBox.DirExNorCreate("Assets/Resources/Serialized/Datas/");
+                    AssetDatabase.DeleteAsset("Assets/Resources/Serialized/Datas/BLADE.SYD.yaml.asset");
+                    AssetDatabase.CreateAsset(so3, "Assets/Resources/Serialized/Datas/BLADE.SYD.yaml.asset");
+                    AssetDatabase.SaveAssets();
+
                     break;
             }
         }
     }
 }
+*/

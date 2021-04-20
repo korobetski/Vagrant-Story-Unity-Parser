@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿/*
+
+using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
-using VS.Entity;
+using VS.Serializable;
 using VS.Utils;
 
 // http://datacrystal.romhacking.net/wiki/Vagrant_Story:ARM_files
@@ -17,119 +20,123 @@ namespace VS.Parser
         public bool PrefabBuilded = false;
         public GameObject ARMGO;
 
-        private uint numRooms;
-        private VSRoom[] rooms;
+        public Serializable.ARM so;
 
-        public void Parse(string filePath)
+        public void CoreParse()
         {
-            PreParse(filePath);
-            if (UseDebug)
+            so = ScriptableObject.CreateInstance<VS.Serializable.ARM>();
+            so.NumRooms = buffer.ReadUInt32();
+            so.Rooms = new ARMRoom[so.NumRooms];
+            for (int i = 0; i < so.NumRooms; i++)
             {
-                Debug.Log("ARM Parse : " + FilePath);
-            }
-
-            numRooms = buffer.ReadUInt32();
-            rooms = new VSRoom[numRooms];
-            for (int i = 0; i < numRooms; i++)
-            {
-                VSRoom room = new VSRoom();
+                ARMRoom room = new ARMRoom();
                 room.name = "Room_" + i;
-                room.u1 = buffer.ReadUInt32(); // ? (RAM only)
-                room.mapLength = buffer.ReadUInt32(); // lenght of map graphics section (RAM: pointer to section)
-                room.zoneNumber = buffer.ReadUInt16();
-                room.mapNumber = buffer.ReadUInt16();
-                rooms[i] = room;
+                room.Unk = buffer.ReadUInt32(); // ? (RAM only)
+                room.Length = buffer.ReadUInt32(); // lenght of map graphics section (RAM: pointer to section)
+                room.ZoneId = buffer.ReadUInt16();
+                room.MapId = buffer.ReadUInt16();
+                so.Rooms[i] = room;
             }
 
-            for (int i = 0; i < numRooms; i++)
+            for (int i = 0; i < so.NumRooms; i++)
             {
-                rooms[i].numVertices = buffer.ReadUInt32();
-                rooms[i].vertices = new List<VSVertex>();
-                for (int j = 0; j < rooms[i].numVertices; j++)
+                so.Rooms[i].NumVertices = buffer.ReadUInt32();
+                so.Rooms[i].Vertices = new VSVertex[so.Rooms[i].NumVertices];
+                for (int j = 0; j < so.Rooms[i].NumVertices; j++)
                 {
                     VSVertex vertex = new VSVertex();
-                    int x = -buffer.ReadInt16();
-                    int y = -buffer.ReadInt16();
-                    int z = -buffer.ReadInt16();
-                    buffer.ReadInt16();
-                    vertex.position = new Vector3(x, y, z);
-                    rooms[i].vertices.Add(vertex);
+                    vertex.position = new Vector4(buffer.ReadInt16(), buffer.ReadInt16(), buffer.ReadInt16(), buffer.ReadInt16());
+                    so.Rooms[i].Vertices[j] = vertex;
                 }
 
-                rooms[i].numTriangles = buffer.ReadUInt32();
-                rooms[i].triangles = new List<VSFace>();
-                for (int j = 0; j < rooms[i].numTriangles; j++)
+                so.Rooms[i].NumTriangles = buffer.ReadUInt32();
+                so.Rooms[i].Triangles = new VSFace[so.Rooms[i].NumTriangles];
+                for (int j = 0; j < so.Rooms[i].NumTriangles; j++)
                 {
                     VSFace face = new VSFace();
                     face.verticesCount = 3;
                     face.type = 0x24;
                     face.side = 8;
-                    face.vertices = new List<int>();
+                    face.vertices = new List<ushort>();
                     face.vertices.Add(buffer.ReadByte());
                     face.vertices.Add(buffer.ReadByte());
                     face.vertices.Add(buffer.ReadByte());
                     face.vertices.Add(buffer.ReadByte());
-                    rooms[i].triangles.Add(face);
+                    so.Rooms[i].Triangles[j] = face;
                 }
-                rooms[i].numQuads = buffer.ReadUInt32();
-                rooms[i].quads = new List<VSFace>();
-                for (int j = 0; j < rooms[i].numQuads; j++)
+                so.Rooms[i].NumQuads = buffer.ReadUInt32();
+                so.Rooms[i].Quads = new VSFace[so.Rooms[i].NumQuads];
+                for (int j = 0; j < so.Rooms[i].NumQuads; j++)
                 {
                     VSFace face = new VSFace();
                     face.verticesCount = 4;
                     face.type = 0x2C;
                     face.side = 8;
-                    face.vertices = new List<int>();
+                    face.vertices = new List<ushort>();
                     face.vertices.Add(buffer.ReadByte());
                     face.vertices.Add(buffer.ReadByte());
                     face.vertices.Add(buffer.ReadByte());
                     face.vertices.Add(buffer.ReadByte());
-                    rooms[i].quads.Add(face);
+                    so.Rooms[i].Quads[j] = face;
                 }
-                rooms[i].numFloorLines = buffer.ReadUInt32();
-                rooms[i].floorLines = new List<VSLine>();
-                for (int j = 0; j < rooms[i].numFloorLines; j++)
-                {
-                    VSLine line = new VSLine();
-                    line.points = new List<VSVertex>();
-                    line.points.Add(rooms[i].vertices[buffer.ReadByte()]);
-                    line.points.Add(rooms[i].vertices[buffer.ReadByte()]);
-                    buffer.ReadInt16();
-                    rooms[i].floorLines.Add(line);
-                }
-                rooms[i].numWallLines = buffer.ReadUInt32();
-                rooms[i].wallLines = new List<VSLine>();
-                for (int j = 0; j < rooms[i].numWallLines; j++)
-                {
-                    VSLine line = new VSLine();
-                    line.points = new List<VSVertex>();
-                    line.points.Add(rooms[i].vertices[buffer.ReadByte()]);
-                    line.points.Add(rooms[i].vertices[buffer.ReadByte()]);
-                    buffer.ReadInt16();
-                    rooms[i].wallLines.Add(line);
-                }
-                rooms[i].numMark = buffer.ReadUInt32();
-                rooms[i].markers = new List<byte[]>();
 
-                for (int j = 0; j < rooms[i].numMark; j++)
+                so.Rooms[i].NumFloorLines = buffer.ReadUInt32();
+                so.Rooms[i].FloorLines = new VSLine[so.Rooms[i].NumFloorLines];
+                for (int j = 0; j < so.Rooms[i].NumFloorLines; j++)
                 {
-                    rooms[i].markers.Add(buffer.ReadBytes(4));
+                    VSLine line = new VSLine();
+                    line.verticesId[0] = buffer.ReadByte();
+                    line.verticesId[1] = buffer.ReadByte();
+                    line.pad = buffer.ReadUInt16();
+                    so.Rooms[i].FloorLines[j] = line;
+                }
+
+                so.Rooms[i].NumCeilLines = buffer.ReadUInt32();
+                so.Rooms[i].CeilLines = new VSLine[so.Rooms[i].NumCeilLines];
+                for (int j = 0; j < so.Rooms[i].NumCeilLines; j++)
+                {
+                    VSLine line = new VSLine();
+                    line.verticesId[0] = buffer.ReadByte();
+                    line.verticesId[1] = buffer.ReadByte();
+                    line.pad = buffer.ReadUInt16();
+                    so.Rooms[i].CeilLines[j] = line;
+                }
+
+                so.Rooms[i].NumMarkers = buffer.ReadUInt32();
+                so.Rooms[i].Markers = new ARMMarker[so.Rooms[i].NumMarkers];
+
+                for (int j = 0; j < so.Rooms[i].NumMarkers; j++)
+                {
+                    so.Rooms[i].Markers[j] = new ARMMarker(buffer.ReadBytes(4));
                 }
             }
+        } 
+
+
+
+        public void Parse()
+        {
+            if (UseDebug)
+            {
+                Debug.Log("ARM Parse : " + FilePath);
+            }
+
+            CoreParse();
+
 
             if (UseDebug)
             {
-                Debug.Log(FileName + " n° of Rooms : " + numRooms + " File Length : " + buffer.BaseStream.Length);
+                Debug.Log(FileName + " n° of Rooms : " + so.NumRooms + " File Length : " + buffer.BaseStream.Length);
             }
 
             if (buffer.BaseStream.Position != buffer.BaseStream.Length) // snowfly forest rooms have no names
             {
                 if (UseDebug)
                 {
-                    Debug.Log("Room info len : " + (buffer.BaseStream.Length - buffer.BaseStream.Position) / numRooms);
+                    Debug.Log("Room info len : " + (buffer.BaseStream.Length - buffer.BaseStream.Position) / so.NumRooms);
                 }
 
-                for (int i = 0; i < numRooms; i++)
+                for (int i = 0; i < so.NumRooms; i++)
                 {
                     if (UseDebug)
                     {
@@ -146,9 +153,11 @@ namespace VS.Parser
                         string sname = "";
                         foreach (byte b in bn)
                         {
-                            sname = sname + VS.Utils.L10n.Charset(b);
+                            sname += VS.Utils.L10n.Charset(b);
                         }
-                        rooms[i].name = sname;
+                        string[] subs = sname.Split('|');
+
+                        so.Rooms[i].name = subs[0];
                         int num4 = buffer.ReadInt16();
                         int num5 = buffer.ReadInt16();
                         int num6 = buffer.ReadInt16();
@@ -160,9 +169,18 @@ namespace VS.Parser
                     }
                 }
             }
+
             buffer.Close();
             fileStream.Close();
             Parsed = true;
+
+            ToolBox.DirExNorCreate("Assets/");
+            ToolBox.DirExNorCreate("Assets/Resources/");
+            ToolBox.DirExNorCreate("Assets/Resources/Serialized/");
+            ToolBox.DirExNorCreate("Assets/Resources/Serialized/MiniMaps/");
+            AssetDatabase.DeleteAsset("Assets/Resources/Serialized/MiniMaps/" + FileName + ".ARM.yaml.asset");
+            AssetDatabase.CreateAsset(so, "Assets/Resources/Serialized/MiniMaps/" + FileName + ".ARM.yaml.asset");
+            AssetDatabase.SaveAssets();
         }
         public GameObject BuildGameObject()
         {
@@ -215,48 +233,18 @@ namespace VS.Parser
                     prefab = PrefabUtility.SaveAsPrefabAsset(areaGo, miniMapFilename);
                 }
 
-                for (int i = 0; i < numRooms; i++)
+                for (int i = 0; i < so.NumRooms; i++)
                 {
                     List<VSFace> polygones = new List<VSFace>();
-                    polygones.AddRange(rooms[i].triangles);
-                    polygones.AddRange(rooms[i].quads);
-                    Mesh roomMesh = BuildMesh(rooms[i].name, rooms[i].vertices.ToArray(), polygones.ToArray());
-                    GameObject meshGo = new GameObject(rooms[i].name);
-                    ARMRoom dataScript = meshGo.AddComponent<ARMRoom>();
-                    dataScript.mapNumber = rooms[i].mapNumber;
-                    dataScript.zoneNumber = rooms[i].zoneNumber;
+                    polygones.AddRange(so.Rooms[i].Triangles);
+                    polygones.AddRange(so.Rooms[i].Quads);
 
-                    /*
-                    LineRenderer lines = meshGo.AddComponent<LineRenderer>();
-                    lines.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                    lines.receiveShadows = false;
-                    lines.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
-                    lines.material = linesMaterial;
-                    lines.startWidth = 0.25f;
-                    lines.endWidth = 0.25f;
-                    lines.positionCount = (int)(rooms[i].numFloorLines * 2 + rooms[i].numWallLines * 2);
-                    //lines.SetVertexCount((int)(rooms[i].numFloorLines * 2 + rooms[i].numWallLines * 2));
-                    lines.useWorldSpace = false;
-                    Vector3[] linePos = new Vector3[(int)(rooms[i].numFloorLines * 2 + rooms[i].numWallLines * 2)];
-                    for (int j = 0; j < rooms[i].numFloorLines; j++)
-                    {
-                        linePos[j * 2] = rooms[i].floorLines[j].points[0].position;
-                        linePos[j * 2 + 1] = rooms[i].floorLines[j].points[1].position;
-                    }
+                    Mesh roomMesh = BuildMesh(so.Rooms[i].name, so.Rooms[i].Vertices, polygones.ToArray());
+                    GameObject meshGo = new GameObject(so.Rooms[i].name);
 
-                    for (int j = 0; j < rooms[i].numWallLines; j++)
-                    {
-                        linePos[rooms[i].numFloorLines * 2 + j * 2] = rooms[i].wallLines[j].points[0].position;
-                        linePos[rooms[i].numFloorLines * 2 + j * 2 + 1] = rooms[i].wallLines[j].points[1].position;
-                    }
-                    lines.SetPositions(linePos);
-                    */
-
-
-                    // Ugly script but nicer render, no choice since line component only work with continued lines.
                     GameObject linesContainer = new GameObject("Lines");
                     linesContainer.transform.parent = meshGo.transform;
-                    for (int j = 0; j < rooms[i].numFloorLines; j++)
+                    for (int j = 0; j < so.Rooms[i].NumFloorLines; j++)
                     {
                         GameObject lineGo = new GameObject("Floor Line " + j);
                         lineGo.transform.parent = linesContainer.transform;
@@ -269,11 +257,12 @@ namespace VS.Parser
                         lines.endWidth = 0.4f;
                         lines.positionCount = 2;
                         lines.useWorldSpace = false;
-                        lines.SetPositions(new Vector3[] { rooms[i].floorLines[j].points[0].position, rooms[i].floorLines[j].points[1].position });
+                        lines.SetPositions(so.Rooms[i].GetLinePositions(j));
                     }
-                    for (int j = 0; j < rooms[i].numWallLines; j++)
+
+                    for (int j = 0; j < so.Rooms[i].NumCeilLines; j++)
                     {
-                        GameObject lineGo = new GameObject("Wall Line " + j);
+                        GameObject lineGo = new GameObject("Ceil Line " + j);
                         lineGo.transform.parent = linesContainer.transform;
                         LineRenderer lines = lineGo.AddComponent<LineRenderer>();
                         lines.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -284,31 +273,17 @@ namespace VS.Parser
                         lines.endWidth = 0.2f;
                         lines.positionCount = 2;
                         lines.useWorldSpace = false;
-                        lines.SetPositions(new Vector3[] { rooms[i].wallLines[j].points[0].position, rooms[i].wallLines[j].points[1].position });
+                        lines.SetPositions(so.Rooms[i].GetLinePositions(j, false));
                     }
 
-                    /*
-                    GameObject vertContainer = new GameObject("Vertices");
-                    vertContainer.transform.parent = meshGo.transform;
-                    for (int j = 0; j < rooms[i].vertices.Count; j++)
-                    {
-                        GameObject vertice = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                        vertice.transform.position = rooms[i].vertices[j].position;
-                        vertice.transform.localScale = Vector3.one/10;
-                        vertice.transform.parent = vertContainer.transform;
-                    }
-                    */
-
-
-                    for (int j = 0; j < rooms[i].numMark; j++)
+                    for (int j = 0; j < so.Rooms[i].NumMarkers; j++)
                     {
                         GameObject markerGO = new GameObject();
-                        ARMMarker mark = markerGO.AddComponent<ARMMarker>();
-                        mark.SetDatas(rooms[i].markers[j]);
-
                         Material mat = null; //(Material)Resources.Load("Prefabs/ARMMaterial", typeof(Material));
 
-                        if (mark.info == ARMMarker.MarkerType.door)
+                        ARMMarker mark = so.Rooms[i].Markers[j];
+
+                        if (mark.type == ARMMarker.MarkerType.DOOR)
                         {
                             markerGO = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                             if (mark.lockId > 0)
@@ -322,68 +297,55 @@ namespace VS.Parser
                                 mat = (Material)Resources.Load("Prefabs/ARMWhite", typeof(Material));
                             }
                         }
-                        if (mark.info == ARMMarker.MarkerType.center)
+                        if (mark.type == ARMMarker.MarkerType.CENTER)
                         {
                             markerGO.name = "Room Center";
                             // center of the room, usefull to place Ashley's position for an ingame map
                         }
 
-                        if (mark.info == ARMMarker.MarkerType.unk12)
+                        if (mark.type == ARMMarker.MarkerType.SAVE_CONTAINER)
                         {
                             markerGO = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                            markerGO.name = "unk12";
+                            markerGO.name = "SAVE_CONTAINER";
                             mat = (Material)Resources.Load("Prefabs/ARMRed", typeof(Material));
                         }
 
 
 
-                        if (mark.info == ARMMarker.MarkerType.exit)
+                        if (mark.type == ARMMarker.MarkerType.EXIT)
                         {
                             markerGO = GameObject.CreatePrimitive(PrimitiveType.Cube);
                             markerGO.name = "Zone Exit";
                             mat = (Material)Resources.Load("Prefabs/ARMRed", typeof(Material));
                         }
-                        if (mark.info == ARMMarker.MarkerType.save || mark.info == ARMMarker.MarkerType.workshop || mark.info == ARMMarker.MarkerType.reserve)
+                        if (mark.type == ARMMarker.MarkerType.SAVE || mark.type == ARMMarker.MarkerType.WORKSHOP || mark.type == ARMMarker.MarkerType.WORKSHOP2)
                         {
                             // these markers are also used as room center
                             markerGO = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                            if (mark.info == ARMMarker.MarkerType.save)
+                            if (mark.type == ARMMarker.MarkerType.SAVE)
                             {
                                 markerGO.name = "Save";
                                 mat = (Material)Resources.Load("Prefabs/ARMLineMaterial", typeof(Material));
                             }
-                            else if (mark.info == ARMMarker.MarkerType.reserve)
-                            {
-                                markerGO.name = "Reserve & Save";
-                                mat = (Material)Resources.Load("Prefabs/ARMLineMaterialSelected", typeof(Material));
-                            }
-                            else
+                            else if (mark.type == ARMMarker.MarkerType.WORKSHOP || mark.type == ARMMarker.MarkerType.WORKSHOP2)
                             {
                                 markerGO.name = "Workshop";
                                 mat = (Material)Resources.Load("Prefabs/ARMWhite", typeof(Material));
                             }
                         }
 
-                        if (mark.info == ARMMarker.MarkerType.container)
+                        if (mark.type == ARMMarker.MarkerType.CONTAINER)
                         {
                             markerGO = GameObject.CreatePrimitive(PrimitiveType.Cube);
                             markerGO.name = "Container";
                             mat = (Material)Resources.Load("Prefabs/ARMWhite", typeof(Material));
                         }
 
-
-                        // One more time ... because we erased this by changing the GO
-                        if (markerGO.GetComponent<ARMMarker>() == null)
-                        {
-                            mark = markerGO.AddComponent<ARMMarker>();
-                            mark.SetDatas(rooms[i].markers[j]);
-                        }
-
                         if (markerGO.GetComponent<MeshRenderer>() != null)
                         {
                             markerGO.GetComponent<MeshRenderer>().material = mat;
                         }
-                        markerGO.transform.position = rooms[i].vertices[(int)mark.vertexId].position;
+                        markerGO.transform.position = so.Rooms[i].Vertices[(int)mark.vertexId].position;
                         markerGO.transform.localScale = Vector3.one;
                         markerGO.transform.parent = meshGo.transform;
                     }
@@ -502,26 +464,6 @@ namespace VS.Parser
 
     }
 
-    public class VSRoom
-    {
-        public uint u1 = 0;
-        public uint mapLength = 0;
-        public uint zoneNumber = 0;
-        public uint mapNumber = 0;
-        public uint numVertices = 0;
-        public uint numTriangles = 0;
-        public uint numQuads = 0;
-        public uint numFloorLines = 0;
-        public uint numWallLines = 0;
-        public uint numMark = 0;
-        public List<VSVertex> vertices = new List<VSVertex>();
-        public List<VSFace> triangles = new List<VSFace>();
-        public List<VSFace> quads = new List<VSFace>();
-        public List<VSLine> floorLines = new List<VSLine>();
-        public List<VSLine> wallLines = new List<VSLine>();
-        public List<byte[]> markers = new List<byte[]>();
-        public string name = "";
-
-        public VSRoom() { }
-    }
 }
+
+*/

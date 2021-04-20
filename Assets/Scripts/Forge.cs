@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using VS.Core;
 using VS.Data;
+using VS.FileFormats.WEP;
 using VS.Parser;
 using VS.Utils;
 
@@ -490,12 +491,14 @@ public class Forge : MonoBehaviour
         }
 
         WEP wepModelParser = new WEP();
-        wepModelParser.Parse(conf.VSPath + "OBJ/" + WEPFilePath + ".WEP");
+        wepModelParser.ParseFromFile(conf.VSPath + "OBJ/" + WEPFilePath + ".WEP");
+        /*
         GameObject wepGO = wepModelParser.BuildGameObject();
         wepGO.transform.parent = container.transform;
         wepGO.transform.localPosition = Vector3.zero;
         wepGO.transform.localRotation = new Quaternion();
         wepGO.transform.localScale = Vector3.one * 25;
         actualiseCAT();
+        */
     }
 }

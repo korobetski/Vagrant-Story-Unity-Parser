@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
-using VS.Data;
-
 namespace VS.Core
 {
     public class Memory
@@ -40,58 +38,12 @@ namespace VS.Core
             }
             return null;
         }
-
-        public static void SaveDB()
-        {
-            BinaryFormatter bf = new BinaryFormatter();
-            FileStream file = File.Create(Application.persistentDataPath + "/VSDB.db");
-            VSDatas save = new VSDatas();
-            save.ArmorList = Armor.JSONlist();
-            save.BladeList = Blade.JSONlist();
-            save.ShieldList = Shield.JSONlist();
-            bf.Serialize(file, save);
-            file.Close();
-            if (UseDebug)
-            {
-                Debug.Log("/VSDB.db Saved");
-            }
-        }
-        public static bool LoadDB()
-        {
-            if (File.Exists(Application.persistentDataPath + "/VSDB.db"))
-            {
-                BinaryFormatter bf = new BinaryFormatter();
-                FileStream file = File.Open(Application.persistentDataPath + "/VSDB.db", FileMode.Open);
-                VSDatas save = (VSDatas)bf.Deserialize(file);
-                Blade.list = JsonUtility.FromJson(save.BladeList, typeof(List<Blade>)) as List<Blade>;
-                Armor.list = JsonUtility.FromJson(save.ArmorList, typeof(List<Armor>)) as List<Armor>;
-                Shield.list = JsonUtility.FromJson(save.ShieldList, typeof(List<Shield>)) as List<Shield>;
-                file.Close();
-                if (UseDebug)
-                {
-                    Debug.Log("/VSDB.db Loaded");
-                }
-
-                return true;
-            }
-            return false;
-        }
-
-
     }
 
-    [System.Serializable]
+    [Serializable]
     public class VSPConfig
     {
         public string VSPath = "";
         public string VS_Version = "";
-    }
-
-    [System.Serializable]
-    public class VSDatas
-    {
-        public string ShieldList = "";
-        public string ArmorList = "";
-        public string BladeList = "";
     }
 }

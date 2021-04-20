@@ -1,7 +1,7 @@
-﻿using System;
+﻿using FileFormats;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
-using VS.Format;
 
 //Minoru Akao
 namespace VS.Parser.Akao

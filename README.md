@@ -29,7 +29,7 @@ There is a dependency for AKAO conversion to WAV, just copy my forked version of
 
 
 
-Discord channel here : discord.gg/dXvJNVD
+# Discord channel here : https://discord.gg/dXvJNVD
 
 
 SHP view (special case when faces have vertex colors)

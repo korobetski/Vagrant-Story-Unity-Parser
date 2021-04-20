@@ -2,12 +2,117 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor;
 using UnityEngine;
 using VS.Core;
 namespace VS.Utils
 {
     public class ToolBox
     {
+        public static string checkVSROM(string path)
+        {
+            if (!Directory.Exists(path + "BATTLE/"))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(path + "SOUND/"))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(path + "MUSIC/"))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(path + "SE/"))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(path + "MENU/"))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(path + "SMALL/"))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(path + "BG/"))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(path + "OBJ/"))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(path + "EVENT/"))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(path + "EFFECT/"))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(path + "GIM/"))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(path + "TITLE/"))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(path + "MOV/"))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(path + "ENDING/"))
+            {
+                return null;
+            }
+            /*
+            (US) SLUS-01040
+            (JP) SLPS-02377
+            (UK) SLES-02754
+            (FR) SLES-02755
+            (GR) SLES-02756
+            (JP) SLPS-91457
+            (JP) SLPM-87393
+            (CH) SLPS-02804 
+            */
+            List<string> sls = new List<string> {
+                "SLUS_010.40",
+                "SLPS_023.77",
+                "SLES_027.54",
+                "SLES_027.55",
+                "SLES_027.56",
+                "SLPS_914.57",
+                "SLPM_873.93",
+                "SLPS_028.04"
+            };
+            string slt = null;
+            foreach (string s in sls)
+            {
+                if (File.Exists(path + s))
+                {
+                    slt = s;
+                    break;
+                }
+            }
+
+            return slt;
+        }
+
         public static uint GetNumPositiveBits(int bnumt)
         {
             uint inc = 0;
@@ -91,8 +196,7 @@ namespace VS.Utils
         }
         public static float rot13toRad(float angle)
         {
-            float f = Mathf.PI / 4096;
-            return (float)(f * angle);
+            return (float)(Mathf.PI / 4096 * angle);
         }
         public static byte[] EndianSwitcher(byte[] bytes)
         {
@@ -141,7 +245,8 @@ namespace VS.Utils
                     else
                     {
                         // some color, and the alpha bit IS set
-                        a = (byte)250; // some variance of transparency
+                        a = AlphaFromGrayscale(new Color32((byte)(r * 8), (byte)(g * 8), (byte)(b * 8), 0)); // some variance of transparency
+                        //a = 250;
                     }
                 }
 
@@ -149,6 +254,14 @@ namespace VS.Utils
                 return color;
             }
         }
+
+        private static byte AlphaFromGrayscale(Color32 cr)
+        {
+            return (byte)Mathf.Round((cr.r + cr.g + cr.b) / 3);
+        }
+
+
+
         /// <summary>
         /// http://datacrystal.romhacking.net/wiki/Vagrant_Story:rooms_list
         /// </summary>
@@ -550,6 +663,21 @@ namespace VS.Utils
             }
 
             return new string[0];
+        }
+
+        public static void SaveScriptableObject(string dir, string filename, ScriptableObject so, UnityEngine.Object[] subAssets = null)
+        {
+            DirExNorCreate(dir);
+            AssetDatabase.DeleteAsset(dir + filename);
+            AssetDatabase.CreateAsset(so, dir + filename);
+            if (subAssets != null)
+            {
+                foreach(var asset in subAssets)
+                {
+                    if (asset != null) AssetDatabase.AddObjectToAsset(asset, dir + filename);
+                }
+            }
+            AssetDatabase.SaveAssets();
         }
     }
 }

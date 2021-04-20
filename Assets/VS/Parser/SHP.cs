@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -6,7 +7,7 @@ using UnityEditor;
 using UnityEditor.Animations;
 #endif
 using UnityEngine;
-using VS.Entity;
+using VS.Serializable;
 using VS.Format;
 using VS.Utils;
 
@@ -87,20 +88,6 @@ namespace VS.Parser
             }
 
             // LBA XX_BTX.SEQ  (battle animations first one is actually XX_COM.SEQ)     certainly one weapon type for each file 
-            /*
-             * LBA SEQ : 98646  OBJ\01_COM.SEQ
-             * LBA SEQ : 0      
-             * LBA SEQ : 98599  OBJ\01_BT2.SEQ
-             * LBA SEQ : 0
-             * LBA SEQ : 98611  OBJ\01_BT4.SEQ
-             * LBA SEQ : 0
-             * LBA SEQ : 98623  OBJ\01_BT6.SEQ
-             * LBA SEQ : 0
-             * LBA SEQ : 0
-             * LBA SEQ : 0
-             * LBA SEQ : 98635  OBJ\01_BTA.SEQ
-             * LBA SEQ : 0
-            */
             for (int i = 0; i < 12; i++)
             {
                 buffer.ReadUInt32();
@@ -144,25 +131,15 @@ namespace VS.Parser
             {
                 VSBone bone = new VSBone();
                 bone.index = i;
-                bone.name = "bone_" + i;
-                bone.length = buffer.ReadInt16();
-                //Debug.LogWarning("bone  "+i+ " .length : "+ bone.length);
-                buffer.ReadUInt16(); // always 0xFFFF
-                bone.parentIndex = buffer.ReadByte();
-                if (bone.parentIndex > numBones)
-                {
-                    bone.parentIndex = -1;
-                }
-                //Debug.LogWarning("bone.parentIndex : " + bone.parentIndex);
-                // https://github.com/morris/vstools/blob/master/src/WEPBone.js
-                byte[] offset = buffer.ReadBytes(3);
-                bone.offset = new Vector3(offset[0], offset[1], offset[2]);
-                bone.mode = buffer.ReadByte();
-                // 0 - 2 normal ?
-                // 3 - 6 normal + roll 90 degrees
-                // 7 - 255 absolute, different angles
-
-                buffer.ReadBytes(7); // always 0000000
+                //bone.name = "bone_" + i;
+                bone.length = buffer.ReadInt32();
+                bone.parentBoneId = buffer.ReadSByte();
+                if (bone.parentBoneId > numBones) bone.parentBoneId = -1;
+                bone.groupId = buffer.ReadSByte();
+                bone.mountId = buffer.ReadSByte();
+                bone.bodyPartId = buffer.ReadSByte();
+                bone.mode = buffer.ReadSByte();
+                bone.unk = buffer.ReadBytes(7); // always 0000000
                 bones.Add(bone);
             }
 
@@ -182,10 +159,7 @@ namespace VS.Parser
                 VSGroup group = new VSGroup();
                 group.boneIndex = buffer.ReadInt16();
                 group.numVertices = buffer.ReadUInt16();
-                if (group.boneIndex != -1)
-                {
-                    group.bone = bones[group.boneIndex];
-                }
+                //if (group.boneIndex != -1) group.bone = bones[group.boneIndex];
 
                 groups.Add(group);
             }
@@ -215,18 +189,17 @@ namespace VS.Parser
                     g++;
                 }
 
+
                 VSVertex vertex = new VSVertex();
-                vertex.group = groups[g];
-                vertex.bone = vertex.group.bone;
+                //vertex.group = groups[g];
+                //vertex.bone = vertex.group.bone;
+
                 BoneWeight bw = new BoneWeight();
-                bw.boneIndex0 = (int)vertex.group.bone.index;
+                bw.boneIndex0 = (int)groups[g].boneIndex;
                 bw.weight0 = 1;
-                vertex.boneWeight = bw;
-                int x = buffer.ReadInt16();
-                int y = buffer.ReadInt16();
-                int z = buffer.ReadInt16();
-                buffer.ReadInt16();
-                vertex.position = -new Vector3(x, y, z) / 100;
+
+                vertex.position = -new Vector4(buffer.ReadInt16(), buffer.ReadInt16(), buffer.ReadInt16(), buffer.ReadInt16()) / 128;
+                vertex.SetBoneWeight(bw);
                 vertices.Add(vertex);
             }
 
@@ -297,14 +270,6 @@ namespace VS.Parser
                     face.size = buffer.ReadByte();
                     face.side = buffer.ReadByte();
                     face.alpha = buffer.ReadByte();
-
-                    /*
-                     * Triangles
-                     * 24-10-04-00-C406-CC06-C806-08-78-05-6D-05-7C
-                     * 24-10-04-00-D006-D806-D406-13-6D-0A-6D-0C-78
-                     * 24-10-04-00-D406-E006-DC06-13-78-13-6D-0F-78
-                     * 24-10-04-00-D406-D806-E006-0F-78-13-6D-0C-78
-                     * */
                     
                     // if (UseDebug)Debug.Log(string.Concat("#####   At : ", polyDec, " face# ", i, "   face.type : ", face.type, "   face.size : ", face.size, "   face.side : ", face.side, "   face.alpha : ", face.alpha));
                     
@@ -316,7 +281,7 @@ namespace VS.Parser
                     face.verticesCount = 0; // fallback
                     if (table[face.type] != 0)
                     {
-                        face.verticesCount = table[face.type];
+                        face.verticesCount = (byte)table[face.type];
                     }
                     else
                     {
@@ -329,7 +294,7 @@ namespace VS.Parser
                     // 6 or 8 bytes
                     for (uint j = 0; j < face.verticesCount; j++)
                     {
-                        int vId = buffer.ReadUInt16() / 4;
+                        ushort vId = (ushort)(buffer.ReadUInt16() / 4);
                         face.vertices.Add(vId);
 
                         // if (UseDebug) Debug.Log("vId : " + j + " - " + vId);
@@ -471,7 +436,7 @@ namespace VS.Parser
                     face.verticesCount = 3;
                     for (uint j = 0; j < face.verticesCount; j++)
                     {
-                        int vId = buffer.ReadUInt16() / 4;
+                        ushort vId = (ushort)(buffer.ReadUInt16() / 4);
                         face.vertices.Add(vId);
                     }
                     // uv1
@@ -517,7 +482,7 @@ namespace VS.Parser
                     face.verticesCount = 4;
                     for (uint j = 0; j < face.verticesCount; j++)
                     {
-                        int vId = buffer.ReadUInt16() / 4;
+                        ushort vId = (ushort)(buffer.ReadUInt16() / 4);
                         face.vertices.Add(vId);
                     }
                     // color 1
@@ -621,52 +586,52 @@ namespace VS.Parser
                     {
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].GetBoneWeight());
                         meshTrianglesUV.Add(faces[i].uv[0]);
                         meshTrianglesUV.Add(faces[i].uv[1]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
 
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[3]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[3]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].GetBoneWeight());
                         meshTrianglesUV.Add(faces[i].uv[3]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[1]);
 
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].GetBoneWeight());
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[1]);
                         meshTrianglesUV.Add(faces[i].uv[0]);
 
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[3]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[3]].GetBoneWeight());
                         meshTrianglesUV.Add(faces[i].uv[1]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[3]);
@@ -695,26 +660,26 @@ namespace VS.Parser
                     {
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].GetBoneWeight());
                         meshTrianglesUV.Add(faces[i].uv[0]);
                         meshTrianglesUV.Add(faces[i].uv[1]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
 
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[3]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[3]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[3]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].GetBoneWeight());
                         meshTrianglesUV.Add(faces[i].uv[3]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[1]);
@@ -737,26 +702,26 @@ namespace VS.Parser
                     {
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].GetBoneWeight());
                         meshTrianglesUV.Add(faces[i].uv[1]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[0]);
 
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].GetBoneWeight());
                         meshTrianglesUV.Add(faces[i].uv[0]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[1]);
@@ -776,13 +741,13 @@ namespace VS.Parser
                     {
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[0]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[0]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[0]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[1]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[1]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[1]].GetBoneWeight());
                         meshTriangles.Add(meshVertices.Count);
                         meshVertices.Add(vertices[faces[i].vertices[2]].position);
-                        meshWeights.Add(vertices[faces[i].vertices[2]].boneWeight);
+                        meshWeights.Add(vertices[faces[i].vertices[2]].GetBoneWeight());
                         meshTrianglesUV.Add(faces[i].uv[1]);
                         meshTrianglesUV.Add(faces[i].uv[2]);
                         meshTrianglesUV.Add(faces[i].uv[0]);
@@ -872,18 +837,18 @@ namespace VS.Parser
             Matrix4x4[] bindPoses = new Matrix4x4[numBones];
             for (int i = 0; i < numBones; i++)
             {
-                meshBones[i] = new GameObject(bones[i].name).transform;
+                meshBones[i] = new GameObject("bone_" + i).transform;
                 meshBones[i].localRotation = Quaternion.identity;
                 bindPoses[i] = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one);
-                if (bones[i].parentIndex == -1)
+                if (bones[i].parentBoneId == -1)
                 {
                     meshBones[i].parent = shapeGo.transform;
                     meshBones[i].localPosition = Vector3.zero;
                 }
                 else
                 {
-                    meshBones[i].parent = meshBones[bones[i].parentIndex];
-                    meshBones[i].localPosition = new Vector3((float)(bones[bones[i].parentIndex].length) / 100, 0, 0);
+                    meshBones[i].parent = meshBones[bones[i].parentBoneId];
+                    meshBones[i].localPosition = new Vector3((float)(bones[bones[i].parentBoneId].length) / 128, 0, 0);
                 }
             }
             SkinnedMeshRenderer mr = meshGo.AddComponent<SkinnedMeshRenderer>();
@@ -1045,3 +1010,4 @@ namespace VS.Parser
 
     }
 }
+*/

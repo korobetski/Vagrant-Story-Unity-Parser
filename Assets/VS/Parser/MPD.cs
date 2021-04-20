@@ -1,9 +1,10 @@
-﻿using System;
+﻿/*
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using VS.Entity;
+using VS.Serializable;
 using VS.Utils;
 
 //http://datacrystal.romhacking.net/wiki/Vagrant_Story:MPD_files
@@ -15,52 +16,8 @@ namespace VS.Parser
         public string filePath;
         public string mapName;
         public string zoneName;
-
-        private uint ptrRoomSection;
-        private uint lenRoomSection;
-        private uint ptrClearedSection;
-        private uint lenClearedSection;
-        private uint ptrScriptSection;
-        private uint lenScriptSection;
-        private uint ptrDoorSection;
-        private uint lenDoorSection;
-        private uint ptrEnemySection;
-        private uint lenEnemySection;
-        private uint ptrTreasureSection;
-        private uint lenTreasureSection;
-
-        private uint lenGeometrySection;
-        private uint lenCollisionSection;
-        private uint lenSubSection03;
-        private uint lenRoomDoorSection;
-        private uint lenLightingSection;
-        private uint lenSubSection06;
-        private uint lenSubSection07;
-        private uint lenSubSection08;
-        private uint lenTrapSection;
-        private uint lenSubSection0A;
-        private uint lenSubSection0B;
-        private uint lenTextureEffectsSection;
-        private uint lenSubSection0D;
-        private uint lenSubSection0E;
-        private uint lenMiniMapSection;
-        private uint lenSubSection10;
-        private uint lenSubSection11;
-        private uint lenFloatingStoneSection;
-        private uint lenChestInteractionSection;
-        private uint lenAKAOSubSection;
-        private uint lenSubSection15;
-        private uint lenSubSection16;
-        private uint lenSubSection17;
-        private uint lenCameraAreaSection;
-
-        uint numGroups;
-        MPDGroup[] groups;
-        List<GameObject> lights;
-        MPDDoor[] doors;
-
         GameObject MapGO;
-
+        public Serializable.MPD so;
         private bool _geom = true;
 
         public void Parse(string filePath)
@@ -74,78 +31,53 @@ namespace VS.Parser
         }
         public void Parse(BinaryReader buffer)
         {
-            ptrRoomSection = buffer.ReadUInt32();
-            lenRoomSection = buffer.ReadUInt32();
-            ptrClearedSection = buffer.ReadUInt32();
-            lenClearedSection = buffer.ReadUInt32();
-            ptrScriptSection = buffer.ReadUInt32();
-            lenScriptSection = buffer.ReadUInt32();
-            ptrDoorSection = buffer.ReadUInt32();
-            lenDoorSection = buffer.ReadUInt32();
-            ptrEnemySection = buffer.ReadUInt32();
-            lenEnemySection = buffer.ReadUInt32();
-            ptrTreasureSection = buffer.ReadUInt32();
-            lenTreasureSection = buffer.ReadUInt32();
+
+            so = ScriptableObject.CreateInstance<Serializable.MPD>();
+
+            so.ptrRoomSection = buffer.ReadUInt32();
+            so.lenRoomSection = buffer.ReadUInt32();
+            so.ptrClearedSection = buffer.ReadUInt32();
+            so.lenClearedSection = buffer.ReadUInt32();
+            so.ptrScriptSection = buffer.ReadUInt32();
+            so.lenScriptSection = buffer.ReadUInt32();
+            so.ptrDoorSection = buffer.ReadUInt32();
+            so.lenDoorSection = buffer.ReadUInt32();
+            so.ptrEnemySection = buffer.ReadUInt32();
+            so.lenEnemySection = buffer.ReadUInt32();
+            so.ptrTreasureSection = buffer.ReadUInt32();
+            so.lenTreasureSection = buffer.ReadUInt32();
+
             // Room sub sections
-            lenGeometrySection = buffer.ReadUInt32();
-            lenCollisionSection = buffer.ReadUInt32();
-            lenSubSection03 = buffer.ReadUInt32();
-            lenRoomDoorSection = buffer.ReadUInt32();
-            lenLightingSection = buffer.ReadUInt32();
-            lenSubSection06 = buffer.ReadUInt32();
-            lenSubSection07 = buffer.ReadUInt32();
-            lenSubSection08 = buffer.ReadUInt32();
-            lenTrapSection = buffer.ReadUInt32();
-            lenSubSection0A = buffer.ReadUInt32();
-            lenSubSection0B = buffer.ReadUInt32();
-            lenTextureEffectsSection = buffer.ReadUInt32();
-            lenSubSection0D = buffer.ReadUInt32();
-            lenSubSection0E = buffer.ReadUInt32();
-            lenMiniMapSection = buffer.ReadUInt32();
-            lenSubSection10 = buffer.ReadUInt32();
-            lenSubSection11 = buffer.ReadUInt32();
-            lenFloatingStoneSection = buffer.ReadUInt32();
-            lenChestInteractionSection = buffer.ReadUInt32();
-            lenAKAOSubSection = buffer.ReadUInt32();
-            lenSubSection15 = buffer.ReadUInt32();
-            lenSubSection16 = buffer.ReadUInt32();
-            lenSubSection17 = buffer.ReadUInt32();
-            lenCameraAreaSection = buffer.ReadUInt32();
-
-
-            if (UseDebug)
+            if (so.lenRoomSection >= 96)
             {
-                Debug.Log("MPD parse : " + filePath);
-                Debug.Log("ptrRoomSection :" + ptrRoomSection + "  lenRoomSection : " + lenRoomSection);
-                Debug.Log("ptrClearedSection :" + ptrClearedSection + "  lenClearedSection : " + lenClearedSection);
-                Debug.Log("ptrScriptSection :" + ptrScriptSection + "  lenScriptSection : " + lenScriptSection);
-                Debug.Log("ptrDoorSection :" + ptrDoorSection + "  lenDoorSection : " + lenDoorSection);
-                Debug.Log("ptrEnemySection :" + ptrEnemySection + "  lenEnemySection : " + lenEnemySection);
-                Debug.Log("ptrTreasureSection :" + ptrTreasureSection + "  lenTreasureSection : " + lenTreasureSection);
-                Debug.Log("lenGeometrySection :" + lenGeometrySection);
-                Debug.Log("lenCollisionSection :" + lenCollisionSection);
-                Debug.Log("lenSubSection03 :" + lenSubSection03);
-                Debug.Log("lenRoomDoorSection :" + lenRoomDoorSection);
-                Debug.Log("lenLightingSection :" + lenLightingSection);
-                Debug.Log("lenSubSection06 :" + lenSubSection06);
-                Debug.Log("lenSubSection07 :" + lenSubSection07);
-                Debug.Log("lenSubSection08 :" + lenSubSection08);
-                Debug.Log("lenTrapSection :" + lenTrapSection);
-                Debug.Log("lenSubSection0A :" + lenSubSection0A);
-                Debug.Log("lenSubSection0B :" + lenSubSection0B);
-                Debug.Log("lenTextureEffectsSection :" + lenTextureEffectsSection);
-                Debug.Log("lenSubSection0D :" + lenSubSection0D);
-                Debug.Log("lenSubSection0E :" + lenSubSection0E);
-                Debug.Log("lenMiniMapSection :" + lenMiniMapSection);
-                Debug.Log("lenSubSection10 :" + lenSubSection10);
-                Debug.Log("lenSubSection11 :" + lenSubSection11);
-                Debug.Log("lenFloatingStoneSection :" + lenFloatingStoneSection);
-                Debug.Log("lenChestInteractionSection :" + lenChestInteractionSection);
-                Debug.Log("lenAKAOSubSection :" + lenAKAOSubSection);
-                Debug.Log("lenSubSection15 :" + lenSubSection15);
-                Debug.Log("lenSubSection16 :" + lenSubSection16);
-                Debug.Log("lenSubSection17 :" + lenSubSection17);
-                Debug.Log("lenCameraAreaSection :" + lenCameraAreaSection);
+                so.lenGeometrySection = buffer.ReadUInt32();
+                so.lenCollisionSection = buffer.ReadUInt32();
+                so.lenTilePropertiesSection = buffer.ReadUInt32();
+                so.lenRoomDoorSection = buffer.ReadUInt32();
+                so.lenLightingSection = buffer.ReadUInt32();
+                so.lenSubSection06 = buffer.ReadUInt32();
+                so.lenSubSection07 = buffer.ReadUInt32();
+                so.lenSubSection08 = buffer.ReadUInt32();
+                so.lenTrapSection = buffer.ReadUInt32();
+                so.lenSubSection0A = buffer.ReadUInt32();
+                so.lenSubSection0B = buffer.ReadUInt32();
+                so.lenTextureEffectsSection = buffer.ReadUInt32();
+                so.lenSubSection0D = buffer.ReadUInt32();
+                so.lenSubSection0E = buffer.ReadUInt32();
+                so.lenMiniMapSection = buffer.ReadUInt32();
+                so.lenSubSection10 = buffer.ReadUInt32();
+                so.lenSubSection11 = buffer.ReadUInt32();
+                so.lenFloatingStoneSection = buffer.ReadUInt32();
+                so.lenChestInteractionSection = buffer.ReadUInt32();
+                so.lenAKAOSection = buffer.ReadUInt32();
+                so.lenSubSection15 = buffer.ReadUInt32();
+                so.lenSubSection16 = buffer.ReadUInt32();
+                so.lenSubSection17 = buffer.ReadUInt32();
+                so.lenCameraAreaSection = buffer.ReadUInt32();
+            }
+            else
+            {
+                buffer.ReadBytes((int)so.lenRoomSection);
             }
 
             // ROOM section
@@ -154,210 +86,156 @@ namespace VS.Parser
                 Debug.Log("ROOM section : " + buffer.BaseStream.Position);
             }
             // Geometry
-            if (lenRoomSection > 4)
+            if (so.lenRoomSection > 0x40)
             {
-                if (lenGeometrySection > 0)
+                if (so.lenGeometrySection > 0)
                 {
-                    numGroups = buffer.ReadUInt32();
-                    if (UseDebug)
+                    so.numGroups = buffer.ReadUInt32();
+                    so.groups = new MPDGroup[so.numGroups];
+                    for (uint i = 0; i < so.numGroups; i++)
                     {
-                        Debug.Log("numGroups : " + numGroups);
-                    }
-                    groups = new MPDGroup[numGroups];
-                    for (uint i = 0; i < numGroups; i++)
-                    {
-                        groups[i] = new MPDGroup();
+                        so.groups[i] = new MPDGroup();
                         //groups[i].header = buffer.ReadBytes(64);
-                        groups[i].display = buffer.ReadByte();
-                        groups[i]._scale = buffer.ReadByte();
-                        groups[i].overlapping = buffer.ReadUInt16();
-                        groups[i].decX = buffer.ReadInt16();
-                        buffer.ReadInt16();
-                        groups[i].decY = buffer.ReadInt16();
-                        buffer.ReadInt16();
-                        groups[i].decZ = buffer.ReadInt16();
-                        buffer.ReadInt16();
+                        so.groups[i].visibility = buffer.ReadByte();
+                        so.groups[i].scaleFlag = buffer.ReadByte();
+                        so.groups[i].overlapping = buffer.ReadUInt16();
+                        so.groups[i].decX = buffer.ReadInt16();
+                        so.groups[i].unk1 = buffer.ReadUInt16();
+                        so.groups[i].decY = buffer.ReadInt16();
+                        so.groups[i].unk2 = buffer.ReadUInt16();
+                        so.groups[i].decZ = buffer.ReadInt16();
+                        so.groups[i].unk3 = buffer.ReadUInt16();
 
-                        groups[i].header = buffer.ReadBytes(48);
+                        so.groups[i].unkBytes = buffer.ReadBytes(48);
 
 
-                        if ((groups[i]._scale & 0x08) > 0)
+                        if ((so.groups[i].scaleFlag & 0x08) > 0)
                         {
-                            groups[i].scale = 1;
+                            so.groups[i].scale = 1;
                         }
                     }
-                    for (uint i = 0; i < numGroups; i++)
+                    for (uint i = 0; i < so.numGroups; i++)
                     {
-                        uint numTriangles = buffer.ReadUInt32();
-                        uint numQuads = buffer.ReadUInt32();
-                        for (uint j = 0; j < numTriangles; j++)
+                        so.groups[i].numTriangles = buffer.ReadUInt32();
+                        so.groups[i].numQuads = buffer.ReadUInt32();
+                        so.groups[i].faces = new MPDFace[so.groups[i].numTriangles + so.groups[i].numQuads];
+                        
+                        for (uint j = 0; j < so.groups[i].numTriangles + so.groups[i].numQuads; j++)
                         {
-                            MPDFace face = new MPDFace(groups[i], false);
-                            face.feed(buffer);
-                            MPDMesh m = groups[i].getMesh(face.textureId, face.clutId);
-                            m.addFace(face);
-                        }
-                        for (uint j = 0; j < numQuads; j++)
-                        {
-                            MPDFace face = new MPDFace(groups[i], true);
-                            face.feed(buffer);
-                            MPDMesh m = groups[i].getMesh(face.textureId, face.clutId);
-                            m.addFace(face);
+                            MPDFace face = new MPDFace(buffer);
+                            so.groups[i].faces[j] = face;
                         }
                     }
                 }
 
                 // collision
-                if (lenCollisionSection > 0)
+                if (so.lenCollisionSection > 0)
                 {
                     long collisionPtr = buffer.BaseStream.Position;
-                    Debug.Log("Collision Section at  : " + collisionPtr);
-                    uint TyleWidth = buffer.ReadUInt16();
-                    uint TyleHeight = buffer.ReadUInt16();
-                    uint unk1 = buffer.ReadUInt16();
-                    uint unk2 = buffer.ReadUInt16();
-                    if (UseDebug)
+
+                    so.tileWidth = buffer.ReadUInt16();
+                    so.tileHeigth = buffer.ReadUInt16();
+                    so.unk1 = buffer.ReadUInt16();
+                    so.numTileModes = buffer.ReadUInt16();
+                    so.tiles = new MPDTile[so.tileWidth * so.tileHeigth];
+                    for (uint i = 0; i < so.tileWidth * so.tileHeigth; i++)
                     {
-                        Debug.Log("TyleWidth : " + TyleWidth + "  TyleHeight : " + TyleHeight);
-                        Debug.Log("unk1 : " + unk1 + "  unk2 : " + unk2);
+                        MPDTile tile = new MPDTile();
+                        tile.floorHeight = buffer.ReadByte();
+                        tile.floorMode = buffer.ReadByte();
+                        so.tiles[i] = tile;
                     }
 
-                    int[] FloorHeight = new int[TyleWidth * TyleHeight];
-                    int[] FloorHeightMode = new int[TyleWidth * TyleHeight];
-                    int[] CeilingHeight = new int[TyleWidth * TyleHeight];
-                    int[] CeilingHeightMode = new int[TyleWidth * TyleHeight];
-                    uint[] Incline = new uint[TyleWidth * TyleHeight];
-                    //Debug.Log("Collision ptr : " + buffer.BaseStream.Position);
-                    for (uint i = 0; i < TyleWidth * TyleHeight; i++)
+                    for (uint i = 0; i < so.tileWidth * so.tileHeigth; i++)
                     {
-                        FloorHeight[i] = buffer.ReadByte();
-                        FloorHeightMode[i] = buffer.ReadByte();
-                        if (UseDebug)
-                        {
-                            Debug.Log("FloorHeight[i] : " + FloorHeight[i]+" -> "+ FloorHeightMode[i]);
-                        }
+                        so.tiles[i].ceilHeight = buffer.ReadByte();
+                        so.tiles[i].ceilMode = buffer.ReadByte();
                     }
 
-                    for (uint i = 0; i < TyleWidth * TyleHeight; i++)
+                    so.tileModes = new MPDTileMode[so.numTileModes];
+                    for (uint i = 0; i < so.numTileModes; i++)
                     {
-                        CeilingHeight[i] = buffer.ReadByte();
-                        CeilingHeightMode[i] = buffer.ReadByte();
-                        if (UseDebug)
-                        {
-                            Debug.Log("CeilingHeight[i] : " + CeilingHeight[i] + " -> " + CeilingHeightMode[i]);
-                        }
+                        so.tileModes[i] = new MPDTileMode();
+                        so.tileModes[i].datas = buffer.ReadBytes(16);
                     }
 
-                    for (uint i = 0; i < TyleWidth * TyleHeight / 2; i++)
+                    if (buffer.BaseStream.Position != collisionPtr + so.lenCollisionSection)
                     {
-                        byte b = buffer.ReadByte();
-                        Incline[i * 2] = (uint)b << 4;
-                        Incline[i * 2 + 1] = (uint)b >> 4;
+                        Debug.LogWarning("Wrong position after collision");
+                        buffer.BaseStream.Position = collisionPtr + so.lenCollisionSection;
                     }
-                    buffer.BaseStream.Position = collisionPtr + lenCollisionSection;
                 }
 
-                // section 3 ??
+                // tile properties
                 //
-                if (lenSubSection03 > 0)
+                if (so.lenTilePropertiesSection > 0)
                 {
-                    string output = mapName + "  lenSubSection03 ptr : " + buffer.BaseStream.Position + "   lenSubSection03 : " + lenSubSection03 + "\r\n";
-                    uint loop = lenSubSection03 / 4;
+                    long tilePropsPtr = buffer.BaseStream.Position;
+
+                    int loop = so.tileWidth * so.tileHeigth;
                     for (uint i = 0; i < loop; i++)
                     {
-                        byte[] unkn = buffer.ReadBytes(4);
-                        output += "  Unknown bytes : " + BitConverter.ToString(unkn) + "\r\n";
-                        //Debug.LogError(BitConverter.ToString(unkn));
+                        so.tiles[i].properties = buffer.ReadBytes(4);
                     }
 
-                    //Debug.LogError(output);
-
-                    //buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection03;
+                    if (buffer.BaseStream.Position != tilePropsPtr + so.lenTilePropertiesSection)
+                    {
+                        Debug.LogWarning("Wrong position after tileProps");
+                        buffer.BaseStream.Position = tilePropsPtr + so.lenTilePropertiesSection;
+                    }
                 }
 
                 // door section
-                if (lenRoomDoorSection > 0)
+                if (so.lenRoomDoorSection > 0)
                 {
                     long doorPtr = buffer.BaseStream.Position;
-                    uint numDoors = lenRoomDoorSection / 0x0C;
-                    doors = new MPDDoor[numDoors];
-                    for (uint i = 0; i < numDoors; i++)
+                    so.numRoomDoors = so.lenRoomDoorSection / 0x0C;
+                    so.roomDoors = new MPDRoomDoor[so.numRoomDoors];
+                    for (uint i = 0; i < so.numRoomDoors; i++)
                     {
-                        MPDDoor d = new MPDDoor();
-                        d.destZone = buffer.ReadByte();
-                        d.destRoom = buffer.ReadByte();
-                        d.unkn = buffer.ReadBytes(6);
-                        d.idCurrentDoor = buffer.ReadUInt32();
-                        doors[i] = d;
-                        if (UseDebug)
-                        {
-                            Debug.Log("MPDDoor # " + i + "  idCurrentDoor : " + d.idCurrentDoor + "  destZone : " + d.destZone + "  destRoom : " + d.destRoom);
-                            Debug.Log(d.unkn[0] + ", " + d.unkn[1] + ", " + d.unkn[2] + ", " + d.unkn[3] + ", " + d.unkn[4] + ", " + d.unkn[5]);
-                        }
+                        MPDRoomDoor door = new MPDRoomDoor();
+                        door.zoneId = buffer.ReadByte();
+                        door.roomId = buffer.ReadByte();
+                        door.tileIndex = buffer.ReadUInt16();
+                        door.destination = new ushort[] { buffer.ReadUInt16(), buffer.ReadUInt16() };
+                        door.doorId = buffer.ReadUInt32();
+                        so.roomDoors[i] = door;
                     }
 
-                    buffer.BaseStream.Position = doorPtr + lenRoomDoorSection;
+                    if (buffer.BaseStream.Position != doorPtr + so.lenRoomDoorSection)
+                    {
+                        Debug.LogWarning("Wrong position after roomDoor");
+                        buffer.BaseStream.Position = doorPtr + so.lenRoomDoorSection;
+                    }
                 }
 
                 // lights section
                 // http://www.psxdev.net/forum/viewtopic.php?f=51&t=3383
-                if (lenLightingSection > 0)
+                if (so.lenLightingSection > 0)
                 {
                     long lightPtr = buffer.BaseStream.Position;
-                    if (UseDebug)
+                    so.numLights = (so.lenLightingSection - 12) / 32;
+                    so.lights = new MPDLight[so.numLights];
+                    so.ambientLight = new MPDLight();
+                    byte[] cols = buffer.ReadBytes(12);
+                    so.ambientLight.colors[0] = new Color32(cols[0], cols[1], cols[2], cols[3]);
+                    so.ambientLight.colors[1] = new Color32(cols[4], cols[5], cols[6], cols[7]);
+                    so.ambientLight.colors[2] = new Color32(cols[8], cols[9], cols[10], cols[11]);
+
+                    for (uint i = 0; i < so.numLights; i++)
                     {
-                        Debug.Log("lights ptr : " + lightPtr + "   lenLightingSection : " + lenLightingSection + "(" + (lightPtr + lenLightingSection) + ")");
-                    }
-
-                    Color32 mc = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte());
-                    uint numLights = buffer.ReadUInt32();
-                    if (UseDebug)
-                    {
-                        Debug.Log("numLights : " + numLights + "  mainColor  :  " + mc.ToString());
-                    }
-
-                    buffer.ReadUInt32(); // padding
-
-                    lights = new List<GameObject>();
-
-                    string lightsDebug = "";
-                    for (uint i = 0; i < numLights; i++)
-                    {
-                        string lgtMat = "";
-                        short[] matrix = new short[10];
-
-                        byte[] hexa = buffer.ReadBytes(20);
-                        buffer.BaseStream.Position -= 20;
-
                         for (uint j = 0; j < 10; j++)
                         {
-                            matrix[j] = buffer.ReadInt16();
-                            lgtMat += (matrix[j]) + " | ";
+                            so.lights[i] = new MPDLight();
+                            so.lights[i].datas[j] = buffer.ReadInt16();
                         }
 
+                        cols = buffer.ReadBytes(12);
+                        so.lights[i].colors[0] = new Color32(cols[0], cols[1], cols[2], cols[3]);
+                        so.lights[i].colors[1] = new Color32(cols[4], cols[5], cols[6], cols[7]);
+                        so.lights[i].colors[2] = new Color32(cols[8], cols[9], cols[10], cols[11]);
 
-                        byte[] cols = buffer.ReadBytes(12);
-                        Color32 colorX = new Color32(cols[0], cols[1], cols[2], cols[3]);
-                        Color32 colorY = new Color32(cols[4], cols[5], cols[6], cols[7]);
-                        Color32 colorZ = new Color32(cols[8], cols[9], cols[10], cols[11]);
-
-                        Color32 main = Color.black;
-                        if (colorX.r != mc.r && colorX.g != mc.g && colorX.b != mc.b)
-                        {
-                            main = colorX;
-                        }
-                        if (colorY.r != mc.r && colorY.g != mc.g && colorY.b != mc.b)
-                        {
-                            main = colorY;
-                        }
-                        if (colorZ.r != mc.r && colorZ.g != mc.g && colorZ.b != mc.b)
-                        {
-                            main = colorZ;
-                        }
-                        main.a = 255;
-
-                        lightsDebug += string.Concat("Light # ", i, "  :  ", BitConverter.ToString(hexa), "  ->  ", lgtMat, "  |  ", colorX, ", ", colorY, ", ", colorZ, "\r\n");
-                        /*
+                        
                         GameObject lgo = new GameObject("Point Light");
                         Rect lightRect = new Rect();
                         lightRect.xMin = -matrix[0] / 100;
@@ -375,167 +253,183 @@ namespace VS.Parser
                         l.color = main;
                         l.shadows = LightShadows.Soft;
                         lights.Add(lgo);
-                        */
+                        
                     }
 
-                    if (UseDebug)
+                    if (buffer.BaseStream.Position != lightPtr + so.lenLightingSection)
                     {
-                        Debug.Log(lightsDebug);
+                        Debug.LogWarning("Wrong position after light");
+                        buffer.BaseStream.Position = lightPtr + so.lenLightingSection;
                     }
-
-                    if (UseDebug)
-                    {
-                        Debug.Log("end lights  :  " + buffer.BaseStream.Position);
-                    }
-
-                    buffer.BaseStream.Position = lightPtr + lenLightingSection;
                 }
 
-                if (lenSubSection06 > 0)
+                if (so.lenSubSection06 > 0)
                 {
-                    Debug.Log("SubSection06 ptr : " + buffer.BaseStream.Position + "   lenSubSection06 : " + lenSubSection06);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection06;
+                    so.SubSection06 = buffer.ReadBytes((int)so.lenSubSection06);
                 }
 
-                if (lenSubSection07 > 0)
+                if (so.lenSubSection07 > 0)
                 {
-                    Debug.Log("SubSection07 ptr : " + buffer.BaseStream.Position + "   lenSubSection07 : " + lenSubSection07);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection07;
+                    so.SubSection07 = buffer.ReadBytes((int)so.lenSubSection07);
                 }
 
-                if (lenSubSection08 > 0)
+                if (so.lenSubSection08 > 0)
                 {
-                    Debug.Log("SubSection08 ptr : " + buffer.BaseStream.Position + "   lenSubSection08 : " + lenSubSection08);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection08;
+                    so.SubSection08 = buffer.ReadBytes((int)so.lenSubSection08);
                 }
 
-                if (lenTrapSection > 0)
+                if (so.lenTrapSection > 0)
                 {
-                    Debug.Log("TrapSection ptr : " + buffer.BaseStream.Position + "   lenTrapSection : " + lenTrapSection);
+                    long trapPtr = buffer.BaseStream.Position;
 
-                    string output = "Traps in " + mapName + "\r\n";
-
-                    uint numTraps = (uint)(lenTrapSection / 12);
+                    uint numTraps = (uint)(so.lenTrapSection / 12);
+                    so.traps = new MPDTrap[numTraps];
                     for (uint i = 0; i < numTraps; i++)
                     {
-                        ushort x = buffer.ReadUInt16();
-                        ushort y = buffer.ReadUInt16();
-                        ushort p = buffer.ReadUInt16();
-                        ushort skill_id = buffer.ReadUInt16(); // http://datacrystal.romhacking.net/wiki/Vagrant_Story:skills_list
-                        uint unk = buffer.ReadUInt32();
-
-                        output += "X : " + x + " Y : "+y +" P : "+p+" Skill : "+skill_id+"  Unknown bytes : " + BitConverter.ToString(BitConverter.GetBytes(unk)) + "\r\n";
-
-
+                        so.traps[i] = new MPDTrap();
+                        so.traps[i].position = new Vector2(buffer.ReadUInt16(), buffer.ReadUInt16()); // grid based
+                        ushort p = buffer.ReadUInt16(); // padding
+                        so.traps[i].skillId = buffer.ReadUInt16(); // http://datacrystal.romhacking.net/wiki/Vagrant_Story:skills_list
+                        so.traps[i].unk1 = buffer.ReadByte();
+                        so.traps[i].save = buffer.ReadByte();
+                        so.traps[i].saveIndex = buffer.ReadByte();
+                        so.traps[i].zero = buffer.ReadByte();
                     }
-                    //Debug.Log(output);
-                    // buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection09;
-                }
 
-                if (lenSubSection0A > 0)
-                {
-                    Debug.Log("SubSection0A ptr : " + buffer.BaseStream.Position + "   lenSubSection0A : " + lenSubSection0A);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0A;
-                }
-
-                if (lenSubSection0B > 0)
-                {
-                    Debug.Log("SubSection0B ptr : " + buffer.BaseStream.Position + "   lenSubSection0B : " + lenSubSection0B);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0B;
-                }
-
-                if (lenTextureEffectsSection > 0)
-                {
-                    Debug.Log("TextureEffectsSection ptr : " + buffer.BaseStream.Position + "   lenTextureEffectsSection : " + lenTextureEffectsSection);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenTextureEffectsSection;
-                }
-
-                if (lenSubSection0D > 0)
-                {
-                    Debug.Log("SubSection0D ptr : " + buffer.BaseStream.Position + "   lenSubSection0D : " + lenSubSection0D);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0D;
-                }
-
-                if (lenSubSection0E > 0)
-                {
-                    Debug.Log("SubSection0E ptr : " + buffer.BaseStream.Position + "   lenSubSection0E : " + lenSubSection0E);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection0E;
-                }
-
-                if (lenMiniMapSection > 0)
-                {
-                    // ARM Format
-                    Debug.Log("MiniMapSection ptr : " + buffer.BaseStream.Position + "   lenMiniMapSection : " + lenMiniMapSection);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenMiniMapSection;
-                }
-
-                if (lenSubSection10 > 0)
-                {
-                    Debug.Log("SubSection10 ptr : " + buffer.BaseStream.Position + "   lenSubSection10 : " + lenSubSection10);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection10;
-                }
-
-                if (lenSubSection11 > 0)
-                {
-                    Debug.Log("SubSection11 ptr : " + buffer.BaseStream.Position + "   lenSubSection11 : " + lenSubSection11);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection11;
-                }
-
-                if (lenFloatingStoneSection > 0)
-                {
-                    Debug.Log("FloatingStoneSection ptr : " + buffer.BaseStream.Position + "   lenFloatingStoneSection : " + lenFloatingStoneSection);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenFloatingStoneSection;
-                }
-
-                if (lenChestInteractionSection > 0)
-                {
-                    Debug.Log("ChestInteractionSection ptr : " + buffer.BaseStream.Position + "   lenChestInteractionSection : " + lenChestInteractionSection);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenChestInteractionSection;
-                }
-
-                if (lenAKAOSubSection > 0)
-                {
-                    long akaoPtr = buffer.BaseStream.Position;
-                    if (UseDebug)
+                    if (buffer.BaseStream.Position != trapPtr + so.lenTrapSection)
                     {
-                        Debug.Log("akaoPtr : " + akaoPtr + "   lenAKAOSubSection : " + lenAKAOSubSection + "(" + (akaoPtr + lenAKAOSubSection) + ")");
+                        Debug.LogWarning("Wrong position after traps");
+                        buffer.BaseStream.Position = trapPtr + so.lenTrapSection;
+                    }
+                }
+
+                if (so.lenSubSection0A > 0)
+                {
+                    so.SubSection0A = buffer.ReadBytes((int)so.lenSubSection0A);
+                }
+
+                if (so.lenSubSection0B > 0)
+                {
+                    so.SubSection0B = buffer.ReadBytes((int)so.lenSubSection0B);
+                }
+
+                if (so.lenTextureEffectsSection > 0)
+                {
+                    long ptrTextureEffectsSection = buffer.BaseStream.Position;
+
+                    List<MPDTextureAnimation> texAnims = new List<MPDTextureAnimation>();
+                    while(buffer.BaseStream.Position+20 <= (ptrTextureEffectsSection + so.lenTextureEffectsSection))
+                    {
+                        byte[] texAnimHead = buffer.ReadBytes(8);
+                        buffer.BaseStream.Position -= 8;
+                        MPDTextureAnimation textureAnimation = new MPDTextureAnimation();
+                        textureAnimation.type = texAnimHead[6];
+                        switch (texAnimHead[6])
+                        {
+                            case 1:
+                                textureAnimation.datas = buffer.ReadBytes(20);
+                                break;
+                            case 2:
+                                textureAnimation.datas = buffer.ReadBytes(32);
+                                break;
+                            case 6:
+                                textureAnimation.datas = buffer.ReadBytes(36);
+                                break;
+                            default:
+                                Debug.Log("Unknown Texture animation type : " + textureAnimation.type+"  in file : "+FileName);
+                                break;
+                        }
+                        texAnims.Add(textureAnimation);
                     }
 
-                    buffer.ReadUInt32(); // 0200 0000
-                    buffer.ReadUInt32(); // 0000 0000
-                    buffer.ReadUInt32(); // 0C00 0000
+                    so.textureAnimations = texAnims.ToArray();
 
-                    /*
-                    AKAO audio = new AKAO();
-                    audio.FileName = FileName;
-                    audio.UseDebug = true;
-                    audio.Parse(buffer, AKAO.UNKNOWN, akaoPtr + lenAKAOSubSection);
-                    */
-                    buffer.BaseStream.Position = akaoPtr + lenAKAOSubSection;
+                    if (buffer.BaseStream.Position != ptrTextureEffectsSection + so.lenTextureEffectsSection)
+                    {
+                        Debug.LogWarning("Wrong position after TextureEffectsSection " + "  in file : " + FileName);
+                        buffer.BaseStream.Position = ptrTextureEffectsSection + so.lenTextureEffectsSection;
+                    }
                 }
 
-                if (lenSubSection15 > 0)
+                if (so.lenSubSection0D > 0)
                 {
-                    Debug.Log("SubSection15 ptr : " + buffer.BaseStream.Position + "   lenSubSection15 : " + lenSubSection15);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection15;
+                    so.SubSection0D = buffer.ReadBytes((int)so.lenSubSection0D);
                 }
 
-                if (lenSubSection16 > 0)
+                if (so.lenSubSection0E > 0)
                 {
-                    Debug.Log("SubSection16 ptr : " + buffer.BaseStream.Position + "   lenSubSection16 : " + lenSubSection16);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection16;
+                    so.SubSection0E = buffer.ReadBytes((int)so.lenSubSection0E);
                 }
 
-                if (lenSubSection17 > 0)
+                if (so.lenMiniMapSection > 0)
                 {
-                    Debug.Log("SubSection17 ptr : " + buffer.BaseStream.Position + "   lenSubSection17 : " + lenSubSection17);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenSubSection17;
+                    long ptrMiniMapSection = buffer.BaseStream.Position;
+
+                    // ARM Format
+                    ARM armParser = new ARM();
+                    armParser.buffer = this.buffer;
+                    armParser.CoreParse();
+
+                    ToolBox.DirExNorCreate("Assets/");
+                    ToolBox.DirExNorCreate("Assets/Resources/");
+                    ToolBox.DirExNorCreate("Assets/Resources/Serialized/");
+                    ToolBox.DirExNorCreate("Assets/Resources/Serialized/MiniMaps/");
+                    AssetDatabase.DeleteAsset("Assets/Resources/Serialized/MiniMaps/" + FileName + ".MPD.yaml.asset");
+                    AssetDatabase.CreateAsset(armParser.so, "Assets/Resources/Serialized/MiniMaps/" + FileName + ".MPD.yaml.asset");
+                    AssetDatabase.SaveAssets();
+
+                    so.miniMap = armParser.so;
+
+                    if (buffer.BaseStream.Position != ptrMiniMapSection + so.lenMiniMapSection)
+                    {
+                        Debug.LogWarning("Wrong position after MiniMapSection " + "  in file : " + FileName);
+                        buffer.BaseStream.Position = ptrMiniMapSection + so.lenMiniMapSection;
+                    }
                 }
 
-                if (lenCameraAreaSection > 0)
+                if (so.lenSubSection10 > 0)
                 {
-                    Debug.Log("CameraAreaSection ptr : " + buffer.BaseStream.Position + "   lenCameraAreaSection : " + lenCameraAreaSection);
-                    buffer.BaseStream.Position = buffer.BaseStream.Position + lenCameraAreaSection;
+                    so.SubSection10 = buffer.ReadBytes((int)so.lenSubSection10);
+                }
+
+                if (so.lenSubSection11 > 0)
+                {
+                    so.SubSection11 = buffer.ReadBytes((int)so.lenSubSection11);
+                }
+
+                if (so.lenFloatingStoneSection > 0)
+                {
+                    so.FloatingStoneSection = buffer.ReadBytes((int)so.lenFloatingStoneSection);
+                }
+
+                if (so.lenChestInteractionSection > 0)
+                {
+                    so.ChestInteractionSection = buffer.ReadBytes((int)so.lenChestInteractionSection);
+                }
+
+                if (so.lenAKAOSection > 0)
+                {
+                    so.AKAOSection = buffer.ReadBytes((int)so.lenAKAOSection);
+                }
+
+                if (so.lenSubSection15 > 0)
+                {
+                    so.SubSection15 = buffer.ReadBytes((int)so.lenSubSection15);
+                }
+
+                if (so.lenSubSection16 > 0)
+                {
+                    so.SubSection16 = buffer.ReadBytes((int)so.lenSubSection16);
+                }
+
+                if (so.lenSubSection17 > 0)
+                {
+                    so.SubSection17 = buffer.ReadBytes((int)so.lenSubSection17);
+                }
+
+                if (so.lenCameraAreaSection > 0)
+                {
+                    so.CameraAreaSection = new ushort[] { buffer.ReadUInt16(), buffer.ReadUInt16() , buffer.ReadUInt16() , buffer.ReadUInt16() };
                 }
             }
             else
@@ -545,63 +439,145 @@ namespace VS.Parser
             }
 
             // Cleared section
-            if (buffer.BaseStream.Position != ptrClearedSection)
+            if (buffer.BaseStream.Position != so.ptrClearedSection)
             {
-                buffer.BaseStream.Position = ptrClearedSection;
+                buffer.BaseStream.Position = so.ptrClearedSection;
             }
-            if (UseDebug)
-            {
-                Debug.Log("Cleared section : " + buffer.BaseStream.Position);
-            }
-
+            so.clearedSection = buffer.ReadBytes((int)so.lenClearedSection);
 
             // Script section
-            if (buffer.BaseStream.Position != ptrScriptSection)
+            if (buffer.BaseStream.Position != so.ptrScriptSection)
             {
-                buffer.BaseStream.Position = ptrScriptSection;
-            }
-            if (UseDebug)
-            {
-                Debug.Log("Script section : " + buffer.BaseStream.Position);
+                buffer.BaseStream.Position = so.ptrScriptSection;
             }
 
-            // See Opcode.cs
+            if (so.lenScriptSection > 0)
+            {
+                // EVT format
+                //so.scriptSection = buffer.ReadBytes((int)so.lenScriptSection);
+                EVT evtParser = new EVT();
+                evtParser.buffer = this.buffer;
+                evtParser.CoreParse();
+
+                ToolBox.DirExNorCreate("Assets/");
+                ToolBox.DirExNorCreate("Assets/Resources/");
+                ToolBox.DirExNorCreate("Assets/Resources/Serialized/");
+                ToolBox.DirExNorCreate("Assets/Resources/Serialized/Events/");
+                AssetDatabase.DeleteAsset("Assets/Resources/Serialized/Events/" + FileName + ".MPD.yaml.asset");
+                AssetDatabase.CreateAsset(evtParser.so, "Assets/Resources/Serialized/Events/" + FileName + ".MPD.yaml.asset");
+                AssetDatabase.SaveAssets();
+
+                so.scriptSection = evtParser.so;
+
+            }
 
 
             // Door section
+            if (buffer.BaseStream.Position != so.ptrDoorSection)
+            {
+                buffer.BaseStream.Position = so.ptrDoorSection;
+            }
+            so.doorSection = buffer.ReadBytes((int)so.lenDoorSection);
 
-            if (buffer.BaseStream.Position != ptrDoorSection)
-            {
-                buffer.BaseStream.Position = ptrDoorSection;
-            }
-            if (UseDebug)
-            {
-                Debug.Log("Door section : " + buffer.BaseStream.Position);
-            }
-            if (lenDoorSection > 0)
-            {
-            }
 
             // Ennemy section
-            if (buffer.BaseStream.Position != ptrEnemySection)
+            if (buffer.BaseStream.Position != so.ptrEnemySection)
             {
-                buffer.BaseStream.Position = ptrEnemySection;
+                buffer.BaseStream.Position = so.ptrEnemySection;
             }
-            if (UseDebug)
+            if (so.lenEnemySection >= 40)
             {
-                Debug.Log("Ennemy section : " + buffer.BaseStream.Position);
+                uint numEnemy = so.lenEnemySection / 40;
+                List<byte[]> enemyDatas = new List<byte[]>();
+                for (uint i = 0; i < numEnemy; i++)
+                {
+                    enemyDatas.Add(buffer.ReadBytes(40));
+                }
+                so.enemySection = enemyDatas.ToArray();
             }
+
 
 
             // Treasure section
-            if (buffer.BaseStream.Position != ptrTreasureSection)
+            if (buffer.BaseStream.Position != so.ptrTreasureSection)
             {
-                buffer.BaseStream.Position = ptrTreasureSection;
+                buffer.BaseStream.Position = so.ptrTreasureSection;
             }
-            if (UseDebug)
+            //so.treasureSection = buffer.ReadBytes((int)so.lenTreasureSection);
+
+            if (so.lenTreasureSection > 0)
             {
-                Debug.Log("Treasure section : " + buffer.BaseStream.Position);
+                // we need this to get item names
+                ItemList itemSO = Resources.Load("Serialized/Datas/ITEM.BIN.yaml") as ItemList;
+
+
+                Treasure treasureSo = ScriptableObject.CreateInstance<Treasure>();
+
+                so.treasureSection = treasureSo;
+                Weapon weapon = new Weapon();
+                weapon.blade = new Blade().SetDatasFromMPD(buffer);
+                weapon.blade.name = itemSO.GetName(weapon.blade.nameId);
+                weapon.blade.description = itemSO.GetDescription(weapon.blade.nameId);
+                weapon.grip = new Grip().SetDatasFromMPD(buffer);
+                weapon.grip.name = itemSO.GetName(weapon.grip.nameId);
+                weapon.grip.description = itemSO.GetDescription(weapon.grip.nameId);
+                for (uint i = 0; i < 3; i++)
+                {
+                    weapon.gems[i] = new Gem().SetDatasFromMPD(buffer);
+                    weapon.gems[i].name = itemSO.GetName(weapon.gems[i].nameId);
+                    weapon.gems[i].description = itemSO.GetDescription(weapon.gems[i].nameId);
+                }
+                weapon.name = Utils.L10n.CleanTranslate(buffer.ReadBytes(18));
+                so.treasureSection.weapon = weapon;
+                so.treasureSection.blade = new Blade().SetDatasFromMPD(buffer);
+                so.treasureSection.blade.name = itemSO.GetName(so.treasureSection.blade.nameId);
+                so.treasureSection.blade.description = itemSO.GetDescription(so.treasureSection.blade.nameId);
+                so.treasureSection.grip = new Grip().SetDatasFromMPD(buffer);
+                so.treasureSection.grip.name = itemSO.GetName(so.treasureSection.grip.nameId);
+                so.treasureSection.grip.description = itemSO.GetDescription(so.treasureSection.grip.nameId);
+                so.treasureSection.shield = new Shield().SetDatasFromMPD(buffer);
+                so.treasureSection.shield.name = itemSO.GetName(so.treasureSection.shield.nameId);
+                for (uint i = 0; i < 3; i++)
+                {
+                    so.treasureSection.shield.gems[i] = new Gem().SetDatasFromMPD(buffer);
+                    so.treasureSection.shield.gems[i].name = itemSO.GetName(so.treasureSection.shield.gems[i].nameId);
+                    so.treasureSection.shield.gems[i].description = itemSO.GetDescription(so.treasureSection.shield.gems[i].nameId);
+                }
+                so.treasureSection.armor1 = new Armor().SetDatasFromMPD(buffer);
+                so.treasureSection.armor1.name = itemSO.GetName(so.treasureSection.armor1.nameId);
+                so.treasureSection.armor2 = new Armor().SetDatasFromMPD(buffer);
+                so.treasureSection.armor2.name = itemSO.GetName(so.treasureSection.armor2.nameId);
+                so.treasureSection.accessory = new Armor().SetDatasFromMPD(buffer);
+                so.treasureSection.accessory.name = itemSO.GetName(so.treasureSection.accessory.nameId);
+                so.treasureSection.accessory.description = itemSO.GetDescription(so.treasureSection.accessory.nameId);
+                so.treasureSection.gem = new Gem().SetDatasFromMPD(buffer);
+                so.treasureSection.gem.name = itemSO.GetName(so.treasureSection.gem.nameId);
+                so.treasureSection.gem.description = itemSO.GetDescription(so.treasureSection.gem.nameId);
+                for (uint i = 0; i < 4; i++)
+                {
+                    so.treasureSection.miscItems[i] = new MiscItem().SetDatasFromMPD(buffer);
+                    so.treasureSection.miscItems[i].name = itemSO.GetName(so.treasureSection.miscItems[i].nameId);
+                    so.treasureSection.miscItems[i].description = itemSO.GetDescription(so.treasureSection.miscItems[i].nameId);
+                }
+
+                ToolBox.DirExNorCreate("Assets/");
+                ToolBox.DirExNorCreate("Assets/Resources/");
+                ToolBox.DirExNorCreate("Assets/Resources/Serialized/");
+                ToolBox.DirExNorCreate("Assets/Resources/Serialized/Maps/");
+                ToolBox.DirExNorCreate("Assets/Resources/Serialized/Maps/Treasures/");
+                AssetDatabase.DeleteAsset("Assets/Resources/Serialized/Maps/Treasures/" + FileName + ".CHEST.yaml.asset");
+                AssetDatabase.CreateAsset(treasureSo, "Assets/Resources/Serialized/Maps/Treasures/" + FileName + ".CHEST.yaml.asset");
+                AssetDatabase.SaveAssets();
             }
+
+
+            ToolBox.DirExNorCreate("Assets/");
+            ToolBox.DirExNorCreate("Assets/Resources/");
+            ToolBox.DirExNorCreate("Assets/Resources/Serialized/");
+            ToolBox.DirExNorCreate("Assets/Resources/Serialized/Maps/");
+            AssetDatabase.DeleteAsset("Assets/Resources/Serialized/Maps/" + FileName + ".MPD.yaml.asset");
+            AssetDatabase.CreateAsset(so, "Assets/Resources/Serialized/Maps/" + FileName + ".MPD.yaml.asset");
+            AssetDatabase.SaveAssets();
 
 
             buffer.Close();
@@ -678,129 +654,112 @@ namespace VS.Parser
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(mapGO, zoneFilename);
 
             // Then we can build the room
-            MPDDatas datas = mapGO.AddComponent<MPDDatas>();
-            ZNDDatas z = mapGO.AddComponent<ZNDDatas>();
-            z.filePath = String.Join("/", hash);
-            z.tims = zndParser.datas.tims;
-            z.MPDInfos = zndParser.datas.MPDInfos;
-            z.ZUDInfos = zndParser.datas.ZUDInfos;
-            datas.doors = doors;
-            for (uint i = 0; i < numGroups; i++)
+
+            for (uint i = 0; i < so.numGroups; i++)
             {
                 GameObject groupGO = new GameObject("Group_" + i);
                 groupGO.transform.parent = mapGO.transform;
-                int lgm = groups[i].meshes.Count;
-                for (int j = 0; j < lgm; j++)
+
+                Mesh mesh = new Mesh();
+                List<Vector3> meshVertices = new List<Vector3>();
+                List<int> meshTriangles = new List<int>();
+                List<Vector2> meshTrianglesUV = new List<Vector2>();
+                List<Vector3> meshNormals = new List<Vector3>();
+                List<Color32> meshColors = new List<Color32>();
+                int iv = 0;
+                int lmf = so.groups[i].faces.Length;
+                for (int k = 0; k < lmf; k++)
                 {
-                    Mesh mesh = new Mesh();
-                    List<Vector3> meshVertices = new List<Vector3>();
-                    List<int> meshTriangles = new List<int>();
-                    List<Vector2> meshTrianglesUV = new List<Vector2>();
-                    List<Vector3> meshNormals = new List<Vector3>();
-                    List<Color32> meshColors = new List<Color32>();
-                    int iv = 0;
-                    int lmf = groups[i].meshes[j].faces.Count;
-                    for (int k = 0; k < lmf; k++)
+                    MPDFace f = so.groups[i].faces[k];
+
+                    if (f.isQuad)
                     {
-                        MPDFace f = groups[i].meshes[j].faces[k];
-                        if (f.isQuad)
-                        {
-                            meshVertices.Add(-f.v1.position / 128);
-                            meshVertices.Add(-f.v2.position / 128);
-                            meshVertices.Add(-f.v3.position / 128);
-                            meshVertices.Add(-f.v4.position / 128);
-                            meshColors.Add(f.v1.color);
-                            meshColors.Add(f.v2.color);
-                            meshColors.Add(f.v3.color);
-                            meshColors.Add(f.v4.color);
-                            meshTrianglesUV.Add(f.v2.uv / 256);
-                            meshTrianglesUV.Add(f.v3.uv / 256);
-                            meshTrianglesUV.Add(f.v1.uv / 256);
-                            meshTrianglesUV.Add(f.v4.uv / 256);
-                            meshNormals.Add(f.n);
-                            meshNormals.Add(f.n);
-                            meshNormals.Add(f.n);
-                            meshNormals.Add(f.n);
+                        meshVertices.Add(-f.GetOpVertex(so.groups[i], 0) / 128);
+                        meshVertices.Add(-f.GetOpVertex(so.groups[i], 1) / 128);
+                        meshVertices.Add(-f.GetOpVertex(so.groups[i], 2) / 128);
+                        meshVertices.Add(-f.GetOpVertex(so.groups[i], 3) / 128);
+                        meshColors.Add(f.colors[0]);
+                        meshColors.Add(f.colors[1]);
+                        meshColors.Add(f.colors[2]);
+                        meshColors.Add(f.colors[3]);
+                        meshTrianglesUV.Add(f.uvs[0] / 256);
+                        meshTrianglesUV.Add(f.uvs[1] / 256);
+                        meshTrianglesUV.Add(f.uvs[2] / 256);
+                        meshTrianglesUV.Add(f.uvs[3] / 256);
+                        
+                        //meshNormals.Add(f.n);
+                        
+                        meshTriangles.Add(iv + 0);
+                        meshTriangles.Add(iv + 1);
+                        meshTriangles.Add(iv + 2);
 
-                            meshTriangles.Add(iv + 0);
-                            meshTriangles.Add(iv + 1);
-                            meshTriangles.Add(iv + 2);
-
-                            meshTriangles.Add(iv + 3);
-                            meshTriangles.Add(iv + 2);
-                            meshTriangles.Add(iv + 1);
-                            iv += 4;
-                        }
-                        else
-                        {
-                            meshVertices.Add(-f.v1.position / 128);
-                            meshVertices.Add(-f.v2.position / 128);
-                            meshVertices.Add(-f.v3.position / 128);
-                            meshColors.Add(f.v1.color);
-                            meshColors.Add(f.v2.color);
-                            meshColors.Add(f.v3.color);
-                            meshTrianglesUV.Add(f.v2.uv / 256);
-                            meshTrianglesUV.Add(f.v3.uv / 256);
-                            meshTrianglesUV.Add(f.v1.uv / 256);
-                            meshNormals.Add(f.n);
-                            meshNormals.Add(f.n);
-                            meshNormals.Add(f.n);
-                            meshTriangles.Add(iv + 0);
-                            meshTriangles.Add(iv + 1);
-                            meshTriangles.Add(iv + 2);
-
-                            iv += 3;
-                        }
+                        meshTriangles.Add(iv + 3);
+                        meshTriangles.Add(iv + 2);
+                        meshTriangles.Add(iv + 1);
+                        iv += 4;
+                    } else
+                    {
+                        meshVertices.Add(-f.GetOpVertex(so.groups[i], 0) / 128);
+                        meshVertices.Add(-f.GetOpVertex(so.groups[i], 1) / 128);
+                        meshVertices.Add(-f.GetOpVertex(so.groups[i], 2) / 128);
+                        meshColors.Add(f.colors[0]);
+                        meshColors.Add(f.colors[1]);
+                        meshColors.Add(f.colors[2]);
+                        meshTrianglesUV.Add(f.uvs[0] / 256);
+                        meshTrianglesUV.Add(f.uvs[1] / 256);
+                        meshTrianglesUV.Add(f.uvs[2] / 256);
+                        
+                        //meshNormals.Add(f.n);
+                        //meshNormals.Add(f.n);
+                        //meshNormals.Add(f.n);
+                        
+                        meshTriangles.Add(iv + 0);
+                        meshTriangles.Add(iv + 1);
+                        meshTriangles.Add(iv + 2);
+                        iv += 3;
                     }
-                    mesh.name = "mesh_" + i + "-" + j;
-                    mesh.vertices = meshVertices.ToArray();
-                    mesh.triangles = meshTriangles.ToArray();
-                    mesh.uv = meshTrianglesUV.ToArray();
-                    mesh.normals = meshNormals.ToArray();
-                    mesh.colors32 = meshColors.ToArray();
-                    mesh.RecalculateNormals();
+                }
+                mesh.name = "mesh_" + i;
+                mesh.vertices = meshVertices.ToArray();
+                mesh.triangles = meshTriangles.ToArray();
+                mesh.uv = meshTrianglesUV.ToArray();
+                //mesh.normals = meshNormals.ToArray();
+                mesh.colors32 = meshColors.ToArray();
+                mesh.RecalculateNormals();
 
-                    GameObject meshGo = new GameObject("mesh_" + i + "-" + j);
-                    meshGo.transform.parent = groupGO.transform;
+                GameObject meshGo = new GameObject("mesh_" + i);
+                meshGo.transform.parent = groupGO.transform;
 
-                    MeshFilter mf = meshGo.AddComponent<MeshFilter>();
-                    mf.mesh = mesh;
+                MeshFilter mf = meshGo.AddComponent<MeshFilter>();
+                mf.mesh = mesh;
 
-                    MeshRenderer mr = meshGo.AddComponent<MeshRenderer>();
-                    if (z != null && z.tims.Length > 0)
-                    {
-                        mr.material = z.GetMaterial(groups[i].meshes[j].textureId, groups[i].meshes[j].clutId);
-                    }
-                    if (buildPrefab)
-                    {
+                MeshRenderer mr = meshGo.AddComponent<MeshRenderer>();
+                
+                if (z != null && z.tims.Length > 0)
+                {
+                    //mr.material = z.GetMaterial(groups[i].meshes[j].textureId, groups[i].meshes[j].clutId);
+                }
+                
+                if (buildPrefab)
+                {
 #if UNITY_EDITOR
-
-                        AssetDatabase.AddObjectToAsset(mesh, zoneFilename);
-                        if (!AssetDatabase.Contains(mr.sharedMaterial))
-                        {
-                            AssetDatabase.AddObjectToAsset(mr.sharedMaterial, zoneFilename);
-                        }
-
-                        if (!AssetDatabase.Contains(mr.sharedMaterial.mainTexture))
-                        {
-                            AssetDatabase.AddObjectToAsset(mr.sharedMaterial.mainTexture, zoneFilename);
-                        }
-
-#endif
+                    
+                    AssetDatabase.AddObjectToAsset(mesh, zoneFilename);
+                    
+                    if (!AssetDatabase.Contains(mr.sharedMaterial))
+                    {
+                        AssetDatabase.AddObjectToAsset(mr.sharedMaterial, zoneFilename);
                     }
+
+                    if (!AssetDatabase.Contains(mr.sharedMaterial.mainTexture))
+                    {
+                        AssetDatabase.AddObjectToAsset(mr.sharedMaterial.mainTexture, zoneFilename);
+                    }
+                    
+#endif
                 }
 
             }
-
-            if (lights != null)
-            {
-                for (int i = 0; i < lights.Count; i++)
-                {
-                    lights[i].transform.parent = mapGO.transform;
-                }
-
-            }
-
 
 
             if (buildPrefab)
@@ -829,156 +788,5 @@ namespace VS.Parser
             }
         }
     }
-
-    [Serializable]
-    public class MPDDoor
-    {
-        public uint destZone;
-        public uint destRoom;
-        public byte[] unkn;
-        public uint idCurrentDoor;
-
-        public MPDDoor()
-        {
-        }
-    }
-
-    public class MPDGroup
-    {
-        public uint scale = 8;
-        public byte[] header;
-        /*
-         *                                                              W  S  E N       W  S  E N
-                 bitwise visibility angles, FF = all time visible, C7 = 1100 0111, 7C = 0111 1100
-        */
-        public byte display;
-        public byte _scale;
-        public ushort overlapping;
-        public short decX;
-        public short decY;
-        public short decZ;
-        public List<MPDMesh> meshes;
-
-        public MPDGroup()
-        {
-            meshes = new List<MPDMesh>();
-        }
-
-        public MPDMesh getMesh(uint textureId, uint clutId)
-        {
-            string idx = textureId.ToString() + "_" + clutId.ToString();
-            MPDMesh mesh = contains(idx);
-            if (mesh == null)
-            {
-                mesh = new MPDMesh(idx, textureId, clutId, this);
-                meshes.Add(mesh);
-            }
-            return mesh;
-        }
-
-        public MPDMesh contains(string idx)
-        {
-            int ml = meshes.Count;
-            for (int i = 0; i < ml; i++)
-            {
-                if (meshes[i].idx == idx)
-                {
-                    return meshes[i];
-                }
-            }
-
-            return null;
-        }
-    }
-    public class MPDMesh
-    {
-        public string idx;
-        public MPDGroup group;
-        public uint textureId;
-        public uint clutId;
-        public List<MPDFace> faces;
-        public Texture2D texture;
-
-        public MPDMesh(string idx, uint textureId, uint clutId, MPDGroup group)
-        {
-            this.idx = idx;
-            this.textureId = textureId;
-            this.clutId = clutId;
-            this.group = group;
-            faces = new List<MPDFace>();
-        }
-
-        public void addFace(MPDFace face)
-        {
-            faces.Add(face);
-        }
-    }
-    public class MPDVertex
-    {
-        public Vector3 position;
-        public Color32 color;
-        public Vector2 uv;
-
-        public MPDVertex()
-        {
-            position = new Vector3();
-            color = new Color32();
-            uv = new Vector2();
-        }
-    }
-    public class MPDFace
-    {
-        public MPDGroup group;
-        public bool isQuad;
-        public uint type;
-        public uint clutId;
-        public uint textureId;
-        public MPDVertex v1 = new MPDVertex();
-        public MPDVertex v2 = new MPDVertex();
-        public MPDVertex v3 = new MPDVertex();
-        public MPDVertex v4 = new MPDVertex();
-        public Vector3 n;
-
-
-        public MPDFace(MPDGroup group, bool isQuad)
-        {
-            this.group = group;
-            this.isQuad = isQuad;
-        }
-
-        public void feed(BinaryReader buffer)
-        {
-
-            v1.position = new Vector3(buffer.ReadInt16(), buffer.ReadInt16(), buffer.ReadInt16());
-            v1.position += new Vector3(group.decX, group.decY, group.decZ);
-            v2.position = new Vector3(buffer.ReadSByte(), buffer.ReadSByte(), buffer.ReadSByte());
-            v3.position = new Vector3(buffer.ReadSByte(), buffer.ReadSByte(), buffer.ReadSByte());
-            v1.color = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255);
-            type = buffer.ReadByte();
-            v2.color = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255);
-            v1.uv.x = buffer.ReadByte();
-            v3.color = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255);
-            v1.uv.y = buffer.ReadByte();
-            v2.uv = new Vector2(buffer.ReadByte(), buffer.ReadByte());
-
-            clutId = buffer.ReadUInt16();
-            v3.uv = new Vector2(buffer.ReadByte(), buffer.ReadByte());
-            textureId = buffer.ReadUInt16();
-
-            if (isQuad == true)
-            {
-                v4.position = new Vector3(buffer.ReadSByte(), buffer.ReadSByte(), buffer.ReadSByte());
-                v4.uv.x = buffer.ReadByte();
-                v4.color = new Color32(buffer.ReadByte(), buffer.ReadByte(), buffer.ReadByte(), 255);
-                v4.uv.y = buffer.ReadByte();
-                v4.position = v4.position * group.scale + v1.position;
-            }
-            v2.position = v2.position * group.scale + v1.position;
-            v3.position = v3.position * group.scale + v1.position;
-            Vector3 u = v2.position - v1.position;
-            Vector3 v = v3.position - v1.position;
-            n = new Vector3(u.y * v.z - u.z * v.y, u.z * v.x - u.x * v.z, u.x * v.y - u.y * v.x);
-        }
-    }
-
 }
+*/

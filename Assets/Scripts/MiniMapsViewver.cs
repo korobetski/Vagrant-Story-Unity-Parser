@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using VS.Core;
-using VS.Entity;
+using VS.FileFormats.ARM;
+using VS.FileFormats.MPD;
 using VS.Parser;
 using VS.Utils;
 
@@ -74,13 +75,15 @@ public class MiniMapsViewver : MonoBehaviour
             myDropdownValueChangedHandler(myDropdown);
         });
 
-        ARM aRM = new ARM();
-        aRM.Parse(conf.VSPath + "SMALL/SCEN001.ARM");
-        GameObject miniMapGO = aRM.BuildGameObject();
+        ARM arm = new ARM();
+        arm.ParseFromFile(conf.VSPath + "SMALL/SCEN001.ARM");
+        /*
+        GameObject miniMapGO = arm.BuildGameObject();
         miniMapGO.transform.parent = container.transform;
         miniMapGO.transform.localPosition = Vector3.zero;
         miniMapGO.transform.localRotation = new Quaternion();
         miniMapGO.transform.localScale = Vector3.one;
+        */
     }
     void Destroy()
     {
@@ -92,14 +95,15 @@ public class MiniMapsViewver : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
-        ARM aRM = new ARM();
-        //aRM.parseFromFile("E:/SMALL/" + ARMList[target.value]);
-        aRM.Parse(conf.VSPath + "SMALL/" + ARMList[target.value]);
+        ARM arm = new ARM();
+        arm.ParseFromFile(conf.VSPath + "SMALL/" + ARMList[target.value]);
+        /*
         GameObject miniMapGO = aRM.BuildGameObject();
         miniMapGO.transform.parent = container.transform;
         miniMapGO.transform.localPosition = Vector3.zero;
         miniMapGO.transform.localRotation = new Quaternion();
         miniMapGO.transform.localScale = Vector3.one;
+        */
     }
     void Update()
     {
@@ -125,9 +129,12 @@ public class MiniMapsViewver : MonoBehaviour
                 room.GetComponent<MeshRenderer>().material = (Material)Resources.Load("Prefabs/ARMMaterialSelected", typeof(Material));
                 room.GetComponentInChildren<LineRenderer>().material = (Material)Resources.Load("Prefabs/ARMLineMaterialSelected", typeof(Material));
 
+                //VS.Serializable.ARM so = Resources.Load("Serialized/MiniMaps/" + selectedRoomFilePath + ".ARM.yaml.asset") as VS.Serializable.ARM;
 
-                MPDList = ToolBox.GetZNDRoomList(room.GetComponent<ARMRoom>().zoneNumber);
+                /*
+                MPDList = ToolBox.GetZNDRoomList(so.);
                 selectedRoomFilePath = conf.VSPath + "MAP/" + MPDList[room.GetComponent<ARMRoom>().mapNumber - 1];
+                */
             }
         }
 
@@ -197,12 +204,14 @@ public class MiniMapsViewver : MonoBehaviour
 
             MPD roomParser = new MPD();
             //roomParser.debugger = true;
-            roomParser.Parse(selectedRoomFilePath);
+            roomParser.ParseFromFile(selectedRoomFilePath);
+            /*
             GameObject roomModel = roomParser.BuildGameObject();
             roomModel.transform.parent = container.transform;
             roomModel.transform.localPosition = Vector3.zero;
             roomModel.transform.localRotation = new Quaternion();
             roomModel.transform.localScale = Vector3.one * 10;
+            */
         }
     }
 }

@@ -1,0 +1,71 @@
+﻿namespace VS.Enums
+{
+    public class OP
+    {
+        
+        
+        
+        public enum Type
+        {
+            DialogShow = 16,
+            DialogText = 17,
+            DialogHide = 18,
+            SplashScreenChoose = 22,
+            SplashScreenLoad = 23,
+            SplashScreenShow = 24,
+            SplashScreenHide = 25,
+            SplashScreenFadeIn = 26,
+            ModelLoad = 32,
+            ModelAnimate = 34,
+            ModelSetAnimations = 35,
+            ModelPosition = 38,
+            ModelMoveTo = 40,
+            ModelMoveTo2 = 41,
+            ModeFree = 47,
+            ModelLoadAnimationsEx = 48,
+            ModelRotate = 51,
+            ModelLookAt = 56,
+            ModelLoadAnimations = 58,
+            WaitForFile = 59,
+            ModelIlluminate = 62,
+            ModelControlViaScript = 66,
+            SetEngineMode = 68,
+            ModelControlViaBattleMode = 80,
+            BattleOver = 84,
+            SetHeadsUpDisplayMode = 88,
+            LoadRoom = 104,
+            LoadScene = 105,
+            DisplayRoom = 109,
+            ModelColor = 112,
+            SoundEffects0 = 128,
+            SoundEffects1 = 129,
+            SoundEffects2 = 130,
+            SoundEffects3 = 131,
+            SoundEffects4 = 132,
+            SoundEffects5 = 133,
+            SoundEffects6 = 134,
+            SoundEffects7 = 135,
+            SoundEffects8 = 136,
+            SoundEffects9 = 137,
+            MusicLoad = 144,
+            MusicPlay = 146,
+            AudioUnknown1 = 153,
+            AudioSetPitch = 157,
+            AudioUnknown2 = 158,
+            SplashScreenEffects = 161,
+            CameraZoomIn = 162,
+            CameraDirection = 192,
+            CameraSetAngle = 193,
+            CameraLookAt = 194,
+            ModelAnimateObject = 196,
+            CameraPosition = 208,
+            SetCameraPosition = 209,
+            CameraHeight = 212,
+            CameraWait = 224,
+            CameraZoom = 234,
+            CameraZoomScalar = 236,
+            Wait = 240,
+            Return = 255
+        }
+    }
+}

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using VS.Core;
-using VS.Parser;
+using VS.Utils;
 
 public class MainMenu : MonoBehaviour
 {
@@ -23,7 +23,7 @@ public class MainMenu : MonoBehaviour
                 Memory.SaveConfig(new VSPConfig());
                 conf = Memory.LoadConfig();
             }
-            if (conf.VSPath != null && LBA.checkVSROM(conf.VSPath) != null)
+            if (conf.VSPath != null && ToolBox.checkVSROM(conf.VSPath) != null)
             {
                 Hide(pathCG);
                 Show(menuCG);
@@ -45,7 +45,7 @@ public class MainMenu : MonoBehaviour
 
     public void OnSetPath()
     {
-        bool validVSROM = (LBA.checkVSROM(pathInput.text) != null);
+        bool validVSROM = (ToolBox.checkVSROM(pathInput.text) != null);
         if (pathInput && validVSROM)
         {
             conf.VSPath = pathInput.text;

@@ -1,4 +1,6 @@
-﻿using System;
+﻿/*
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -34,8 +36,7 @@ namespace VS.Parser
         {
             long basePtr = buffer.BaseStream.Position;
             uint numSlots = buffer.ReadUInt16();
-            numBones = buffer.ReadByte();
-            buffer.ReadByte(); // padding
+            numBones = buffer.ReadUInt16();
             uint size = buffer.ReadUInt32();
             uint dataOffset = buffer.ReadUInt32() + 8;
             long slotOffset = buffer.ReadUInt32() + 8;
@@ -122,12 +123,12 @@ namespace VS.Parser
                 // Translation
                 int tkl = animations[i].transKeys.Count;
                 List<NVector4> keyframes = animations[i].transKeys;
-                /*
-                Debug.Log("animations["+i+"].trans : "+ animations[i].trans.ToString());
-                int tx = (int)animations[i].trans.x/64;
-                int ty = (int)animations[i].trans.y/64;
-                int tz = (int)animations[i].trans.z/64;
-                */
+                
+                //Debug.Log("animations["+i+"].trans : "+ animations[i].trans.ToString());
+                //int tx = (int)animations[i].trans.x/64;
+                //int ty = (int)animations[i].trans.y/64;
+                //int tz = (int)animations[i].trans.z/64;
+                
                 float tx = 0;
                 float ty = 0;
                 float tz = 0;
@@ -321,10 +322,10 @@ namespace VS.Parser
             {
                 ptrBoneScales[i] = buffer.ReadUInt16();
             }
-            /*
+            
             Debug.Log("VSAnim -> index : "+index+" , numBones : "+numBones+ ", length : "+ length + ", baseAnimationId : "+ baseAnimationId +
                 ", scaleFlags : "+ scaleFlags+ ", ptrActions : "+ ptrActions+ ", ptrTrans : "+ ptrTrans);
-            */
+            
         }
 
         public void getData(BinaryReader buffer, long basePtr, long dataPtr, VSAnim[] animations)
@@ -649,3 +650,5 @@ namespace VS.Parser
         }
     }
 }
+
+*/

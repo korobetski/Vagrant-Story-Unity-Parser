@@ -1,9 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
 using VS.Core;
-using VS.Parser;
+using VS.FileFormats.ARM;
+using VS.FileFormats.BIN;
+using VS.FileFormats.MPD;
+using VS.FileFormats.ZUD;
+using VS.FileFormats.WEP;
+using VS.FileFormats.SHP;
+using VS.FileFormats.EVT;
+using VS.FileFormats.ZND;
+using VS.FileFormats.SYD;
+using VS.FileFormats.TIM;
+using VS.FileFormats.AKAO;
+using VS.FileFormats.EFFECT;
+using VS.FileFormats.PRG;
+using VS.FileFormats.ITEM;
+using VS.Utils;
+using VS.FileFormats.HELP;
+using VS.FileFormats.SEQ;
+
+//https://unity3d.college/2017/05/22/unity-attributes/
 
 public class VSWindow : EditorWindow
 {
@@ -38,7 +57,7 @@ public class VSWindow : EditorWindow
                 VSPath = conf.VSPath;
                 if (conf.VS_Version == "")
                 {
-                    conf.VS_Version = LBA.checkVSROM(VSPath);
+                    conf.VS_Version = ToolBox.checkVSROM(VSPath);
                     Memory.SaveConfig(conf);
                 }
             }
@@ -61,7 +80,7 @@ public class VSWindow : EditorWindow
         if (VSSaveTrigger)
         {
             conf.VSPath = VSPath;
-            conf.VS_Version = LBA.checkVSROM(VSPath);
+            conf.VS_Version = ToolBox.checkVSROM(VSPath);
             Memory.SaveConfig(conf);
         }
 
@@ -97,7 +116,7 @@ public class VSWindow : EditorWindow
                     {
                         case "PRG":
                             PRG parser = new PRG();
-                            parser.Parse(VSPath + FilePath);
+                            //parser.ParseFromFile(VSPath + FilePath);
                             break;
                     }
                     break;
@@ -116,7 +135,7 @@ public class VSWindow : EditorWindow
                     switch (ext)
                     {
                         case "P":
-                            EFFECT effect = new EFFECT(VSPath + FilePath);
+                            ParseEFFECT(VSPath + FilePath);
                             break;
                     }
                     break;
@@ -129,7 +148,7 @@ public class VSWindow : EditorWindow
                     {
                         case "BIN":
                             TIM parser = new TIM();
-                            parser.ParseIllust(VSPath + FilePath);
+                            //parser.ParseIllust(VSPath + FilePath);
                             break;
                     }
                     break;
@@ -164,9 +183,13 @@ public class VSWindow : EditorWindow
                     // *.PRG
                     switch (ext)
                     {
+                        case "BIN":
+                            //BIN bparser = new BIN();
+                            //bparser.ParseFromFile(VSPath + FilePath);
+                            break;
                         case "PRG":
                             PRG parser = new PRG();
-                            parser.Parse(VSPath + FilePath);
+                            //parser.ParseFromFile(VSPath + FilePath);
                             break;
                     }
                     break;
@@ -174,7 +197,7 @@ public class VSWindow : EditorWindow
                     // TITLE.STR intro video
                     break;
                 case "MUSIC":
-                    ParseAKAO(VSPath + FilePath, AKAO.MUSIC, true);
+                    //ParseAKAO(VSPath + FilePath, AKAO.Type.SEQUENCE, true);
                     break;
                 case "OBJ":
                     // **.SHP
@@ -203,10 +226,20 @@ public class VSWindow : EditorWindow
                     // **.DIS
                     // HELP**.HF0
                     // HELP**.HF1
+
+                    switch (ext)
+                    {
+                        case "ARM":
+                            ParseARM(VSPath + FilePath, true);
+                            break;
+                        case "BIN":
+                            ParseBIN(VSPath + FilePath, fileName);
+                            break;
+                    }
                     break;
                 case "SOUND":
                     // WAVE0***.DAT
-                    ParseAKAO(VSPath + FilePath, AKAO.SOUND, true);
+                    ParseAKAO(VSPath + FilePath, VS.Enums.AKAO.Type.SAMPLE_COLLECTION, true);
                     break;
                 case "TITLE":
                     // TITLE.PRG
@@ -217,7 +250,7 @@ public class VSWindow : EditorWindow
 
 
         GUILayout.Label("| Batch imports", EditorStyles.boldLabel);
-        GUILayout.BeginVertical();
+        GUILayout.BeginVertical(options);
         GUILayout.Label("3D Model Formats : ");
         bool LoadARMTrigger = GUILayout.Button(new GUIContent("Load MiniMaps.ARM"));
         if (LoadARMTrigger && VSPath != "")
@@ -231,10 +264,7 @@ public class VSWindow : EditorWindow
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                ARM parser = new ARM();
-                //parser.UseDebug = true;
-                parser.Parse(file);
-                parser.BuildPrefab(true);
+                ParseARM(file, false);
                 fileParsed++;
             }
             EditorUtility.ClearProgressBar();
@@ -243,8 +273,6 @@ public class VSWindow : EditorWindow
         bool LoadWEPTrigger = GUILayout.Button(new GUIContent("Load Weapons.WEP"));
         if (LoadWEPTrigger && VSPath != "")
         {
-
-            BuildDatabase();
             string[] files = Directory.GetFiles(VSPath + "OBJ/", "*.WEP");
             float fileToParse = files.Length;
             float fileParsed = 0f;
@@ -278,6 +306,24 @@ public class VSWindow : EditorWindow
             EditorUtility.ClearProgressBar();
         }
 
+        bool LoadSEQTrigger = GUILayout.Button(new GUIContent("Load 3D Models Animations.SEQ"));
+        if (LoadSEQTrigger && VSPath != "")
+        {
+            string[] files = Directory.GetFiles(VSPath + "OBJ/", "*.SEQ");
+            float fileToParse = files.Length;
+            float fileParsed = 0f;
+
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                ParseSEQ(file);
+                fileParsed++;
+            }
+            EditorUtility.ClearProgressBar();
+        }
+
         bool LoadZUDTrigger = GUILayout.Button(new GUIContent("Load Zones Units Datas.ZUD"));
         if (LoadZUDTrigger && VSPath != "")
         {
@@ -290,6 +336,23 @@ public class VSWindow : EditorWindow
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
                 ParseZUD(file, filename, false);
+                fileParsed++;
+            }
+            EditorUtility.ClearProgressBar();
+        }
+
+        bool LoadZNDTrigger = GUILayout.Button(new GUIContent("Load Zones Datas.ZND"));
+        if (LoadZNDTrigger && VSPath != "")
+        {
+            string[] files = Directory.GetFiles(VSPath + "MAP/", "*.ZND");
+            float fileToParse = files.Length;
+            float fileParsed = 0f;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                ParseZND(file, false);
                 fileParsed++;
             }
             EditorUtility.ClearProgressBar();
@@ -314,7 +377,7 @@ public class VSWindow : EditorWindow
             EditorUtility.ClearProgressBar();
         }
 
-        bool LoadEFFECTTrigger = GUILayout.Button(new GUIContent("Load EFFECT/E0*.P, E0*.FBC, E0*.FBT (Only Texture right now)"));
+        bool LoadEFFECTTrigger = GUILayout.Button(new GUIContent("Load Spell Effects .P"));
         if (LoadEFFECTTrigger && VSPath != "")
         {
 
@@ -327,7 +390,7 @@ public class VSWindow : EditorWindow
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                EFFECT effect = new EFFECT(file);
+                ParseEFFECT(file);
                 fileParsed++;
             }
 
@@ -338,9 +401,9 @@ public class VSWindow : EditorWindow
         }
         GUILayout.EndVertical();
 
-        GUILayout.BeginVertical();
+        GUILayout.BeginVertical(options);
         GUILayout.Label("Texture Formats : ");
-
+        /*
         bool LoadGIMTrigger = GUILayout.Button(new GUIContent("Load GIM/*.GIM"));
         if (LoadGIMTrigger && VSPath != "")
         {
@@ -354,36 +417,15 @@ public class VSWindow : EditorWindow
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                GIM gim = new GIM(file);
+                //GIM gim = new GIM(file);
                 fileParsed++;
             }
 
 
             EditorUtility.ClearProgressBar();
         }
-
-        bool LoadMENUBGTrigger = GUILayout.Button(new GUIContent("Load MENU/*BG.BIN"));
-        if (LoadMENUBGTrigger && VSPath != "")
-        {
-
-            string[] files = new string[] { VSPath + "MENU/MAPBG.BIN", VSPath + "MENU/MENUBG.BIN" };
-            float fileToParse = files.Length;
-
-            float fileParsed = 0;
-            foreach (string file in files)
-            {
-                string[] h = file.Split("/"[0]);
-                string filename = h[h.Length - 1];
-                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                TIM bg = new TIM();
-                bg.ParseBG(file);
-                fileParsed++;
-            }
-
-
-            EditorUtility.ClearProgressBar();
-        }
-
+        */
+        /*
         bool LoadDISTrigger = GUILayout.Button(new GUIContent("Load SMALL/*.DIS"));
         if (LoadDISTrigger && VSPath != "")
         {
@@ -396,15 +438,16 @@ public class VSWindow : EditorWindow
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                DIS dis = new DIS();
-                dis.Parse(file);
+                //DIS dis = new DIS();
+                //dis.ParseFromFile(file);
                 fileParsed++;
             }
 
 
             EditorUtility.ClearProgressBar();
         }
-
+        */
+        /*
         bool LoadTIMTrigger = GUILayout.Button(new GUIContent("BG/*.TIM"));
         if (LoadTIMTrigger && VSPath != "")
         {
@@ -418,14 +461,15 @@ public class VSWindow : EditorWindow
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
                 TIM parser = new TIM();
-                parser.Parse(file);
+                //parser.ParseFromFile(file);
                 fileParsed++;
             }
 
 
             EditorUtility.ClearProgressBar();
         }
-
+        */
+        /*
         bool LoadILLUSTTrigger = GUILayout.Button(new GUIContent("ENDING/ILLUST*.BIN (Not Working Yet)"));
         if (LoadILLUSTTrigger && VSPath != "")
         {
@@ -444,13 +488,12 @@ public class VSWindow : EditorWindow
                 fileParsed++;
             }
 
-
             EditorUtility.ClearProgressBar();
         }
+        */
+
         GUILayout.EndVertical();
-
-
-        GUILayout.BeginVertical();
+        GUILayout.BeginVertical(options);
         GUILayout.Label("Audio Formats : ");
 
         /*
@@ -479,6 +522,25 @@ public class VSWindow : EditorWindow
         sf2Trigger = GUILayout.Toggle(sf2Trigger, new GUIContent("output a SF2 (soundfont) file ?"));
         dlsTrigger = GUILayout.Toggle(dlsTrigger, new GUIContent("output a DLS (soundfont) file ? (Not working well yet)"));
         wavTrigger = GUILayout.Toggle(wavTrigger, new GUIContent("output a WAV file ? ( /_!_\\ heavy files)"));
+
+        bool LoadAKAO1Trigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE****.DAT"));
+        if (LoadAKAO1Trigger && VSPath != "")
+        {
+
+            string[] files = Directory.GetFiles(VSPath + "SOUND/", "*.DAT");
+            float fileToParse = files.Length;
+
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                ParseAKAO(file, VS.Enums.AKAO.Type.SAMPLE_COLLECTION, false);
+                fileParsed++;
+            }
+            EditorUtility.ClearProgressBar();
+        }
         bool LoadAKAO2Trigger = GUILayout.Button(new GUIContent("Load Akao MUSIC/MUSIC*.DAT"));
         if (LoadAKAO2Trigger && VSPath != "")
         {
@@ -492,26 +554,42 @@ public class VSWindow : EditorWindow
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                ParseAKAO(file, AKAO.MUSIC, false);
+                ParseAKAO(file, VS.Enums.AKAO.Type.SEQUENCE, false);
                 fileParsed++;
             }
             EditorUtility.ClearProgressBar();
         }
         GUILayout.EndVertical();
 
-        GUILayout.BeginVertical();
+        GUILayout.BeginVertical(options);
         GUILayout.Label("Data Formats : ");
-        bool LoadSYDTrigger = GUILayout.Button(new GUIContent("Load MENU DataBase.SYD"));
+        bool LoadSYDTrigger = GUILayout.Button(new GUIContent("Load Workshop *.SYD"));
         if (LoadSYDTrigger && VSPath != "")
         {
-            BuildDatabase();
+            ItemList itemStr = AssetDatabase.LoadAssetAtPath<ItemList>("Assets/Resources/Serialized/MENU/ITEMS.yaml.asset");
+            if (itemStr == null)
+            {
+                itemStr = BuildItemStrings();
+            }
+            
+            string[] files = Directory.GetFiles(VSPath + "MENU/", "*.SYD");
+            foreach (string file in files)
+            {
+                SYD syd = ScriptableObject.CreateInstance<SYD>();
+                syd.ParseFromFile(file);
+                syd.SetNames(itemStr);
+
+                ToolBox.SaveScriptableObject("Assets/Resources/Serialized/MENU/", syd.Filename + ".yaml.asset", syd);
+            }
         }
 
-        bool LoadITEMTrigger = GUILayout.Button(new GUIContent("Load MENU ITEM*.BIN"));
-        if (LoadITEMTrigger && VSPath != "")
+        bool LoadMONTrigger = GUILayout.Button(new GUIContent("Load Bestiary MON.BIN"));
+        if (LoadMONTrigger && VSPath != "")
         {
-            BIN itemDB = new BIN();
-            itemDB.BuildItems(VSPath + "MENU/ITEMNAME.BIN", VSPath + "MENU/ITEMHELP.BIN");
+            MONList mon = ScriptableObject.CreateInstance<MONList>();
+            mon.ParseFromFile(VSPath + "SMALL/MON.BIN");
+
+            ToolBox.SaveScriptableObject("Assets/Resources/Serialized/SMALL/", "MON.yaml.asset", mon);
         }
 
         bool LoadEVENTTrigger = GUILayout.Button(new GUIContent("Load EVENT/*.EVT"));
@@ -549,7 +627,7 @@ public class VSWindow : EditorWindow
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
                 HF0 parser = new HF0();
-                parser.Parse(file);
+                parser.ParseFromFile(file);
                 fileParsed++;
             }
 
@@ -557,165 +635,182 @@ public class VSWindow : EditorWindow
             EditorUtility.ClearProgressBar();
         }
         GUILayout.EndVertical();
-
-
-        bool LoadEXPLOTrigger = GUILayout.Button(new GUIContent("Explore..."));
-        if (LoadEXPLOTrigger && VSPath != "")
-        {
-            //BIN parser = new BIN();
-            //parser.Explore(VSPath + "SLES_027.55"); // spell and skills
-            // "BATTLE/INITBTL.PRG" // Fandango
-            //parser.Explore(VSPath + "BATTLE/BOG.DAT");
-            /*
-            string[] files = Directory.GetFiles(VSPath + "MENU/", "*.PRG");
-            ToolBox.FeedDatabases(files);
-            */
-            BIN parser = new BIN();
-            parser.Explore(VSPath + "SLES_027.55"); // spell and skills
-            //PRG parser = new PRG();
-            //parser.Parse(VSPath + "TITLE/TITLE.PRG"); // spell and skills
-            //parser.Parse(VSPath + "ENDING/ENDING.PRG");
-            //parser.Parse(VSPath + "BATTLE/BATTLE.PRG");
-            //parser.Parse(VSPath + "BATTLE/INITBTL.PRG");
-        }
-
     }
 
-    private void ParseEVT(string path, bool UseDebug)
+
+    private ItemList BuildItemStrings()
     {
-        EVT evt = new EVT(path, UseDebug);
+        ItemList  itemsStr = ScriptableObject.CreateInstance<ItemList>();
+        itemsStr.ParseFromFile(VSPath + "MENU/ITEMNAME.BIN");
+        itemsStr.ParseFromFile(VSPath + "MENU/ITEMHELP.BIN");
+
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/MENU/", "ITEMS.yaml.asset", itemsStr);
+
+        return itemsStr;
     }
 
-    private void BuildDatabase()
+    private void BuildBestiary()
     {
-        BIN DB = new BIN();
-        //List<string>[] texts = DB.BuildItems(VSPath + "MENU/ITEMNAME.BIN", VSPath + "MENU/ITEMHELP.BIN");
-        DB.Parse(VSPath + "SMALL/MON.BIN");
-        /*
-        string[] files = Directory.GetFiles(VSPath + "MENU/", "*.SYD");
-        foreach (string file in files)
-        {
-            SYD parser = new SYD();
-            //parser.UseDebug = true;
-            parser.Parse(file, texts);
-        }
-        */
+        MONList mon = ScriptableObject.CreateInstance<MONList>();
+        mon.ParseFromFile(VSPath + "SMALL/MON.BIN");
+
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/SMALL/", "MON.yaml.asset", mon);
     }
 
+    private void ParseARM(string path, bool UseDebug)
+    {
+        ARM arm = ScriptableObject.CreateInstance<ARM>();
+        arm.ParseFromFile(path);
+
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/ARM/", arm.filename+".yaml.asset", arm);
+    }
 
     private void ParseWEP(string path, bool UseDebug)
     {
-        WEP parser = new WEP();
-        parser.UseDebug = UseDebug;
-        parser.Parse(path);
-        parser.BuildPrefab(true);
+        WEP wep = ScriptableObject.CreateInstance<WEP>();
+        wep.ParseFromFile(path);
+
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/WEP/", wep.Filename + ".WEP.yaml.asset", wep, new UnityEngine.Object[]{ wep.TIM });
     }
+
     private void ParseSHP(string path, string filename, bool UseDebug, bool erase = false)
     {
-        // excp = list of models with colored vertex polygons section
-        List<string> excp = new List<string>();
-        excp.Add("26"); // 26.SHP is a Mimic : http://chrysaliswiki.com/bestiary:mimic#VS
-        excp.Add("3A"); // D'Tok first Wyvern same as Z006U00.ZUD
-        excp.Add("3B"); // a Wyvern same as Z050U00.ZUD
-        excp.Add("65"); // 65.SHP is Damascus Golem  : http://chrysaliswiki.com/bestiary:damascus-golem#VS
-        excp.Add("6A");
-        excp.Add("6B");
-        excp.Add("AC");
-        excp.Add("B1"); // Platform During Final Battle
-        excp.Add("B2"); // Stone
-        excp.Add("B3"); // Stone
-        excp.Add("B4"); // Stone
-        excp.Add("B5"); // Lever / Switch (Opens Door in Wine Cellar)
-        excp.Add("B6"); // Lever / Switch (Opens Door in Wine Cellar)
-        excp.Add("B7"); // Stone
-        excp.Add("B8"); // Stone
-        excp.Add("B9"); // Stone
-        excp.Add("BA"); // Stone
-        excp.Add("BB"); // Stone
-        excp.Add("BC"); // Stone
-        excp.Add("BD"); // Stone
-        excp.Add("BE"); // Stone
-        excp.Add("BF"); // Stone
-        excp.Add("C0"); // Stone
-        excp.Add("C1"); // Stone
-        excp.Add("C2"); // Stone
-        excp.Add("C3"); // Stone
+        SHP shp = ScriptableObject.CreateInstance<SHP>();
+        shp.ParseFromFile(path);
 
-        SHP parser = new SHP();
-        if (!excp.Contains(filename))
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/SHP/", shp.Filename + ".SHP.yaml.asset", shp, new UnityEngine.Object[] { shp.TIM });
+    }
+
+    private void ParseSEQ(string path)
+    {
+        SEQ seq = ScriptableObject.CreateInstance<SEQ>();
+        seq.ParseFromFile(path);
+
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/SEQ/", seq.Filename + ".yaml.asset", seq);
+    }
+
+    private void ParseZUD(string path, string filename, bool UseDebug)
+    {
+        ZUD zud = ScriptableObject.CreateInstance<ZUD>();
+        zud.ParseFromFile(path);
+
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/ZUD/", zud.Filename + ".ZUD.yaml.asset", zud);
+        string zudPath = "Assets/Resources/Serialized/ZUD/" + zud.Filename + ".ZUD.yaml.asset";
+        if (zud.zudShape != null)
         {
-            parser.UseDebug = UseDebug;
-            parser.Parse(path);
-            parser.BuildPrefab(erase);
+            zud.zudShape.name = zud.Filename + ".ZUD.SHP";
+            AssetDatabase.AddObjectToAsset(zud.zudShape, zudPath);
+            zud.zudShape.TIM.name = zud.Filename + ".ZUD.SHP.TIM";
+            AssetDatabase.AddObjectToAsset(zud.zudShape.TIM, zudPath);
         }
-        else
+        if (zud.zudWeapon != null)
         {
-            parser.UseDebug = UseDebug;
-            parser.excpFaces = true;
-            parser.Parse(path);
-            parser.BuildPrefab(true);
+            zud.zudWeapon.name = zud.Filename + ".ZUD.WEP";
+            AssetDatabase.AddObjectToAsset(zud.zudWeapon, zudPath);
+            zud.zudWeapon.TIM.name = zud.Filename + ".ZUD.WEP.TIM";
+            AssetDatabase.AddObjectToAsset(zud.zudWeapon.TIM, zudPath);
+        }
+        if (zud.zudShield != null)
+        {
+            zud.zudShield.name = zud.Filename + ".ZUD.WEP2";
+            AssetDatabase.AddObjectToAsset(zud.zudShield, zudPath);
+            zud.zudShield.TIM.name = zud.Filename + ".ZUD.WEP2.TIM";
+            AssetDatabase.AddObjectToAsset(zud.zudShield.TIM, zudPath);
+        }
+        if (zud.zudComSeq != null)
+        {
+            zud.zudComSeq.name = zud.Filename + ".ZUD.COMSEQ";
+            AssetDatabase.AddObjectToAsset(zud.zudComSeq, zudPath);
+        }
+        if (zud.zudBatSeq != null)
+        {
+            zud.zudBatSeq.name = zud.Filename + ".ZUD.BATSEQ";
+            AssetDatabase.AddObjectToAsset(zud.zudBatSeq, zudPath);
         }
     }
 
     private void ParseZND(string path, bool UseDebug)
     {
-        ZND parser = new ZND();
-        parser.UseDebug = UseDebug;
-        parser.Parse(path);
-        parser.BuildPrefab();
+        ZND znd = ScriptableObject.CreateInstance<ZND>();
+        znd.ParseFromFile(path);
+
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/ZND/", znd.Filename + ".ZND.yaml.asset", znd, znd.TIMs);
     }
 
-    private void ParseZUD(string path, string filename, bool UseDebug)
-    {
-        List<string> excp = new List<string>();
-        excp.Add("Z006U00"); // same as 3A.SHP
-        excp.Add("Z050U00"); // same as 3B.SHP
-        excp.Add("Z050U11"); // same as 26.SHP
-        excp.Add("Z051U21"); // same as 26.SHP
-        excp.Add("Z054U00"); // same as 65.SHP
-        excp.Add("Z054U01"); // same as 65.SHP
-        excp.Add("Z055U04"); // same as 3B.SHP (red color)
-        excp.Add("Z055U05"); // same as 3B.SHP (yellow color)
-        excp.Add("Z234U16"); // same as 3B.SHP (without SEQ attached)
-
-        if (!excp.Contains(filename))
-        {
-            ZUD parser = new ZUD();
-            parser.UseDebug = UseDebug;
-            parser.Parse(path);
-            parser.BuildPrefab();
-        }
-        else
-        {
-            ZUD parser = new ZUD();
-            parser.excpFaces = true;
-            parser.UseDebug = UseDebug;
-            parser.Parse(path);
-            parser.BuildPrefab();
-        }
-    }
 
     private void ParseMPD(string path, bool UseDebug)
     {
-        MPD parser = new MPD();
-        parser.UseDebug = false;
-        parser.Parse(path);
-        parser.BuildPrefab(true);
+        MPD mpd = ScriptableObject.CreateInstance<MPD>();
+        mpd.ParseFromFile(path);
+        UnityEngine.Object[] subAssets = new UnityEngine.Object[] { mpd.miniMap, mpd.scriptSection, mpd.treasureSection };
+
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/MPD/", mpd.Filename + ".MPD.yaml.asset", mpd, subAssets);
     }
 
-    private void ParseAKAO(string path, AKAO.AKAOType type, bool UseDebug)
+
+    private void ParseEFFECT(string path)
     {
-        AKAO parser = new AKAO();
-        parser.UseDebug = UseDebug;
-        parser.bMID = midTrigger;
-        parser.bSF2 = sf2Trigger;
-        parser.bDLS = dlsTrigger;
-        parser.bWAV = wavTrigger;
-        parser.Parse(path, type);
+        EFFECT effect = ScriptableObject.CreateInstance<EFFECT>();
+        effect.ParseFromFile(path);
+
+        List<UnityEngine.Object> subAssets = new List<UnityEngine.Object>();
+        subAssets.Add(effect.p);
+        if (effect.fbc != null) subAssets.Add(effect.fbc);
+        if (effect.fbts != null && effect.fbts.Length > 0)
+        {
+            for (uint i = 0; i < effect.fbts.Length; i++)
+            {
+                subAssets.Add(effect.fbts[i]);
+            }
+            
+            subAssets.Add(effect.atlas);
+
+            for (uint i = 0; i < effect.p.sprites.Length; i++)
+            {
+                subAssets.Add(effect.p.sprites[i].sprite);
+            }
+        }
+        if (effect.plg != null) subAssets.Add(effect.plg);
+
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/EFFECT/", effect.Filename + ".yaml.asset", effect, subAssets.ToArray());
+    }
+
+    private void ParseEVT(string path, bool UseDebug)
+    {
+        EVT evt = ScriptableObject.CreateInstance<EVT>();
+        evt.ParseFromFile(path);
+
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/EVT/", evt.Filename + ".yaml.asset", evt);
+    }
+
+    private void ParseAKAO(string path, VS.Enums.AKAO.Type type, bool UseDebug)
+    {
+        switch(type)
+        {
+            case (VS.Enums.AKAO.Type.SAMPLE_COLLECTION):
+                AKAOSampleCollection collection = ScriptableObject.CreateInstance<AKAOSampleCollection>();
+                collection.ParseFromFile(path);
+
+                ToolBox.SaveScriptableObject("Assets/Resources/Serialized/AKAO/SampleCollections/", collection.Filename + ".yaml.asset", collection);
+                break;
+            case (VS.Enums.AKAO.Type.SEQUENCE):
+                AKAOSequence sequence = ScriptableObject.CreateInstance<AKAOSequence>();
+                sequence.ParseFromFile(path);
+
+                ToolBox.SaveScriptableObject("Assets/Resources/Serialized/AKAO/Sequence/", sequence.Filename + ".yaml.asset", sequence);
+                break;
+        }
     }
 
     private void ParseGIM(string path, bool UseDebug)
     {
-        GIM parser = new GIM(path);
+        //GIM parser = new GIM(path);
     }
+
+    private void ParseBIN(string path, string fileName)
+    {
+        //BIN evt = new BIN();
+        //evt.Parse(path);
+    }
+
 }

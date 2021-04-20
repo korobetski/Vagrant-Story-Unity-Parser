@@ -2,13 +2,13 @@
 using AudioSynthesis.Sequencer;
 using AudioSynthesis.Synthesis;
 using AudioSynthesis.Wave;
+using FileFormats;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityMidi;
-using VS.Format;
 using VS.Utils;
 
 //Minoru Akao

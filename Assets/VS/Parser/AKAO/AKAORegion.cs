@@ -9,8 +9,6 @@ namespace VS.Parser.Akao
         public byte hiRange = 179; // 179
         public byte lowVel = 0;
         public byte hiVel = 127;
-        public byte unk1;
-        public byte unk2;
         public byte unk3;
         public byte unk4;
         public byte volume = 127;
