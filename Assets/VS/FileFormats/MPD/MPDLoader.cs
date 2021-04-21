@@ -189,9 +189,12 @@ namespace VS.FileFormats.MPD
                     {
                         for (uint x = 0; x < SerializedMPD.tileWidth; x++)
                         {
-                            v0= v1= v2= v3= v4= v5 = 0;
+                            v0= v1= v2= v3= v4= v5 = -1;
                             uint k = y * SerializedMPD.tileWidth + x;
                             MPDTile tile = SerializedMPD.tiles[k];
+                            tile.id = k;
+                            tile.y = y;
+                            tile.x = x;
                             MPDTileMode floorMode = SerializedMPD.tileModes[tile.floorMode];
 
                             float z = (float)tile.floorHeight / 16;
@@ -315,33 +318,74 @@ namespace VS.FileFormats.MPD
                                 }
                                 colliTriangles.AddRange(new int[] { v2, v1, v0 });
                                 colliTriangles.AddRange(new int[] { v2, v3, v1 });
+                                if (v4 != -1)
+                                {
+                                    tile.heigths = new List<float>()
+                                    {
+                                        colliVertices[v0].y,
+                                        colliVertices[v1].y,
+                                        colliVertices[v2].y,
+                                        colliVertices[v3].y,
+                                        colliVertices[v4].y,
+                                        colliVertices[v5].y,
+                                    };
+                                } else
+                                {
+                                    tile.heigths = new List<float>()
+                                    {
+                                        colliVertices[v0].y,
+                                        colliVertices[v1].y,
+                                        colliVertices[v2].y,
+                                        colliVertices[v3].y,
+                                    };
+                                }
                             }
 
-                            // pillars
-                            if (y > 0 && y < SerializedMPD.tileHeigth-1)
+                            // pillars (connections faces between tiles of different heigth)
+                            // TODO : we need to manage DIAG pillars
+                            if (y > 0 && y < SerializedMPD.tileHeigth)
                             {
                                 uint south = (y-1) * SerializedMPD.tileWidth + x;
                                 MPDTile southTile = SerializedMPD.tiles[south];
-                                if (tile.floorHeight != southTile.floorHeight)
+                                if (tile.heigths[0] != southTile.heigths[2])
                                 {
-                                    // so we need to connect them
-                                    colliTriangles.AddRange(new int[] { v0, v1, GetVertexIndex(new Vector3(x, (float)southTile.floorHeight / 16, y), colliVertices) });
+                                    colliTriangles.AddRange(new int[] {
+                                        v0,
+                                        v1,
+                                        GetVertexIndex(new Vector3(x, southTile.heigths[2], y), colliVertices)
+                                    });
+                                }
+
+                                if (tile.heigths[1] != southTile.heigths[3])
+                                {
                                     colliTriangles.AddRange(new int[] {
                                         v1,
-                                        GetVertexIndex(new Vector3(x+1, (float)southTile.floorHeight / 16, y), colliVertices),
-                                        GetVertexIndex(new Vector3(x, (float)southTile.floorHeight / 16, y), colliVertices)
+                                        GetVertexIndex(new Vector3(x+1, southTile.heigths[3], y), colliVertices),
+                                        GetVertexIndex(new Vector3(x, southTile.heigths[2], y), colliVertices)
                                     });
                                 }
                             }
-                            if (x > 0 && x < SerializedMPD.tileWidth - 1)
+                            if (x > 0 && x < SerializedMPD.tileWidth)
                             {
                                 uint east = y * SerializedMPD.tileWidth + x - 1;
                                 MPDTile eastTile = SerializedMPD.tiles[east];
-                                if (tile.floorHeight != eastTile.floorHeight)
+                                if (tile.heigths[0] != eastTile.heigths[1])
                                 {
-                                    // so we need to connect them
-                                    colliTriangles.AddRange(new int[] { GetVertexIndex(new Vector3(x, (float)eastTile.floorHeight / 16, y), colliVertices), v2, v0 });
-                                    colliTriangles.AddRange(new int[] { GetVertexIndex(new Vector3(x, (float)eastTile.floorHeight / 16, y), colliVertices), GetVertexIndex(new Vector3(x, (float)eastTile.floorHeight / 16, y+1), colliVertices), v2 });
+                                    colliTriangles.AddRange(new int[] {
+                                        GetVertexIndex(new Vector3(x, eastTile.heigths[1], y), colliVertices),
+                                        v2,
+                                        v0
+                                    });
+                                }
+
+                                if (tile.heigths[2] != eastTile.heigths[3])
+                                {
+                                    colliTriangles.AddRange(new int[] {
+                                        GetVertexIndex(new Vector3(x, eastTile.heigths[1], y), colliVertices),
+                                        GetVertexIndex(new Vector3(x, eastTile.heigths[3], y+1),
+                                        colliVertices),
+                                        v2
+                                    });
                                 }
                             }
                         }
@@ -425,33 +469,59 @@ namespace VS.FileFormats.MPD
                             }
                             colliTriangles.AddRange(new int[] { v0, v1, v2 });
                             colliTriangles.AddRange(new int[] { v1, v3, v2 });
+
+                                tile.ceilHeigths = new List<float>()
+                                    {
+                                        colliVertices[v0].y,
+                                        colliVertices[v1].y,
+                                        colliVertices[v2].y,
+                                        colliVertices[v3].y,
+                                    };
+
                             // pillars
-                            if (y > 0 && y < SerializedMPD.tileHeigth-1)
+                            if (y > 0 && y < SerializedMPD.tileHeigth)
                             {
                                 uint south = (y-1) * SerializedMPD.tileWidth + x;
                                 MPDTile southTile = SerializedMPD.tiles[south];
-                                float sf = (float)southTile.ceilHeight / 16;
-                                if (tile.ceilHeight != southTile.ceilHeight)
+                                if (tile.ceilHeigths[0] != southTile.ceilHeigths[2])
                                 {
-                                    // so we need to connect them
-                                    colliTriangles.AddRange(new int[] { GetVertexIndex(new Vector3(x, sf, y), colliVertices), v1, v0 });
                                     colliTriangles.AddRange(new int[] {
-                                        GetVertexIndex(new Vector3(x, sf, y), colliVertices),
-                                        GetVertexIndex(new Vector3(x+1, sf, y), colliVertices),
+                                        GetVertexIndex(new Vector3(x, southTile.ceilHeigths[2], y), colliVertices),
+                                        v1,
+                                        v0
+                                    });
+                                }
+
+                                if (tile.ceilHeigths[1] != southTile.ceilHeigths[3])
+                                {
+                                    colliTriangles.AddRange(new int[] {
+                                        GetVertexIndex(new Vector3(x, southTile.ceilHeigths[2], y), colliVertices),
+                                        GetVertexIndex(new Vector3(x+1, southTile.ceilHeigths[3], y), colliVertices),
                                         v1
                                     });
                                 }
                             }
-                            if (x > 0 && x < SerializedMPD.tileWidth - 1)
+                            if (x > 0 && x < SerializedMPD.tileWidth)
                             {
                                 uint east = k- 1;
                                 MPDTile eastTile = SerializedMPD.tiles[east];
-                                float ef = (float)eastTile.ceilHeight / 16;
-                                if (tile.ceilHeight != eastTile.ceilHeight)
+
+                                if (tile.ceilHeigths[0] != eastTile.ceilHeigths[1])
                                 {
-                                    // so we need to connect them
-                                    colliTriangles.AddRange(new int[] { v0, v2, GetVertexIndex(new Vector3(x, ef, y), colliVertices) });
-                                    colliTriangles.AddRange(new int[] { v2, GetVertexIndex(new Vector3(x, ef, y), colliVertices), GetVertexIndex(new Vector3(x, ef, y+1), colliVertices) });
+                                    colliTriangles.AddRange(new int[] {
+                                        v0,
+                                        v2,
+                                        GetVertexIndex(new Vector3(x, eastTile.ceilHeigths[1], y), colliVertices)
+                                    });
+                                }
+
+                                if (tile.ceilHeigths[2] != eastTile.ceilHeigths[3])
+                                {
+                                    colliTriangles.AddRange(new int[] {
+                                        v2,
+                                        GetVertexIndex(new Vector3(x, eastTile.ceilHeigths[3], y+1), colliVertices),
+                                        GetVertexIndex(new Vector3(x, eastTile.ceilHeigths[1], y), colliVertices)
+                                    });
                                 }
                             }
                         }
@@ -480,19 +550,6 @@ namespace VS.FileFormats.MPD
                 verticesList.Add(vertex);
                 return verticesList.Count - 1;
             }
-        }
-
-        private int MagicGetVertexIndex(Vector2 point, List<Vector3> verticesList)
-        {
-            foreach(Vector3 vertex in verticesList)
-            {
-                if (vertex.x == point.x && vertex.z == point.y)
-                {
-                    return verticesList.IndexOf(vertex);
-                }
-            }
-
-            return 0;
         }
     }
 }
