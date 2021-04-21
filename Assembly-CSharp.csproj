@@ -318,6 +318,7 @@
     <Compile Include="Assets\VS\Data\Grip.cs" />
     <Compile Include="Assets\VS\FileFormats\ZND\ZNDShield.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Wave\WaveFile.cs" />
+    <Compile Include="Assets\VS\FileFormats\MPD\MPDEnemy.cs" />
     <Compile Include="Assets\VS\FileFormats\ZND\BodyPart.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Util\Riff\Chunk.cs" />
     <Compile Include="Assets\VS\FileFormats\MPD\MPDTileMode.cs" />
@@ -338,9 +339,9 @@
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\SampleDataAsset.cs" />
     <Compile Include="Assets\VS\FileFormats\GEOM\Group.cs" />
     <Compile Include="Assets\VS\Parser\ZND.cs" />
-    <Compile Include="Assets\VS\FileFormats\MPD\MPDEnemy.cs" />
   </ItemGroup>
   <ItemGroup>
+     <None Include="Assets\Shaders\StandardTriplanar.shader" />
      <None Include="Assets\Shaders\StandardDoubleSide.shader" />
      <None Include="Assets\UnityMidi\ProjectSettings\ProjectVersion.txt" />
      <None Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\ReadMe.txt" />

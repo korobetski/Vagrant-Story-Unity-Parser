@@ -179,56 +179,177 @@ namespace VS.FileFormats.MPD
                 // Collision mesh
                 if (generate_collision_mesh)
                 {
-                    GameObject collisionGO = new GameObject("Collision");
+                    GameObject collisionGO = new GameObject("Floor Collision");
                     collisionGO.transform.parent = gameObject.transform;
-
+                    int v0, v1, v2, v3, v4, v5;
                     List<Vector3> colliVertices = new List<Vector3>();
                     List<int> colliTriangles = new List<int>();
+
                     for (uint y = 0; y < SerializedMPD.tileHeigth; y++)
                     {
                         for (uint x = 0; x < SerializedMPD.tileWidth; x++)
                         {
+                            v0= v1= v2= v3= v4= v5 = 0;
                             uint k = y * SerializedMPD.tileWidth + x;
                             MPDTile tile = SerializedMPD.tiles[k];
                             MPDTileMode floorMode = SerializedMPD.tileModes[tile.floorMode];
 
                             float z = (float)tile.floorHeight / 16;
-                            int l = colliVertices.Count;
-                            Vector3[] vertices = new Vector3[4] {
-                                new Vector3(x       , z    , y),
-                                new Vector3(x + 1   , z    , y),
-                                new Vector3(x       , z    , y + 1),
-                                new Vector3(x + 1   , z    , y + 1)
-                            };
-                            float dec;
-                            switch (floorMode.mode)
+
+                            Vector3[] vertices;
+
+                            if (floorMode.mode == MPDTileMode.Mode.DIAG0 || floorMode.mode == MPDTileMode.Mode.DIAG1 || floorMode.mode == MPDTileMode.Mode.DIAG2 || floorMode.mode == MPDTileMode.Mode.DIAG3)
                             {
-                                case MPDTileMode.Mode.DECIMAL:
-                                    vertices[0].y = vertices[1].y = vertices[2].y = vertices[3].y = z + 0.5f;
-                                    break;
-                                case MPDTileMode.Mode.RAMPXP:
-                                    dec = (float)(floorMode.to - floorMode.from) / 6;
-                                    vertices[1].y = vertices[3].y = z + dec;
-                                    break;
-                                case MPDTileMode.Mode.RAMPXN:
-                                    dec = (float)(floorMode.from - floorMode.to) / 6;
-                                    vertices[0].y = vertices[2].y = z + dec;
-                                    break;
-                                case MPDTileMode.Mode.RAMPYP:
-                                    dec = (float)(floorMode.from -floorMode.to) / 6;
-                                    vertices[0].y = vertices[1].y = z + dec;
-                                    break;
-                                case MPDTileMode.Mode.RAMPYN:
-                                    dec = (float)(floorMode.to - floorMode.from) / 6;
-                                    vertices[2].y = vertices[3].y = z + dec;
-                                    break;
+                                // two triangles at different height, so we need 6 vertices
+                                vertices = new Vector3[6];
+                                float dec = floorMode.to / 16;
+                                switch (floorMode.mode)
+                                {
+                                    case MPDTileMode.Mode.DIAG0:
+                                        v0 = GetVertexIndex(new Vector3(x, z, y), colliVertices);
+                                        v1 = GetVertexIndex(new Vector3(x + 1, z, y), colliVertices);
+                                        v2 = GetVertexIndex(new Vector3(x, z + dec, y + 1), colliVertices);
+                                        v3 = GetVertexIndex(new Vector3(x, z + dec, y), colliVertices);
+                                        v4 = GetVertexIndex(new Vector3(x + 1, z, y + 1), colliVertices);
+                                        v5 = GetVertexIndex(new Vector3(x + 1, z + dec, y + 1), colliVertices);
+
+                                        colliTriangles.AddRange(new int[] { v4, v1, v0 });
+                                        colliTriangles.AddRange(new int[] { v5, v3, v2 });
+                                        colliTriangles.AddRange(new int[] { v0, v3, v5 });
+                                        colliTriangles.AddRange(new int[] { v0, v5, v4 });
+                                        break;
+                                    case MPDTileMode.Mode.DIAG1:
+                                        v0 = GetVertexIndex(new Vector3(x, z, y), colliVertices);
+                                        v1 = GetVertexIndex(new Vector3(x + 1, z, y), colliVertices);
+                                        v2 = GetVertexIndex(new Vector3(x, z, y + 1), colliVertices);
+                                        v3 = GetVertexIndex(new Vector3(x + 1, z + dec, y), colliVertices);
+                                        v4 = GetVertexIndex(new Vector3(x, z + dec, y + 1), colliVertices);
+                                        v5 = GetVertexIndex(new Vector3(x + 1, z + dec, y + 1), colliVertices);
+
+                                        colliTriangles.AddRange(new int[] { v2, v1, v0 });
+                                        colliTriangles.AddRange(new int[] { v5, v3, v4 });
+                                        colliTriangles.AddRange(new int[] { v1, v2, v3 });
+                                        colliTriangles.AddRange(new int[] { v3, v2, v4 });
+                                        break;
+                                    case MPDTileMode.Mode.DIAG2:
+                                        v0 = GetVertexIndex(new Vector3(x, z + dec, y), colliVertices);
+                                        v1 = GetVertexIndex(new Vector3(x + 1, z + dec, y), colliVertices);
+                                        v2 = GetVertexIndex(new Vector3(x, z, y + 1), colliVertices);
+                                        v3 = GetVertexIndex(new Vector3(x, z, y), colliVertices);
+                                        v4 = GetVertexIndex(new Vector3(x + 1, z + dec, y + 1), colliVertices);
+                                        v5 = GetVertexIndex(new Vector3(x + 1, z, y + 1), colliVertices);
+
+                                        colliTriangles.AddRange(new int[] { v4, v1, v0 });
+                                        colliTriangles.AddRange(new int[] { v5, v3, v2 });
+                                        colliTriangles.AddRange(new int[] { v0, v3, v5 });
+                                        colliTriangles.AddRange(new int[] { v0, v5, v4 });
+                                        break;
+                                    case MPDTileMode.Mode.DIAG3:
+                                        v0 = GetVertexIndex(new Vector3(x, z + dec, y), colliVertices);
+                                        v1 = GetVertexIndex(new Vector3(x + 1, z + dec, y), colliVertices);
+                                        v2 = GetVertexIndex(new Vector3(x, z + dec, y + 1), colliVertices);
+                                        v3 = GetVertexIndex(new Vector3(x + 1, z, y), colliVertices);
+                                        v4 = GetVertexIndex(new Vector3(x, z, y + 1), colliVertices);
+                                        v5 = GetVertexIndex(new Vector3(x + 1, z, y + 1), colliVertices);
+
+                                        colliTriangles.AddRange(new int[] { v2, v1, v0 });
+                                        colliTriangles.AddRange(new int[] { v5, v3, v4 });
+                                        colliTriangles.AddRange(new int[] { v1, v2, v3 });
+                                        colliTriangles.AddRange(new int[] { v3, v2, v4 });
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                float dec;
+                                switch (floorMode.mode)
+                                {
+                                    case MPDTileMode.Mode.FLAT:
+                                        dec = (float)floorMode.from/16;
+                                        v0 = GetVertexIndex(new Vector3(x, z + dec, y), colliVertices);
+                                        v1 = GetVertexIndex(new Vector3(x + 1, z + dec, y), colliVertices);
+                                        v2 = GetVertexIndex(new Vector3(x, z + dec, y + 1), colliVertices);
+                                        v3 = GetVertexIndex(new Vector3(x + 1, z + dec, y + 1), colliVertices);
+                                        break;
+                                    case MPDTileMode.Mode.DECIMAL:
+                                        v0 = GetVertexIndex(new Vector3(x, z + 0.5f, y), colliVertices);
+                                        v1 = GetVertexIndex(new Vector3(x + 1, z + 0.5f, y), colliVertices);
+                                        v2 = GetVertexIndex(new Vector3(x, z + 0.5f, y + 1), colliVertices);
+                                        v3 = GetVertexIndex(new Vector3(x + 1, z + 0.5f, y + 1), colliVertices);
+                                        break;
+                                    case MPDTileMode.Mode.RAMPXP:
+                                        dec = (float)(floorMode.to - floorMode.from) / 6;
+                                        v0 = GetVertexIndex(new Vector3(x, z, y), colliVertices);
+                                        v1 = GetVertexIndex(new Vector3(x + 1, z + dec, y), colliVertices);
+                                        v2 = GetVertexIndex(new Vector3(x, z, y + 1), colliVertices);
+                                        v3 = GetVertexIndex(new Vector3(x + 1, z + dec, y + 1), colliVertices);
+                                        break;
+                                    case MPDTileMode.Mode.RAMPXN:
+                                        dec = (float)(floorMode.from - floorMode.to) / 6;
+                                        v0 = GetVertexIndex(new Vector3(x, z + dec, y), colliVertices);
+                                        v1 = GetVertexIndex(new Vector3(x + 1, z, y), colliVertices);
+                                        v2 = GetVertexIndex(new Vector3(x, z + dec, y + 1), colliVertices);
+                                        v3 = GetVertexIndex(new Vector3(x + 1, z, y + 1), colliVertices);
+                                        break;
+                                    case MPDTileMode.Mode.RAMPYP:
+                                        dec = (float)(floorMode.from - floorMode.to) / 6;
+                                        v0 = GetVertexIndex(new Vector3(x, z + dec, y), colliVertices);
+                                        v1 = GetVertexIndex(new Vector3(x + 1, z + dec, y), colliVertices);
+                                        v2 = GetVertexIndex(new Vector3(x, z, y + 1), colliVertices);
+                                        v3 = GetVertexIndex(new Vector3(x + 1, z, y + 1), colliVertices);
+                                        break;
+                                    case MPDTileMode.Mode.RAMPYN:
+                                        dec = (float)(floorMode.to - floorMode.from) / 6;
+                                        v0 = GetVertexIndex(new Vector3(x, z, y), colliVertices);
+                                        v1 = GetVertexIndex(new Vector3(x + 1, z, y), colliVertices);
+                                        v2 = GetVertexIndex(new Vector3(x, z + dec, y + 1), colliVertices);
+                                        v3 = GetVertexIndex(new Vector3(x + 1, z + dec, y + 1), colliVertices);
+                                        break;
+                                    default:
+                                        v0 = GetVertexIndex(new Vector3(x, z, y), colliVertices);
+                                        v1 = GetVertexIndex(new Vector3(x + 1, z, y), colliVertices);
+                                        v2 = GetVertexIndex(new Vector3(x, z, y + 1), colliVertices);
+                                        v3 = GetVertexIndex(new Vector3(x + 1, z, y + 1), colliVertices);
+                                        break;
+
+                                }
+                                colliTriangles.AddRange(new int[] { v2, v1, v0 });
+                                colliTriangles.AddRange(new int[] { v2, v3, v1 });
                             }
 
-                            colliVertices.AddRange(vertices);
-                            colliTriangles.AddRange(new int[] { l + 2, l + 1, l + 0 });
-                            colliTriangles.AddRange(new int[] { l + 2, l + 3, l + 1 });
+                            // pillars
+                            if (y > 0 && y < SerializedMPD.tileHeigth-1)
+                            {
+                                uint south = (y-1) * SerializedMPD.tileWidth + x;
+                                MPDTile southTile = SerializedMPD.tiles[south];
+                                if (tile.floorHeight != southTile.floorHeight)
+                                {
+                                    // so we need to connect them
+                                    colliTriangles.AddRange(new int[] { v0, v1, GetVertexIndex(new Vector3(x, (float)southTile.floorHeight / 16, y), colliVertices) });
+                                    colliTriangles.AddRange(new int[] {
+                                        v1,
+                                        GetVertexIndex(new Vector3(x+1, (float)southTile.floorHeight / 16, y), colliVertices),
+                                        GetVertexIndex(new Vector3(x, (float)southTile.floorHeight / 16, y), colliVertices)
+                                    });
+                                }
+                            }
+                            if (x > 0 && x < SerializedMPD.tileWidth - 1)
+                            {
+                                uint east = y * SerializedMPD.tileWidth + x - 1;
+                                MPDTile eastTile = SerializedMPD.tiles[east];
+                                if (tile.floorHeight != eastTile.floorHeight)
+                                {
+                                    // so we need to connect them
+                                    colliTriangles.AddRange(new int[] { GetVertexIndex(new Vector3(x, (float)eastTile.floorHeight / 16, y), colliVertices), v2, v0 });
+                                    colliTriangles.AddRange(new int[] { GetVertexIndex(new Vector3(x, (float)eastTile.floorHeight / 16, y), colliVertices), GetVertexIndex(new Vector3(x, (float)eastTile.floorHeight / 16, y+1), colliVertices), v2 });
+                                }
+                            }
                         }
                     }
+
+
+
+
                     Mesh colliMesh = new Mesh();
                     colliMesh.name = "floor_collision";
                     colliMesh.vertices = colliVertices.ToArray();
@@ -238,8 +359,140 @@ namespace VS.FileFormats.MPD
                     mf.mesh = colliMesh;
 
                     MeshRenderer mr = collisionGO.AddComponent<MeshRenderer>();
+
+
+
+
+                    GameObject collisionGO2 = new GameObject("Ceil Collision");
+                    collisionGO2.transform.parent = gameObject.transform;
+
+                    colliVertices = new List<Vector3>();
+                    colliTriangles = new List<int>();
+
+                    for (uint y = 0; y < SerializedMPD.tileHeigth; y++)
+                    {
+                        for (uint x = 0; x < SerializedMPD.tileWidth; x++)
+                        {
+                            uint k = y * SerializedMPD.tileWidth + x;
+                            MPDTile tile = SerializedMPD.tiles[k];
+                            MPDTileMode ceilMode = SerializedMPD.tileModes[tile.ceilMode];
+
+                            float z = (float)tile.ceilHeight / 16;
+                            float dec;
+                            switch (ceilMode.mode)
+                            {
+                                case MPDTileMode.Mode.DECIMAL:
+                                    v0 = GetVertexIndex(new Vector3(x, z + 0.5f, y), colliVertices);
+                                    v1 = GetVertexIndex(new Vector3(x + 1, z + 0.5f, y), colliVertices);
+                                    v2 = GetVertexIndex(new Vector3(x, z + 0.5f, y + 1), colliVertices);
+                                    v3 = GetVertexIndex(new Vector3(x + 1, z + 0.5f, y + 1), colliVertices);
+                                    break;
+                                case MPDTileMode.Mode.RAMPXP:
+                                    dec = (float)(ceilMode.to - ceilMode.from) / 6;
+                                    v0 = GetVertexIndex(new Vector3(x, z, y), colliVertices);
+                                    v1 = GetVertexIndex(new Vector3(x + 1, z + dec, y), colliVertices);
+                                    v2 = GetVertexIndex(new Vector3(x, z, y + 1), colliVertices);
+                                    v3 = GetVertexIndex(new Vector3(x + 1, z + dec, y + 1), colliVertices);
+                                    break;
+                                case MPDTileMode.Mode.RAMPXN:
+                                    dec = (float)(ceilMode.from - ceilMode.to) / 6;
+                                    v0 = GetVertexIndex(new Vector3(x, z + dec, y), colliVertices);
+                                    v1 = GetVertexIndex(new Vector3(x + 1, z, y), colliVertices);
+                                    v2 = GetVertexIndex(new Vector3(x, z + dec, y + 1), colliVertices);
+                                    v3 = GetVertexIndex(new Vector3(x + 1, z, y + 1), colliVertices);
+                                    break;
+                                case MPDTileMode.Mode.RAMPYP:
+                                    dec = (float)(ceilMode.from - ceilMode.to) / 6;
+                                    v0 = GetVertexIndex(new Vector3(x, z + dec, y), colliVertices);
+                                    v1 = GetVertexIndex(new Vector3(x + 1, z + dec, y), colliVertices);
+                                    v2 = GetVertexIndex(new Vector3(x, z, y + 1), colliVertices);
+                                    v3 = GetVertexIndex(new Vector3(x + 1, z, y + 1), colliVertices);
+                                    break;
+                                case MPDTileMode.Mode.RAMPYN:
+                                    dec = (float)(ceilMode.to - ceilMode.from) / 6;
+                                    v0 = GetVertexIndex(new Vector3(x, z, y), colliVertices);
+                                    v1 = GetVertexIndex(new Vector3(x + 1, z, y), colliVertices);
+                                    v2 = GetVertexIndex(new Vector3(x, z + dec, y + 1), colliVertices);
+                                    v3 = GetVertexIndex(new Vector3(x + 1, z + dec, y + 1), colliVertices);
+                                    break;
+                                default:
+                                    v0 = GetVertexIndex(new Vector3(x, z, y), colliVertices);
+                                    v1 = GetVertexIndex(new Vector3(x + 1, z, y), colliVertices);
+                                    v2 = GetVertexIndex(new Vector3(x, z, y + 1), colliVertices);
+                                    v3 = GetVertexIndex(new Vector3(x + 1, z, y + 1), colliVertices);
+                                    break;
+
+                            }
+                            colliTriangles.AddRange(new int[] { v0, v1, v2 });
+                            colliTriangles.AddRange(new int[] { v1, v3, v2 });
+                            // pillars
+                            if (y > 0 && y < SerializedMPD.tileHeigth-1)
+                            {
+                                uint south = (y-1) * SerializedMPD.tileWidth + x;
+                                MPDTile southTile = SerializedMPD.tiles[south];
+                                float sf = (float)southTile.ceilHeight / 16;
+                                if (tile.ceilHeight != southTile.ceilHeight)
+                                {
+                                    // so we need to connect them
+                                    colliTriangles.AddRange(new int[] { GetVertexIndex(new Vector3(x, sf, y), colliVertices), v1, v0 });
+                                    colliTriangles.AddRange(new int[] {
+                                        GetVertexIndex(new Vector3(x, sf, y), colliVertices),
+                                        GetVertexIndex(new Vector3(x+1, sf, y), colliVertices),
+                                        v1
+                                    });
+                                }
+                            }
+                            if (x > 0 && x < SerializedMPD.tileWidth - 1)
+                            {
+                                uint east = k- 1;
+                                MPDTile eastTile = SerializedMPD.tiles[east];
+                                float ef = (float)eastTile.ceilHeight / 16;
+                                if (tile.ceilHeight != eastTile.ceilHeight)
+                                {
+                                    // so we need to connect them
+                                    colliTriangles.AddRange(new int[] { v0, v2, GetVertexIndex(new Vector3(x, ef, y), colliVertices) });
+                                    colliTriangles.AddRange(new int[] { v2, GetVertexIndex(new Vector3(x, ef, y), colliVertices), GetVertexIndex(new Vector3(x, ef, y+1), colliVertices) });
+                                }
+                            }
+                        }
+                    }
+
+                    Mesh colliMesh2 = new Mesh();
+                    colliMesh2.name = "ceil_collision";
+                    colliMesh2.vertices = colliVertices.ToArray();
+                    colliMesh2.triangles = colliTriangles.ToArray();
+
+                    MeshFilter mf2 = collisionGO2.AddComponent<MeshFilter>();
+                    mf2.mesh = colliMesh2;
+
+                    MeshRenderer mr2 = collisionGO2.AddComponent<MeshRenderer>();
                 } 
             }
+        }
+    
+        private int GetVertexIndex(Vector3 vertex, List<Vector3> verticesList)
+        {
+            if (verticesList.Contains(vertex))
+            {
+                return verticesList.IndexOf(vertex);
+            } else
+            {
+                verticesList.Add(vertex);
+                return verticesList.Count - 1;
+            }
+        }
+
+        private int MagicGetVertexIndex(Vector2 point, List<Vector3> verticesList)
+        {
+            foreach(Vector3 vertex in verticesList)
+            {
+                if (vertex.x == point.x && vertex.z == point.y)
+                {
+                    return verticesList.IndexOf(vertex);
+                }
+            }
+
+            return 0;
         }
     }
 }
