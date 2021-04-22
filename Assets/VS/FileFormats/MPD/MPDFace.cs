@@ -83,19 +83,19 @@ namespace VS.FileFormats.MPD
             switch (vId)
             {
                 case 0:
-                    position = group.position + vertices[0];
+                    position = /*group.position +*/ vertices[0];
                     break;
                 case 1:
-                    position = group.position + vertices[0] + vertices[1] * group.scale;
+                    position = /*group.position +*/ vertices[0] + vertices[1] * group.scale;
                     break;
                 case 2:
-                    position = group.position + vertices[0] + vertices[2] * group.scale;
+                    position = /*group.position +*/ vertices[0] + vertices[2] * group.scale;
                     break;
                 case 3:
-                    position = group.position + vertices[0] + vertices[3] * group.scale;
+                    position = /*group.position +*/ vertices[0] + vertices[3] * group.scale;
                     break;
                 default:
-                    position = group.position + vertices[0];
+                    position = /*group.position +*/ vertices[0];
                     break;
             }
             position.y = -position.y;

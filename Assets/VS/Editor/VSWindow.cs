@@ -115,8 +115,7 @@ public class VSWindow : EditorWindow
                     switch (ext)
                     {
                         case "PRG":
-                            PRG parser = new PRG();
-                            //parser.ParseFromFile(VSPath + FilePath);
+                            ParsePRG(VSPath + FilePath);
                             break;
                     }
                     break;
@@ -188,8 +187,7 @@ public class VSWindow : EditorWindow
                             //bparser.ParseFromFile(VSPath + FilePath);
                             break;
                         case "PRG":
-                            PRG parser = new PRG();
-                            //parser.ParseFromFile(VSPath + FilePath);
+                            ParsePRG(VSPath + FilePath);
                             break;
                     }
                     break;
@@ -637,7 +635,6 @@ public class VSWindow : EditorWindow
         GUILayout.EndVertical();
     }
 
-
     private ItemList BuildItemStrings()
     {
         ItemList  itemsStr = ScriptableObject.CreateInstance<ItemList>();
@@ -813,4 +810,10 @@ public class VSWindow : EditorWindow
         //evt.Parse(path);
     }
 
+
+    private void ParsePRG(string v)
+    {
+        PRG parser = new PRG();
+        parser.ParseFromFile(v);
+    }
 }

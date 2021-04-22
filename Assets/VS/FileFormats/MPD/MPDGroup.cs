@@ -24,5 +24,6 @@ namespace VS.FileFormats.MPD
         public MPDFace[] faces;
 
         public Vector3 position { get => new Vector3(decX, decY, decZ); }
+        public Vector3 positionYInv { get => new Vector3(decX, -decY, decZ); }
     }
 }

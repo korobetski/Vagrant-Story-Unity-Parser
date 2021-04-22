@@ -31,23 +31,23 @@ namespace VS.FileFormats.MPD
         public uint lenRoomDoorSection;
         public uint lenLightingSection;
         public uint lenSubSection06;
-        public uint lenSubSection07;
-        public uint lenSubSection08;
+        public uint lenSubSection07; // Always 256 when != 0
+        public uint lenSubSection08; // Always 0
         public uint lenTrapSection;
-        public uint lenSubSection0A;
-        public uint lenSubSection0B;
+        public uint lenSubSection0A; // factor of 20
+        public uint lenSubSection0B; // always 88
         public uint lenTextureEffectsSection;
         public uint lenSubSection0D;
-        public uint lenSubSection0E;
+        public uint lenSubSection0E; // Always 0
         public uint lenMiniMapSection;
         public uint lenSubSection10;
         public uint lenSubSection11;
         public uint lenFloatingStoneSection;
         public uint lenChestInteractionSection;
         public uint lenAKAOSection;
-        public uint lenSubSection15;
-        public uint lenSubSection16;
-        public uint lenSubSection17;
+        public uint lenSubSection15; // Always 0
+        public uint lenSubSection16; // Always 0
+        public uint lenSubSection17; // Always 0
         public uint lenCameraAreaSection;
 
         public uint numGroups;
@@ -69,31 +69,30 @@ namespace VS.FileFormats.MPD
 
         public byte[] SubSection06;
         public byte[] SubSection07;
-        public byte[] SubSection08;
+        //public byte[] SubSection08;
 
-        public uint numTraps;
         public MPDTrap[] traps;
 
-        public byte[] SubSection0A;
+        public MPDItemA[] SubSection0A; // locked doors ?
         public byte[] SubSection0B;
 
         public MPDTextureAnimation[] textureAnimations;
 
-        public byte[] SubSection0D;
-        public byte[] SubSection0E;
+        public MPDItemD[] SubSection0D;
+        //public byte[] SubSection0E;
 
         public ARM.ARM miniMap;
 
         public byte[] SubSection10;
-        public byte[] SubSection11;
+        public MPDItem11[] SubSection11;
 
         public byte[] FloatingStoneSection;
         public byte[] ChestInteractionSection;
         public byte[] AKAOSection;
 
-        public byte[] SubSection15;
-        public byte[] SubSection16;
-        public byte[] SubSection17;
+        //public byte[] SubSection15;
+        //public byte[] SubSection16;
+        //public byte[] SubSection17;
 
         public ushort[] CameraAreaSection;
 
@@ -360,17 +359,41 @@ namespace VS.FileFormats.MPD
 
                 if (lenSubSection06 > 0)
                 {
-                    SubSection06 = buffer.ReadBytes((int)lenSubSection06);
+                    //SubSection06 = buffer.ReadBytes((int)lenSubSection06);
+                    // viariable size, must be based on room grid size in a certain way because this section is bigger when the room grid is bigger
+                    int width = 32;
+                    int height = (int)lenSubSection06 / width;
+                    List<Color> cluts = new List<Color>();
+                    for (uint x = 0; x < height; x++)
+                    {
+                        List<Color> cl2 = new List<Color>();
+                        for (uint y = 0; y < width; y++)
+                        {
+                            byte b = buffer.ReadByte();
+                            cl2.Add(new Color32(b, b, b, 255));
+                        }
+                        cl2.Reverse();
+                        cluts.AddRange(cl2);
+                    }
+                    cluts.Reverse();
+                    Texture2D tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
+                    tex.SetPixels(cluts.ToArray());
+                    tex.Apply();
+                    byte[] bytes = tex.EncodeToPNG();
+                    ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/Ex/");
+                    File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Ex/" + Filename + ".png", bytes);
+
                 }
 
                 if (lenSubSection07 > 0)
                 {
+                    // always 256 bytes when set, lots of 0x00 bytes
                     SubSection07 = buffer.ReadBytes((int)lenSubSection07);
                 }
 
                 if (lenSubSection08 > 0)
                 {
-                    SubSection08 = buffer.ReadBytes((int)lenSubSection08);
+                    //SubSection08 = buffer.ReadBytes((int)lenSubSection08);
                 }
 
                 if (lenTrapSection > 0)
@@ -400,7 +423,14 @@ namespace VS.FileFormats.MPD
 
                 if (lenSubSection0A > 0)
                 {
-                    SubSection0A = buffer.ReadBytes((int)lenSubSection0A);
+                    //SubSection0A = buffer.ReadBytes((int)lenSubSection0A);
+                    uint numItemA = lenSubSection0A / 20;
+                    SubSection0A = new MPDItemA[numItemA];
+                    for (uint i = 0; i < numItemA; i++)
+                    {
+                        MPDItemA itemA = new MPDItemA(buffer.ReadBytes(20));
+                        SubSection0A[i] = itemA;
+                    }
                 }
 
                 if (lenSubSection0B > 0)
@@ -431,6 +461,7 @@ namespace VS.FileFormats.MPD
                                 textureAnimation.datas = buffer.ReadBytes(36);
                                 break;
                             default:
+                                // it never appens
                                 Debug.Log("Unknown Texture animation type : " + textureAnimation.type + "  in file : " + Filename);
                                 break;
                         }
@@ -447,12 +478,29 @@ namespace VS.FileFormats.MPD
 
                 if (lenSubSection0D > 0)
                 {
-                    SubSection0D = buffer.ReadBytes((int)lenSubSection0D);
+                    long sectionDPtr = buffer.BaseStream.Position;
+                    //SubSection0D = buffer.ReadBytes((int)lenSubSection0D);
+                    List<MPDItemD> _sectionD = new List<MPDItemD>();
+                    while(buffer.BaseStream.Position < sectionDPtr + lenSubSection0D)
+                    {
+                        byte len = buffer.ReadByte();
+                        buffer.BaseStream.Position -= 1;
+                        if (len <= 8)
+                        {
+                            _sectionD.Add(new MPDItemD(buffer.ReadBytes(8)));
+                        } else
+                        {
+                            // 20 or 28 bytes
+                            _sectionD.Add(new MPDItemD(buffer.ReadBytes(len)));
+                        }
+                    }
+
+                    SubSection0D = _sectionD.ToArray();
                 }
 
                 if (lenSubSection0E > 0)
                 {
-                    SubSection0E = buffer.ReadBytes((int)lenSubSection0E);
+                    //SubSection0E = buffer.ReadBytes((int)lenSubSection0E);
                 }
 
                 if (lenMiniMapSection > 0)
@@ -475,11 +523,161 @@ namespace VS.FileFormats.MPD
                 if (lenSubSection10 > 0)
                 {
                     SubSection10 = buffer.ReadBytes((int)lenSubSection10);
+                    // 0 most of time, 140 bytes when set and in cutscene only MPD
+                    // MAP001.MPD
+                    // 0100000062675c65787472615c3030316f703031612e54494d00003000313200313200330031303234003130323400330030003900390031340030002d31002d915f0100
+                    // 0088000062675c65787472615c3030316f703031612e46415200003000313200313200330031303234003130323400330030003900390031340030002d31002d905f0100
+                    // 00080000
+                    // MAP002.MPD
+                    // 0200000062675c65787472615c3030326f703031612e54494d0000330031320031320033003130323400313032340033002d3400300031360033300030002d31a35f0100
+                    // 0008010062675c65787472615c3030326f703031612e4641520000330031320031320033003130323400313032340033002d3400300031360033300030002d31a25f0100
+                    // 00080000
+                    // MAP215.MPD
+                    // 0100000062675c65787472615c3030316f703031612e54494d00003000313200313200330031303234003130323400330030003900390031340030002d31002d915f0100
+                    // 0088000062675c65787472615c3030316f703031612e46415200003000313200313200330031303234003130323400330030003900390031340030002d31002d905f0100
+                    // 00080000
+                    // MAP216.MPD
+                    // 0200000062675c65787472615c3030326f703031612e54494d0000330031320031320033003130323400313032340033002d3400300031360033300030002d31a35f0100
+                    // 0008010062675c65787472615c3030326f703031612e4641520000330031320031320033003130323400313032340033002d3400300031360033300030002d31a25f0100
+                    // 00080000
                 }
 
                 if (lenSubSection11 > 0)
                 {
-                    SubSection11 = buffer.ReadBytes((int)lenSubSection11);
+                    //SubSection11 = buffer.ReadBytes((int)lenSubSection11);
+                    uint numItem11 = lenSubSection11 / 12;
+                    SubSection11 = new MPDItem11[numItem11];
+                    for (uint i = 0; i < numItem11; i++)
+                    {
+                        MPDItem11 item11 = new MPDItem11(buffer.ReadBytes(12));
+                        SubSection11[i] = item11;
+                    }
+                    // MAP013.MPD
+                    //  4030 0600 050b 0f15 1a1c 0000
+                    //  6030 0600 050b 0f15 1a1c 0000
+                    //  8030 0600 050b 0f15 1a1c 0000
+                    //  a030 0600 050b 0f15 1a1c 0000
+                    //  4130 0600 050b 0f15 1a1c 0000
+                    //  6130 0600 050b 0f15 1a1c 0000
+                    //  8130 0600 050b 0f15 1a1c 0000
+                    //  a130 0600 050b 0f15 1a1c 0000
+                    //  4230 0600 050b 0f15 1a1c 0000
+                    //  6230 0600 050b 0f15 1a1c 0000
+                    //  8230 0600 050b 0f15 1a1c 0000
+                    //  a230 0600 050b 0f15 1a1c 0000
+                    //  2330 0600 050b 0f15 1a1c 0000
+                    //  4330 0600 050b 0f15 1a1c 0000
+                    //  6330 0600 050b 0f15 1a1c 0000
+                    //  8330 0600 050b 0f15 1a1c 0000
+                    //  a330 0600 050b 0f15 1a1c 0000
+                    // MAP015.MPD
+                    //  4031 0500 0417 2530 3100 0000
+                    //  4131 0500 0417 2530 3100 0000
+                    //  4231 0500 0417 2530 3100 0000
+                    //  433105000417253031000000
+                    //  443105000417253031000000
+                    //  453105000417253031000000
+                    //  463105000417253031000000
+                    //  473105000417253031000000
+                    //  483105000417253031000000
+                    //  493105000417253031000000
+                    //  4a3105000417253031000000
+                    //  4b3105000417253031000000
+                    //  4c3105000417253031000000
+                    //  4d3105000417253031000000
+                    //  203105000417253031000000
+                    //  213105000417253031000000
+                    //  223105000417253031000000
+                    //  233105000417253031000000
+                    //  243105000417253031000000
+                    //  253105000417253031000000
+                    //  263105000417253031000000
+                    //  273105000417253031000000
+                    //  283105000417253031000000
+                    //  293105000417253031000000
+                    //  2a3105000417253031000000
+                    //  2b3105000417253031000000
+                    //  2c3105000417253031000000
+                    //  2d3105000417253031000000
+                    //  003105000417253031000000
+                    //  013105000417253031000000
+                    //  023105000417253031000000
+                    //  033105000417253031000000
+                    //  043105000417253031000000
+                    //  053105000417253031000000
+                    //  063105000417253031000000
+                    //  073105000417253031000000
+                    //  083105000417253031000000
+                    //  093105000417253031000000
+                    //  0a3105000417253031000000
+                    //  0b3105000417253031000000
+                    //  0c3105000417253031000000
+                    //  0d3105000417253031000000
+                    //  407105000417253031000000
+                    //  417105000417253031000000
+                    //  427105000417253031000000
+                    //  437105000417253031000000
+                    //  447105000417253031000000
+                    //  207105000417253031000000
+                    //  217105000417253031000000
+                    //  227105000417253031000000
+                    //  237105000417253031000000
+                    //  247105000417253031000000
+                    //  007105000417253031000000
+                    //  017105000417253031000000
+                    //  027105000417253031000000
+                    //  037105000417253031000000
+                    //  0471 0500 0417 2530 3100 0000
+                    // MAP051.MPD
+                    // 2601 0400 0715 1a1b 2701 0400
+                    // MAP053.MPD
+                   //  7560 0300 0f1c 2400 7520 0300
+                   //  0f1c 2400 f560 0300 0f1c 2400
+                   //  f520 0300 0f1c 2400 1561 0300
+                   //  0f1c 2400 1521 0300 0f1c 2400
+                   //  7460 0300 0f1c 2400 7420 0300
+                   //  0f1c 2400 f460 0300 0f1c 2400
+                   //  f420 0300 0f1c 2400 1461 0300
+                   //  0f1c 2400 1421 0300 0f1c 2400
+                   //  3461 0300 0f1c 2400 3421 0300
+                   //  0f1c 2400 5360 0300 0f1c 2400
+                   //  5320 0300 0f1c 2400 7360 0300
+                   //  0f1c2400732003000f1c2400
+                   //  936003000f1c240093200300
+                   //  0f1c2400b36003000f1c2400
+                   //  b32003000f1c2400d3600300
+                   //  0f1c2400d32003000f1c2400
+                   //  f36003000f1c2400f3200300
+                   //  0f1c2400136103000f1c2400
+                   //  132103000f1c240033610300
+                   //  0f1c2400332103000f1c2400
+                   //  526003000f1c240052200300
+                   //  0f1c2400726003000f1c2400
+                   //  722003000f1c240092600300
+                   //  0f1c2400922003000f1c2400
+                   //  b26003000f1c2400b2200300
+                   //  0f1c2400d26003000f1c2400
+                   //  d22003000f1c2400f2600300
+                   //  0f1c2400f22003000f1c2400
+                   //  126103000f1c240012210300
+                   //  0f1c2400326103000f1c2400
+                   //  322103000f1c240071600300
+                   //  0f1c2400916003000f1c2400
+                   //  912003000f1c2400b1600300
+                   //  0f1c2400b12003000f1c2400
+                   //  d16003000f1c2400d1200300
+                   //  0f1c2400f16003000f1c2400
+                   //  f12003000f1c240011610300
+                   //  0f1c2400112103000f1c2400
+                   //  316103000f1c240031210300
+                   //  0f1c2400b06003000f1c2400
+                   //  d06003000f1c2400f0600300
+                   //  0f1c2400106103000f1c2400
+                   //  c9180200012c0000c9200200
+                   //  012c0000c8180200012c0000
+                   //  c8200200012c0000c7180200
+                   //  012c0000c7200200012c0000
+                   //  a6180200012c0000a6200200
                 }
 
                 if (lenFloatingStoneSection > 0)
@@ -499,17 +697,17 @@ namespace VS.FileFormats.MPD
 
                 if (lenSubSection15 > 0)
                 {
-                    SubSection15 = buffer.ReadBytes((int)lenSubSection15);
+                    //SubSection15 = buffer.ReadBytes((int)lenSubSection15);
                 }
 
                 if (lenSubSection16 > 0)
                 {
-                    SubSection16 = buffer.ReadBytes((int)lenSubSection16);
+                    //SubSection16 = buffer.ReadBytes((int)lenSubSection16);
                 }
 
                 if (lenSubSection17 > 0)
                 {
-                    SubSection17 = buffer.ReadBytes((int)lenSubSection17);
+                    //SubSection17 = buffer.ReadBytes((int)lenSubSection17);
                 }
 
                 if (lenCameraAreaSection > 0)

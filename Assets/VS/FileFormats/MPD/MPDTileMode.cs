@@ -4,6 +4,8 @@ using System.Collections.Generic;
 namespace VS.FileFormats.MPD
 {
     // it tells how the collision tile is set, it can be flat or ramp or cut in diagonal
+    // i don't know precisly how the 16bytes works, maybe vertices modifiers...
+    // MAP053.MPD for example has weird values
     [Serializable]
     public class MPDTileMode
     {

@@ -53,14 +53,14 @@ namespace VS.FileFormats.MPD
                         Material mat = new Material(shader);
                         mat.name = SerializedMPD.materialRefs[i];
                         mat.SetTexture("_MainTex", SerializedZND.GetTexture(SerializedMPD.materialRefs[i]));
-                        mat.SetFloat("_Mode", 0);
+                        mat.SetFloat("_Mode", 1);
                         mat.SetFloat("_ColorMode", 0);
                         mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
                         mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
                         mat.SetInt("_ZWrite", 1);
                         mat.EnableKeyword("_ALPHATEST_ON");
-                        //mat.DisableKeyword("_ALPHABLEND_ON");
-                        //mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                        mat.DisableKeyword("_ALPHABLEND_ON");
+                        mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
                         materials.Add(mat);
                     }
                 }
@@ -92,7 +92,7 @@ namespace VS.FileFormats.MPD
                         int subMeshIndex = meshMaterials.IndexOf(meshMaterials.Find(x => x.name.Equals(f.materialRef)));
                         if (f.translucent)
                         {
-                            meshMaterials[subMeshIndex].SetFloat("_Mode", 4);
+                            meshMaterials[subMeshIndex].SetFloat("_Mode", 3);
                         }
                         if (f.doubleSided)
                         {
@@ -150,6 +150,9 @@ namespace VS.FileFormats.MPD
                     }
                     GameObject groupGO = new GameObject("Group_" + i);
                     groupGO.transform.parent = roomGO.transform;
+                    // we apply group position for no-static groups like doors, floating stones, chest top, billboard effects etc...
+                    // by doing so we can apply rotations
+                    groupGO.transform.position = SerializedMPD.groups[i].positionYInv/128;
 
                     Mesh mesh = new Mesh();
                     mesh.name = "mesh_" + i;
@@ -189,7 +192,7 @@ namespace VS.FileFormats.MPD
                     {
                         for (uint x = 0; x < SerializedMPD.tileWidth; x++)
                         {
-                            v0= v1= v2= v3= v4= v5 = -1;
+                            v0= v1= v2= v3= v4= v5 = 0;
                             uint k = y * SerializedMPD.tileWidth + x;
                             MPDTile tile = SerializedMPD.tiles[k];
                             tile.id = k;
@@ -318,7 +321,7 @@ namespace VS.FileFormats.MPD
                                 }
                                 colliTriangles.AddRange(new int[] { v2, v1, v0 });
                                 colliTriangles.AddRange(new int[] { v2, v3, v1 });
-                                if (v4 != -1)
+                                if (v4 != 0)
                                 {
                                     tile.heigths = new List<float>()
                                     {
@@ -402,7 +405,7 @@ namespace VS.FileFormats.MPD
                     MeshFilter mf = collisionGO.AddComponent<MeshFilter>();
                     mf.mesh = colliMesh;
 
-                    MeshRenderer mr = collisionGO.AddComponent<MeshRenderer>();
+                    MeshCollider mc = collisionGO.AddComponent<MeshCollider>();
 
 
 
@@ -535,7 +538,7 @@ namespace VS.FileFormats.MPD
                     MeshFilter mf2 = collisionGO2.AddComponent<MeshFilter>();
                     mf2.mesh = colliMesh2;
 
-                    MeshRenderer mr2 = collisionGO2.AddComponent<MeshRenderer>();
+                    MeshCollider mc2 = collisionGO2.AddComponent<MeshCollider>();
                 } 
             }
         }

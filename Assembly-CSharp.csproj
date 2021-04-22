@@ -56,6 +56,7 @@
     <Analyzer Include="C:\Program Files (x86)\Microsoft Visual Studio Tools for Unity\16.0\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\VS\FileFormats\MPD\MPDItemD.cs" />
     <Compile Include="Assets\Scripts\Vagrant Story\Core\BreakArt.cs" />
     <Compile Include="Assets\VS\Parser\AKAO\AKAOSample.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\Components\Effects\Delay.cs" />
@@ -240,7 +241,9 @@
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\Descriptors\IDescriptor.cs" />
     <Compile Include="Assets\VS\Parser\SYD.cs" />
     <Compile Include="Assets\VS\FileFormats\ZND\ZNDWeapon.cs" />
+    <Compile Include="Assets\VS\FileFormats\MPD\MPDItem11.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Midi\MidiTrack.cs" />
+    <Compile Include="Assets\VS\FileFormats\MPD\MPDItemA.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Midi\Event\MetaDataEvent.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Util\Riff\LabeledTextChunk.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\Components\Envelope.cs" />
