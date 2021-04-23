@@ -1,276 +1,255 @@
-﻿/*
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using VS.Utils;
 
-namespace VS.FileFormats
+namespace VS.FileFormats.TIM
 {
 
-    public class GIM : FileParser
+    public class GIM : ScriptableObject
     {
-        public Texture2D texture;
+        public string Filename;
 
-        public GIM(string path)
+        public bool has8bitsIds = false;
+        public GIMFrame[] frames;
+
+        public Palette[] palettes16;
+        public Palette[] palettes256;
+
+        public SplitBlock[] blocks;
+
+        private readonly int blockWidth = 128;
+        private readonly int blockHeight = 15;
+
+        public void ParseFromFile(string filepath)
         {
-            UseDebug = true;
-            Parse(path);
+            FileParser fp = new FileParser();
+            fp.Read(filepath);
+
+            if (fp.Ext == "GIM")
+            {
+                Filename = fp.FileName;
+                if (Filename == "BLACK")
+                {
+                    return;
+                }
+                ParseFromBuffer(fp.buffer, fp.FileSize);
+            }
+
+            fp.Close();
         }
 
-
-        public void Parse(string filePath)
+        public void ParseFromBuffer(BinaryReader buffer, long limit)
         {
-            if (!filePath.EndsWith(".GIM"))
+            // frames section
+            GIMFrame mainFrame = new GIMFrame();
+            mainFrame.fwidth = buffer.ReadByte(); // multiply by 64 to get the real width
+            mainFrame.fheigth = buffer.ReadByte(); // multiply by 15 to get the real height
+            mainFrame.numBlocks = buffer.ReadByte(); // blocks are 128 width.... so we need to cut them in half
+            mainFrame.unk1 = buffer.ReadByte();
+            mainFrame.numPalette256 = buffer.ReadInt16(); // num of 256 col pallets (0 means no pallet)
+            mainFrame.additionalFrames = buffer.ReadInt16(); // num of additional layers
+            // half block table
+            int blockTableSize = mainFrame.fwidth * mainFrame.fheigth;
+            mainFrame.hbt = new ushort[blockTableSize];
+            for (uint i = 0; i < blockTableSize; i++)
             {
-                return;
+                mainFrame.hbt[i] = buffer.ReadUInt16();
+                // trick to detect 8bits TIM
+                if (!has8bitsIds) if (mainFrame.hbt[i] == 514) has8bitsIds = true;
             }
-            PreParse(filePath);
+            frames = new GIMFrame[1 + mainFrame.additionalFrames];
+            frames[0] = mainFrame;
 
-            if (FileName == "BLACK")
+            if (mainFrame.additionalFrames > 0)
             {
-
-                return;
+                for (uint i = 1; i < 1 + mainFrame.additionalFrames; i++)
+                {
+                    GIMFrame frame = new GIMFrame();
+                    frame.fwidth = buffer.ReadByte();
+                    frame.fheigth = buffer.ReadByte();
+                    // next values are often empty in additionnal frames
+                    frame.numBlocks = buffer.ReadByte();
+                    frame.unk1 = buffer.ReadByte();
+                    frame.numPalette256 = buffer.ReadInt16();
+                    frame.additionalFrames = buffer.ReadInt16();
+                    int frameBlockTableSize = frame.fwidth * frame.fheigth;
+                    frame.hbt = new ushort[frameBlockTableSize];
+                    for (uint j = 0; j < frameBlockTableSize; j++)
+                    {
+                        frame.hbt[j] = buffer.ReadUInt16();
+                        // trick to detect 8bits TIM
+                        if (!has8bitsIds) if (frame.hbt[j] == 514) has8bitsIds = true;
+                    }
+                    frames[i] = frame;
+                }
             }
+            // ultimate test, we must be sure of that
+            if (!has8bitsIds) if (mainFrame.numPalette256 == 0) has8bitsIds = true;
+            // 8 bytes block align padding
+            int rem = (int)buffer.BaseStream.Position % 8;
+            if (rem != 0) buffer.ReadBytes(8 - rem);
 
 
-            ushort timH = buffer.ReadUInt16();
-            int ptr = buffer.ReadUInt16();
-            int pal = buffer.ReadInt16(); // num of 256 col pallets (0 means no pallet)
-            int pal2 = buffer.ReadInt16(); // num of 16 col pallets (0 means 1 if there is no other pallet)
-            pal2++;
-            Debug.Log(FileName + "  timH : " + timH + "  ptr : " + ptr + "   pal : " + pal + "   pal2 : " + pal2);
-
-            buffer.BaseStream.Position = 0xA8;
-            switch (FileName)
+            // palettes section
+            // 16 colors palettes first, always 4 slots
+            palettes16 = new Palette[4];
+            for (int i = 0; i < 4; i++)
             {
-                case "019XXX01":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "1142":
-                    buffer.BaseStream.Position = 0xA8;
-                    break;
-                case "DADDY":
-                    buffer.BaseStream.Position = 0x100;
-                    break;
-                case "DEMO_001":
-                    buffer.BaseStream.Position = 0x150;
-                    break;
-                case "DEMO_002":
-                    buffer.BaseStream.Position = 0x150;
-                    break;
-                case "DEMO_003":
-                    buffer.BaseStream.Position = 0x150;
-                    break;
-                case "DEMO_004":
-                    buffer.BaseStream.Position = 0x150;
-                    break;
-                case "DEMO_005":
-                    buffer.BaseStream.Position = 0x150;
-                    break;
-                case "DEMO_006":
-                    buffer.BaseStream.Position = 0x150;
-                    break;
-                case "DEMO_007":
-                    buffer.BaseStream.Position = 0x150;
-                    break;
-                case "DEMO_008":
-                    buffer.BaseStream.Position = 0x150;
-                    break;
-                case "DEMOENK":
-                    buffer.BaseStream.Position = 0x178;
-                    break;
-                case "DEMOFIN":
-                    buffer.BaseStream.Position = 0x1F8;
-                    break;
-                case "ENKEI":
-                    buffer.BaseStream.Position = 0x178;
-                    break;
-                case "ENKEI2":
-                    buffer.BaseStream.Position = 0xF0;
-                    break;
-                case "EPI_INF":
-                    buffer.BaseStream.Position = 0x118;
-                    break;
-                case "EPILOGUE":
-                    buffer.BaseStream.Position = 0x1F8;
-                    break;
-                case "EV_MASK":
-                    buffer.BaseStream.Position = 0xA8;
-                    break;
-                case "GAMEOVER":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "HEADQUAT":
-                    buffer.BaseStream.Position = 0xF0;
-                    break;
-                case "JO":
-                    buffer.BaseStream.Position = 0x178;
-                    break;
-                case "JYO":
-                    buffer.BaseStream.Position = 0x1A0;
-                    break;
-                case "LOGO_G22":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "MAIN03":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "N_LEA":
-                    buffer.BaseStream.Position = 0x170;
-                    break;
-                case "STAFF001":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "STAFF002":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "STAFF003":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "STAFF004":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "STAFF005":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "STAFF006":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "STAFF007":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "STAFF008":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "STAFF009":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "STAFF010":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "STAFF011":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "STAFF012":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "STAFF013":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "SUNRISE":
-                    buffer.BaseStream.Position = 0xE8;
-                    break;
-                case "VKP_0":
-                    buffer.BaseStream.Position = 0x270;
-                    break;
-                case "VKP_1":
-                    buffer.BaseStream.Position = 0x1A0;
-                    break;
-                case "VKP_2":
-                    buffer.BaseStream.Position = 0x298;
-                    break;
-            }
-
-            // First 16 col pallets
-            Color[][] pallets16 = new Color[pal2][];
-            for (int i = 0; i < pal2; i++)
-            {
-                Color[] col = new Color[16];
+                Color32[] col = new Color32[16];
                 for (int j = 0; j < 16; j++)
                 {
                     col[j] = ToolBox.BitColorConverter(buffer.ReadUInt16());
                 }
-                pallets16[i] = col;
+                palettes16[i] = new Palette(16);
+                palettes16[i].colors = col;
             }
-            buffer.ReadBytes(32); // padding between 16 col & 256 col pallets
-            if (pal > 1)
+
+            // then 256 colors palettes
+            palettes256 = new Palette[mainFrame.numPalette256];
+            for (int i = 0; i < mainFrame.numPalette256; i++)
             {
-                buffer.ReadBytes(32);
-            }
-            // Second 256 col pallets
-            Color[][] pallets256 = new Color[pal][];
-            for (int i = 0; i < pal; i++)
-            {
-                Color[] col = new Color[256];
+                Color32[] col = new Color32[256];
                 for (int j = 0; j < 256; j++)
                 {
                     col[j] = ToolBox.BitColorConverter(buffer.ReadUInt16());
                 }
-                pallets256[i] = col;
+                palettes256[i] = new Palette(256);
+                palettes256[i].colors = col;
             }
 
+            // old fashion ways to determine numBlocks :s
+            // int numBlocks = (int)(buffer.BaseStream.Length - buffer.BaseStream.Position) / (blockWidth * blockHeight);
 
-            int width = 128;
-            int height = 15;
-            int numBlocks = (int)(FileSize - buffer.BaseStream.Position) / (width * height);
-            long pixPtr = buffer.BaseStream.Position;
-            if (pal2 > 1 || pal == 0)
+            uint numSplit = 2;
+            if (has8bitsIds) numSplit = 4;
+            List<SplitBlock> _blocks = new List<SplitBlock>();
+
+            for (int i = 0; i < mainFrame.numBlocks; i++)
             {
-                for (int j = 0; j < pallets16.Length; j++)
+                // black magic number
+                int ome = 512 + 188 * Mathf.FloorToInt(i / 17);
+                SplitBlock[] splitBlocks = new SplitBlock[numSplit];
+                for (uint j = 0; j < numSplit; j++) splitBlocks[j] = new SplitBlock((uint)(ome + i * 4 + j));
+                // we fill blocks
+                for (uint x = 0; x < blockHeight; x++)
                 {
-                    buffer.BaseStream.Position = pixPtr;
-                    List<Color> gim = new List<Color>();
-                    for (int i = 0; i < numBlocks; i++)
+                    if (!has8bitsIds)
                     {
-                        List<Color> block = new List<Color>();
-                        for (uint x = 0; x < height; x++)
+                        for (uint j = 0; j < numSplit; j++) splitBlocks[j].clut.AddRange(buffer.ReadBytes(64));
+                    }
+                    else
+                    {
+                        // we need 8 bits per pixels so we must split byte in two
+                        for (uint j = 0; j < numSplit; j++)
                         {
-                            List<Color> cl2 = new List<Color>();
-                            for (uint y = 0; y < width; y++)
+                            List<byte> cl2 = new List<byte>();
+                            
+                            for (uint y = 0; y < 32; y++)
                             {
-                                byte id = buffer.ReadByte();
+                                // EOF security
+                                byte id = (buffer.BaseStream.Position < buffer.BaseStream.Length) ? buffer.ReadByte() : (byte)0;
                                 byte l = (byte)Mathf.RoundToInt(id / 16);
                                 byte r = (byte)(id % 16);
-                                cl2.Add(pallets16[j][r]);
-                                cl2.Add(pallets16[j][l]);
+                                cl2.Add(r);
+                                cl2.Add(l);
                             }
-                            cl2.Reverse();
-                            block.AddRange(cl2);
+                            splitBlocks[j].clut.AddRange(cl2);
                         }
-                        gim.AddRange(block);
                     }
-                    gim.Reverse();
-                    texture = new Texture2D(width * 2, height * numBlocks, TextureFormat.ARGB32, false);
-                    texture.SetPixels(gim.ToArray());
-                    texture.Apply();
-                    byte[] bytes = texture.EncodeToPNG();
-                    ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/GIM/");
-                    File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/GIM/" + FileName + "_4b_" + j + ".png", bytes);
                 }
+                for (uint j = 0; j < numSplit; j++) _blocks.Add(splitBlocks[j]);
             }
 
-            for (int j = 0; j < pallets256.Length; j++)
+            blocks = _blocks.ToArray();
+
+            // we have gather all informations, now we can reconstruct pictures
+            Reconstruct();
+
+        }
+
+
+        public void Reconstruct()
+        {
+            for(uint i = 0; i < frames.Length; i++)
             {
-                buffer.BaseStream.Position = pixPtr;
-                List<Color> gim = new List<Color>();
-                for (int i = 0; i < numBlocks; i++)
+                GIMFrame f = frames[i];
+                Palette palette;
+                if (frames[0].numPalette256 > 0) palette = (f.numPalette256 > 0) ? palettes256[f.numPalette256 - 1] : palettes256[0];
+                else palette = palettes16[i];
+                Texture2D texture = new Texture2D(f.fwidth * 64, f.fheigth * 15, TextureFormat.ARGB32, false);
+                uint z = 0;
+                for (uint y = 0; y < f.fheigth; y++)
                 {
-                    List<Color> block = new List<Color>();
-                    for (uint x = 0; x < height; x++)
+                    for (uint x = 0; x < f.fwidth; x++)
                     {
-                        List<Color> cl2 = new List<Color>();
-                        for (uint y = 0; y < width; y++)
+                        if (f.hbt[z] != 0)
                         {
-                            byte id = buffer.ReadByte();
-                            cl2.Add(pallets256[j][id]);
+                            if (f.hbt[z] >= 512)
+                            {
+                                texture.SetPixels32((int)x * 64, (int)y * 15, 64, 15, GetHalfBlockColors(f.hbt[z], blocks, palette));
+                            }
                         }
-                        cl2.Reverse();
-                        block.AddRange(cl2);
+                        z++;
                     }
-                    gim.AddRange(block);
                 }
-                gim.Reverse();
-
-
-                texture = new Texture2D(width, height * numBlocks, TextureFormat.ARGB32, false);
-                texture.SetPixels(gim.ToArray());
+                // we need a vertical mirror
+                List<Color[]> flipped = new List<Color[]>();
+                for (int y = 0; y < f.fheigth * 15; y++)
+                {
+                    Color[] yLine = texture.GetPixels(0, y, f.fwidth * 64, 1);
+                    flipped.Add(yLine);
+                }
+                flipped.Reverse();
+                for (int y = 0; y < f.fheigth * 15; y++)
+                {
+                    texture.SetPixels(0, y, f.fwidth * 64, 1, flipped[y]);
+                }
                 texture.Apply();
 
                 byte[] bytes = texture.EncodeToPNG();
-                ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/GIM/");
-                File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/GIM/" + FileName + "_8b_" + j + ".png", bytes);
+                ToolBox.DirExNorCreate("Assets/Resources/Textures/GIM/");
+                File.WriteAllBytes(string.Concat("Assets/Resources/Textures/GIM/",Filename,"_", i, ".png"), bytes);
+            }
+        }
+
+        private Color32[] GetHalfBlockColors(ushort v, SplitBlock[] blocks, Palette palette)
+        {
+            List<Color32> _block = new List<Color32>();
+            foreach (SplitBlock b in blocks)
+            {
+                if (b.id == v)
+                {
+                    for (int i = 0; i < b.clut.Count; i++)
+                    {
+                        _block.Add(palette.colors[b.clut[i]]);
+                    }
+
+                    return _block.ToArray();
+                }
+            }
+            for (int j = 0; j < 64 * 15; j++) _block.Add(Color.black);
+            return _block.ToArray();
+        }
+
+        [Serializable]
+        public class SplitBlock
+        {
+            public uint id;
+            public List<byte> clut;
+
+            public SplitBlock(uint _id)
+            {
+                id = _id;
+                clut = new List<byte>();
+            }
+
+            public SplitBlock(uint _id, List<byte> _clut)
+            {
+                id = _id;
+                clut = _clut;
             }
         }
     }
 }
-*/

@@ -246,7 +246,7 @@ namespace VS.Utils
                     {
                         // some color, and the alpha bit IS set
                         a = AlphaFromGrayscale(new Color32((byte)(r * 8), (byte)(g * 8), (byte)(b * 8), 0)); // some variance of transparency
-                        //a = 250;
+                        a = 255;
                     }
                 }
 

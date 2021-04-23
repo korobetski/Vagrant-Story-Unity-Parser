@@ -157,6 +157,7 @@ public class VSWindow : EditorWindow
                     break;
                 case "GIM":
                     // ****.GIM
+                    // SCREFF2.PRG
                     ParseGIM(VSPath + FilePath, true);
                     break;
                 case "MAP":
@@ -401,7 +402,7 @@ public class VSWindow : EditorWindow
 
         GUILayout.BeginVertical(options);
         GUILayout.Label("Texture Formats : ");
-        /*
+        
         bool LoadGIMTrigger = GUILayout.Button(new GUIContent("Load GIM/*.GIM"));
         if (LoadGIMTrigger && VSPath != "")
         {
@@ -415,14 +416,15 @@ public class VSWindow : EditorWindow
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                //GIM gim = new GIM(file);
+
+                ParseGIM(file, false);
                 fileParsed++;
             }
 
 
             EditorUtility.ClearProgressBar();
         }
-        */
+        
         /*
         bool LoadDISTrigger = GUILayout.Button(new GUIContent("Load SMALL/*.DIS"));
         if (LoadDISTrigger && VSPath != "")
@@ -801,7 +803,10 @@ public class VSWindow : EditorWindow
 
     private void ParseGIM(string path, bool UseDebug)
     {
-        //GIM parser = new GIM(path);
+        GIM gim = ScriptableObject.CreateInstance<GIM>();
+        gim.ParseFromFile(path);
+
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/GIM/", gim.Filename + ".yaml.asset", gim);
     }
 
     private void ParseBIN(string path, string fileName)
