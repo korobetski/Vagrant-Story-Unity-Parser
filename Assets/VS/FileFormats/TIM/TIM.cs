@@ -9,7 +9,7 @@ namespace VS.FileFormats.TIM
 {
     public class TIM:ScriptableObject
     {
-        public enum TIMType { WEP, SHP, ZND };
+        public enum TIMType { WEP, SHP, ZND, DIS };
 
         public string Filename;
 
@@ -32,6 +32,126 @@ namespace VS.FileFormats.TIM
 
         public TIMType type;
 
+        public void ParseFromFile(string filepath)
+        {
+            FileParser fp = new FileParser();
+            fp.Read(filepath);
+            
+            Filename = fp.FileName;
+
+            if (fp.Ext == "DIS")
+            {
+                ParseDISFromBuffer(fp.buffer);
+            }
+
+            fp.Close();
+        }
+
+        public void ParseDISFromBuffer(BinaryReader buffer)
+        {
+
+            type = TIMType.DIS;
+
+            h = buffer.ReadUInt32();
+            bpp = buffer.ReadUInt32();
+            imgLen = buffer.ReadUInt32();
+            fx = buffer.ReadUInt16();
+            fy = buffer.ReadUInt16();
+            width = buffer.ReadUInt16();
+            height = buffer.ReadUInt16();
+
+            if (bpp == 2)
+            {
+                // 32 bits TIM, no palette, pixels are given one after another
+                List<Color> gim = new List<Color>();
+                for (uint x = 0; x < height; x++)
+                {
+                    List<Color> cl2 = new List<Color>();
+                    for (uint y = 0; y < width; y++)
+                    {
+                        cl2.Add(ToolBox.BitColorConverter(buffer.ReadUInt16()));
+                    }
+                    cl2.Reverse();
+                    gim.AddRange(cl2);
+                }
+                gim.Reverse();
+
+                Texture2D texture = new Texture2D((int)width, (int)height, TextureFormat.ARGB32, false);
+                texture.SetPixels(gim.ToArray());
+                texture.Apply();
+                byte[] bytes = texture.EncodeToPNG();
+                ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/DIS/");
+                File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/DIS/" + Filename + ".png", bytes);
+            }
+            else if (bpp == 8)
+            {
+                // 8 bits TIM, seems to contains 16 x 16 colors Palettes + clut
+                // a file can contains several TIM
+                numPalettes = 16;
+                palettes = new Palette[numPalettes];
+
+                for (uint i = 0; i < numPalettes; i++)
+                {
+                    palettes[i] = new Palette(16);
+                    for (uint j = 0; j < 16; j++)
+                    {
+                        palettes[i].colors[j] = (ToolBox.BitColorConverter(buffer.ReadUInt16()));
+                    }
+
+                }
+
+                buffer.ReadBytes(12);
+
+                width = 128;
+                height = 256;
+
+                clut = new byte[width * height * 2];
+                for (uint i = 0; i < height * width*2; i+=2)
+                {
+                    byte id = buffer.ReadByte();
+                    byte l = (byte)Mathf.RoundToInt(id / 16);
+                    byte r = (byte)(id % 16);
+                    clut[i] = r;
+                    clut[i + 1] = l;
+                }
+                clut = ReverseCLUT();
+
+                List<Texture2D> textures = new List<Texture2D>();
+
+                for (int h = 0; h < numPalettes; h++)
+                {
+                    List<Color> colors = new List<Color>();
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width*2; x++)
+                        {
+                            colors.Add(palettes[h].colors[clut[(int)((y * width*2) + x)]]);
+                        }
+                    }
+
+                    Texture2D tex = new Texture2D((int)width*2, (int)height, TextureFormat.ARGB32, false);
+                    tex.SetPixels(colors.ToArray());
+                    tex.Apply();
+                    textures.Add(tex);
+                }
+
+                Texture2D pack = new Texture2D((int)width * 2, (int)height*numPalettes, TextureFormat.ARGB32, false);
+                pack.PackTextures(textures.ToArray(), 0);
+                pack.filterMode = FilterMode.Point;
+                pack.wrapMode = TextureWrapMode.Repeat;
+                pack.Apply();
+                
+                byte[] bytes = pack.EncodeToPNG();
+                ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/DIS/");
+                File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/DIS/" + Filename + ".png", bytes);
+
+                if (buffer.BaseStream.Position + 20 < buffer.BaseStream.Length)
+                {
+                    Filename = Filename + "_";
+                    ParseDISFromBuffer(buffer);
+                }
+            }
+        }
 
         public void ParseWEPFromBuffer(BinaryReader buffer)
         {

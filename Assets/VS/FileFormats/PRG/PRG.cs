@@ -1,6 +1,4 @@
-﻿
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using VS.Utils;
@@ -29,8 +27,8 @@ namespace VS.FileFormats.PRG
 
         public void ParseFromBuffer(BinaryReader buffer, long limit)
         {
-            buffer.BaseStream.Position = 0x5D20;
-            string[] subs = L10n.Translate(buffer.ReadBytes((int)buffer.BaseStream.Length- 0x5D20)).Split('|');
+            buffer.BaseStream.Position = 0;
+            string[] subs = L10n.Translate(buffer.ReadBytes((int)buffer.BaseStream.Length- 0)).Split('|');
             foreach(string s in subs)
             {
 

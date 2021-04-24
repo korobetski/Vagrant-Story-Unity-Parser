@@ -158,7 +158,15 @@ public class VSWindow : EditorWindow
                 case "GIM":
                     // ****.GIM
                     // SCREFF2.PRG
-                    ParseGIM(VSPath + FilePath, true);
+                    switch (ext)
+                    {
+                        case "GIM":
+                            ParseGIM(VSPath + FilePath, true);
+                            break;
+                        case "PRG":
+                            ParsePRG(VSPath + FilePath);
+                            break;
+                    }
                     break;
                 case "MAP":
                     // MAP***.MPD
@@ -184,8 +192,7 @@ public class VSWindow : EditorWindow
                     switch (ext)
                     {
                         case "BIN":
-                            //BIN bparser = new BIN();
-                            //bparser.ParseFromFile(VSPath + FilePath);
+                            ParseBIN(VSPath + FilePath);
                             break;
                         case "PRG":
                             ParsePRG(VSPath + FilePath);
@@ -232,7 +239,16 @@ public class VSWindow : EditorWindow
                             ParseARM(VSPath + FilePath, true);
                             break;
                         case "BIN":
-                            ParseBIN(VSPath + FilePath, fileName);
+                            BuildBestiary();
+                            break;
+                        case "DIS":
+                            ParseDIS(VSPath + FilePath);
+                            break;
+                        case "HF0":
+                            ParseHF0(VSPath + FilePath);
+                            break;
+                        case "HF1":
+                            ParseHF1(VSPath + FilePath);
                             break;
                     }
                     break;
@@ -425,7 +441,7 @@ public class VSWindow : EditorWindow
             EditorUtility.ClearProgressBar();
         }
         
-        /*
+        
         bool LoadDISTrigger = GUILayout.Button(new GUIContent("Load SMALL/*.DIS"));
         if (LoadDISTrigger && VSPath != "")
         {
@@ -438,15 +454,12 @@ public class VSWindow : EditorWindow
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                //DIS dis = new DIS();
-                //dis.ParseFromFile(file);
+                ParseDIS(file);
                 fileParsed++;
             }
-
-
             EditorUtility.ClearProgressBar();
         }
-        */
+        
         /*
         bool LoadTIMTrigger = GUILayout.Button(new GUIContent("BG/*.TIM"));
         if (LoadTIMTrigger && VSPath != "")
@@ -517,12 +530,12 @@ public class VSWindow : EditorWindow
             EditorUtility.ClearProgressBar();
         }
         */
-
+        /*
         midTrigger = GUILayout.Toggle(midTrigger, new GUIContent("output a MIDI file ?"));
         sf2Trigger = GUILayout.Toggle(sf2Trigger, new GUIContent("output a SF2 (soundfont) file ?"));
         dlsTrigger = GUILayout.Toggle(dlsTrigger, new GUIContent("output a DLS (soundfont) file ? (Not working well yet)"));
         wavTrigger = GUILayout.Toggle(wavTrigger, new GUIContent("output a WAV file ? ( /_!_\\ heavy files)"));
-
+        */
         bool LoadAKAO1Trigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE****.DAT"));
         if (LoadAKAO1Trigger && VSPath != "")
         {
@@ -636,7 +649,6 @@ public class VSWindow : EditorWindow
         }
         GUILayout.EndVertical();
     }
-
     private ItemList BuildItemStrings()
     {
         ItemList  itemsStr = ScriptableObject.CreateInstance<ItemList>();
@@ -809,10 +821,10 @@ public class VSWindow : EditorWindow
         ToolBox.SaveScriptableObject("Assets/Resources/Serialized/GIM/", gim.Filename + ".yaml.asset", gim);
     }
 
-    private void ParseBIN(string path, string fileName)
+    private void ParseBIN(string path)
     {
-        //BIN evt = new BIN();
-        //evt.Parse(path);
+        BIN parser = new BIN();
+        parser.ParseFromFile(path);
     }
 
 
@@ -821,4 +833,23 @@ public class VSWindow : EditorWindow
         PRG parser = new PRG();
         parser.ParseFromFile(v);
     }
+
+    private void ParseHF0(string v)
+    {
+        HF0 parser = new HF0();
+        parser.ParseFromFile(v);
+    }
+    private void ParseHF1(string v)
+    {
+        HF1 parser = new HF1();
+        parser.ParseFromFile(v);
+    }
+
+    private void ParseDIS(string v)
+    {
+        TIM tim = new TIM();
+        tim.type = TIM.TIMType.DIS;
+        tim.ParseFromFile(v);
+    }
+
 }

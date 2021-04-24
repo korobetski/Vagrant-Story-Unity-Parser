@@ -255,7 +255,6 @@
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Util\Riff\PlaylistChunk.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Midi\MidiHelper.cs" />
     <Compile Include="Assets\Scripts\Vagrant Story\Core\BreakArtEffect.cs" />
-    <Compile Include="Assets\VS\FileFormats\TIM\DIS.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Midi\Event\MidiEvent.cs" />
     <Compile Include="Assets\VS\FileFormats\AKAO\AKAOArticulation.cs" />
     <Compile Include="Assets\VS\FileFormats\TIM\Palette.cs" />
@@ -282,6 +281,7 @@
     <Compile Include="Assets\VS\FileFormats\GEOM\Vector4Col.cs" />
     <Compile Include="Assets\VS\Core\Memory.cs" />
     <Compile Include="Assets\VS\FileFormats\AKAO\AKAOSequence.cs" />
+    <Compile Include="Assets\VS\FileFormats\TIM\GIMFrame.cs" />
     <Compile Include="Assets\Scripts\Vagrant Story\Core\Affinity.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Util\IOHelper.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Synthesis\Synthesizer.Main.cs" />
@@ -342,7 +342,7 @@
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\SampleDataAsset.cs" />
     <Compile Include="Assets\VS\FileFormats\GEOM\Group.cs" />
     <Compile Include="Assets\VS\Parser\ZND.cs" />
-    <Compile Include="Assets\VS\FileFormats\TIM\GIMFrame.cs" />
+    <Compile Include="Assets\VS\FileFormats\BIN\BIN.cs" />
   </ItemGroup>
   <ItemGroup>
      <None Include="Assets\Shaders\StandardTriplanar.shader" />

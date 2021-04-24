@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using UnityEngine;
+using VS.Utils;
 
 namespace VS.FileFormats.HELP
 {
@@ -25,6 +27,12 @@ namespace VS.FileFormats.HELP
         public void ParseFromBuffer(BinaryReader buffer, long limit)
         {
 
+            string[] subs = L10n.Translate(buffer.ReadBytes((int)buffer.BaseStream.Length - 0)).Split('|');
+            foreach (string s in subs)
+            {
+
+                Debug.Log(s);
+            }
         }
     }
 }
