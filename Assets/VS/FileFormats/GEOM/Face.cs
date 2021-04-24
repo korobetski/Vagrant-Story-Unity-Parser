@@ -22,5 +22,12 @@ namespace VS.FileFormats.GEOM
             uv = new List<Vector2>();
             colors = new List<Color32>();
         }
+
+        public Vector2 GetUV(int i, uint width, uint height)
+        {
+            float u = uv[i].x / width;
+            float v = uv[i].y / height;
+            return new Vector2(u, v);
+        }
     }
 }

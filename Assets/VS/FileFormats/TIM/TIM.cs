@@ -9,7 +9,7 @@ namespace VS.FileFormats.TIM
 {
     public class TIM:ScriptableObject
     {
-        public enum TIMType { WEP, SHP, ZND, DIS };
+        public enum TIMType { WEP, SHP, ZND, DIS, FAR };
 
         public string Filename;
 
@@ -25,7 +25,7 @@ namespace VS.FileFormats.TIM
         public uint dataLen = 0;
         public uint dataPtr = 0;
 
-        public byte numColors;
+        public ushort numColors;
         public byte numPalettes;
         public Palette[] palettes;
         public byte[] clut;
@@ -39,14 +39,82 @@ namespace VS.FileFormats.TIM
             
             Filename = fp.FileName;
 
-            if (fp.Ext == "DIS")
+            switch(fp.Ext)
             {
-                ParseDISFromBuffer(fp.buffer);
+                case "DIS":
+                    ParseDISFromBuffer(fp.buffer);
+                    break;
+                case "TIM":
+                    ParseFARFromBuffer(fp.buffer);
+                    break;
             }
 
             fp.Close();
         }
+        public void ParseFARFromBuffer(BinaryReader buffer)
+        {
 
+            type = TIMType.FAR;
+
+            h = buffer.ReadUInt32();
+            bpp = buffer.ReadUInt32();
+            imgLen = buffer.ReadUInt32();
+            fx = buffer.ReadUInt16();
+            fy = buffer.ReadUInt16();
+            width = buffer.ReadUInt16();
+            height = buffer.ReadUInt16();
+
+            if (bpp == 10)
+            {
+                numPalettes = 1;
+                numColors = 256;
+                palettes = new Palette[numPalettes];
+
+                for (uint i = 0; i < numPalettes; i++)
+                {
+                    palettes[i] = new Palette(numColors);
+                    for (uint j = 0; j < numColors; j++)
+                    {
+                        palettes[i].colors[j] = (ToolBox.BitColorConverter(buffer.ReadUInt16()));
+                    }
+
+                }
+
+                imgLen = buffer.ReadUInt32();
+                fx = buffer.ReadUInt16();
+                fy = buffer.ReadUInt16();
+                width = buffer.ReadUInt16();
+                height = buffer.ReadUInt16();
+
+                width *= 2;
+                //height = (uint)(buffer.BaseStream.Length - buffer.BaseStream.Position) / width;
+
+                clut = new byte[width * height];
+                for (uint i = 0; i < height * width; i ++)
+                {
+                    byte id = buffer.ReadByte();
+                    clut[i] = id;
+                }
+                clut = ReverseCLUT();
+
+                List<Color> colors = new List<Color>();
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        colors.Add(palettes[0].colors[clut[(int)((y * width) + x)]]);
+                    }
+                }
+
+                Texture2D tex = new Texture2D((int)width, (int)height, TextureFormat.ARGB32, false);
+                tex.SetPixels(colors.ToArray());
+                tex.Apply();
+                byte[] bytes = tex.EncodeToPNG();
+                ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/TIM/");
+                File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/TIM/" + Filename + ".png", bytes);
+            }
+        }
+        
         public void ParseDISFromBuffer(BinaryReader buffer)
         {
 

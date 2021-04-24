@@ -1,26 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
 using VS.Core;
+using VS.FileFormats.AKAO;
 using VS.FileFormats.ARM;
 using VS.FileFormats.BIN;
-using VS.FileFormats.MPD;
-using VS.FileFormats.ZUD;
-using VS.FileFormats.WEP;
-using VS.FileFormats.SHP;
+using VS.FileFormats.EFFECT;
 using VS.FileFormats.EVT;
-using VS.FileFormats.ZND;
+using VS.FileFormats.HELP;
+using VS.FileFormats.ITEM;
+using VS.FileFormats.MPD;
+using VS.FileFormats.PRG;
+using VS.FileFormats.SEQ;
+using VS.FileFormats.SHP;
 using VS.FileFormats.SYD;
 using VS.FileFormats.TIM;
-using VS.FileFormats.AKAO;
-using VS.FileFormats.EFFECT;
-using VS.FileFormats.PRG;
-using VS.FileFormats.ITEM;
+using VS.FileFormats.WEP;
+using VS.FileFormats.ZND;
+using VS.FileFormats.ZUD;
 using VS.Utils;
-using VS.FileFormats.HELP;
-using VS.FileFormats.SEQ;
 
 //https://unity3d.college/2017/05/22/unity-attributes/
 
@@ -124,6 +123,12 @@ public class VSWindow : EditorWindow
                     // 002OP01A.FAR & TIM
                     // 007OP01A.FAR & TIM
                     // 008OP01A.FAR & TIM
+                    switch(ext)
+                    {
+                        case"TIM":
+                            ParseTIM(VSPath + FilePath, TIM.TIMType.FAR);
+                            break;
+                    }
                     break;
                 case "EFFECT":
                     // EFFPURGE.BIN maybe the PLG for E000.P
@@ -203,7 +208,8 @@ public class VSWindow : EditorWindow
                     // TITLE.STR intro video
                     break;
                 case "MUSIC":
-                    //ParseAKAO(VSPath + FilePath, AKAO.Type.SEQUENCE, true);
+                    // MUSIC***.DAT
+                    ParseAKAO(VSPath + FilePath, VS.Enums.AKAO.Type.SEQUENCE, true);
                     break;
                 case "OBJ":
                     // **.SHP
@@ -219,18 +225,24 @@ public class VSWindow : EditorWindow
                         case "WEP":
                             ParseWEP(VSPath + FilePath, true);
                             break;
+                        case "SEQ":
+                            ParseSEQ(VSPath + FilePath);
+                            break;
                     }
                     break;
                 case "SE":
                     // EFFECT00.DAT
                     // EFFECT01.DAT
                     // SEP000**.DAT
+                    // SE files contains many little AKAOs, maybe "Sound Effect"
+                    // seems to be one track instructions without instruments set
                     break;
                 case "SMALL":
                     // **.ARM
                     // MON.BIN
                     // **.DIS
                     // HELP**.HF0
+                    // HF0 contains text strings
                     // HELP**.HF1
 
                     switch (ext)
@@ -242,7 +254,7 @@ public class VSWindow : EditorWindow
                             BuildBestiary();
                             break;
                         case "DIS":
-                            ParseDIS(VSPath + FilePath);
+                            ParseTIM(VSPath + FilePath, TIM.TIMType.DIS);
                             break;
                         case "HF0":
                             ParseHF0(VSPath + FilePath);
@@ -454,13 +466,13 @@ public class VSWindow : EditorWindow
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                ParseDIS(file);
+                ParseTIM(file, TIM.TIMType.DIS);
                 fileParsed++;
             }
             EditorUtility.ClearProgressBar();
         }
         
-        /*
+        
         bool LoadTIMTrigger = GUILayout.Button(new GUIContent("BG/*.TIM"));
         if (LoadTIMTrigger && VSPath != "")
         {
@@ -473,63 +485,17 @@ public class VSWindow : EditorWindow
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                TIM parser = new TIM();
-                //parser.ParseFromFile(file);
+                ParseTIM(file, TIM.TIMType.FAR);
                 fileParsed++;
             }
-
-
             EditorUtility.ClearProgressBar();
         }
-        */
-        /*
-        bool LoadILLUSTTrigger = GUILayout.Button(new GUIContent("ENDING/ILLUST*.BIN (Not Working Yet)"));
-        if (LoadILLUSTTrigger && VSPath != "")
-        {
-            // not working yet
-            string[] files = Directory.GetFiles(VSPath + "ENDING/", "*.BIN");
-            float fileToParse = files.Length;
-
-            float fileParsed = 0;
-            foreach (string file in files)
-            {
-                string[] h = file.Split("/"[0]);
-                string filename = h[h.Length - 1];
-                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                TIM parser = new TIM();
-                parser.ParseIllust(file);
-                fileParsed++;
-            }
-
-            EditorUtility.ClearProgressBar();
-        }
-        */
+        
 
         GUILayout.EndVertical();
         GUILayout.BeginVertical(options);
         GUILayout.Label("Audio Formats : ");
 
-        /*
-        bool LoadAKAOTrigger = GUILayout.Button(new GUIContent("Load Akao SOUND/WAVE*.DAT"));
-        if (LoadAKAOTrigger && VSPath != "")
-        {
-            string[] files = Directory.GetFiles(VSPath + "SOUND/", "*.DAT");
-            float fileToParse = files.Length;
-            float fileParsed = 0;
-            foreach (string file in files)
-            {
-                string[] h = file.Split("/"[0]);
-                string filename = h[h.Length - 1];
-                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
-                AKAO parser = new AKAO();
-                parser.UseDebug = true;
-                parser.Parse(file, AKAO.SOUND);
-                fileParsed++;
-            }
-
-            EditorUtility.ClearProgressBar();
-        }
-        */
         /*
         midTrigger = GUILayout.Toggle(midTrigger, new GUIContent("output a MIDI file ?"));
         sf2Trigger = GUILayout.Toggle(sf2Trigger, new GUIContent("output a SF2 (soundfont) file ?"));
@@ -845,11 +811,12 @@ public class VSWindow : EditorWindow
         parser.ParseFromFile(v);
     }
 
-    private void ParseDIS(string v)
+    private void ParseTIM(string file, TIM.TIMType type)
     {
         TIM tim = new TIM();
-        tim.type = TIM.TIMType.DIS;
-        tim.ParseFromFile(v);
+        tim.type = type;
+        tim.ParseFromFile(file);
     }
+
 
 }

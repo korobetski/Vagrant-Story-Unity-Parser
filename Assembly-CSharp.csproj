@@ -83,6 +83,8 @@
     <Compile Include="Assets\Scripts\Vagrant Story\Core\Class.cs" />
     <Compile Include="Assets\VS\FileFormats\AKAO\AKAOTrack.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Sf2\ModulatorType.cs" />
+    <Compile Include="Assets\VS\FileFormats\ZUD\ZUDLoader.cs" />
+    <Compile Include="Assets\VS\FileFormats\BIN\BIN.cs" />
     <Compile Include="Assets\VS\FileFormats\SHP\SHP.cs" />
     <Compile Include="Assets\Scripts\FileFormats\SF2\SF2Chunks.cs" />
     <Compile Include="Assets\VS\FileFormats\MPD\MPDRoomDoor.cs" />
@@ -342,7 +344,6 @@
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\SampleDataAsset.cs" />
     <Compile Include="Assets\VS\FileFormats\GEOM\Group.cs" />
     <Compile Include="Assets\VS\Parser\ZND.cs" />
-    <Compile Include="Assets\VS\FileFormats\BIN\BIN.cs" />
   </ItemGroup>
   <ItemGroup>
      <None Include="Assets\Shaders\StandardTriplanar.shader" />

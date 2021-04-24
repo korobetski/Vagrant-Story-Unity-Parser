@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using VS.FileFormats.GEOM;
 using VS.Utils;
@@ -31,7 +27,7 @@ namespace VS.FileFormats.SHP
         }
 
 
-        private void Build()
+        public void Build()
         {
             ToolBox.DestroyChildren(gameObject, true);
             _mf = GetComponent<MeshFilter>();
@@ -40,22 +36,6 @@ namespace VS.FileFormats.SHP
             if (SerializedSHP != null)
             {
                 // Building Model
-                for (int i = 0; i < SerializedSHP.numFaces; i++)
-                {
-                    for (int j = 0; j < SerializedSHP.faces[i].verticesCount; j++)
-                    {
-                        if (SerializedSHP.TIM != null)
-                        {
-                            float u = SerializedSHP.faces[i].uv[j].x / (SerializedSHP.TIM.width - 1);
-                            float v = SerializedSHP.faces[i].uv[j].y / (SerializedSHP.TIM.height - 1);
-                            SerializedSHP.faces[i].uv[j] = (new Vector2(u, v));
-                        }
-                        else
-                        {
-                            SerializedSHP.faces[i].uv[j] = Vector2.zero;
-                        }
-                    }
-                }
 
                 foreach (Bone bone in SerializedSHP.bones)
                 {
@@ -100,9 +80,9 @@ namespace VS.FileFormats.SHP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[2]].position);
                             meshWeights.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[2]].boneWeight);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[0]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[1]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[2]);
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(0, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(1, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(2, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
 
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[3]].position);
@@ -113,9 +93,9 @@ namespace VS.FileFormats.SHP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[1]].position);
                             meshWeights.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[1]].boneWeight);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[3]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[2]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[1]);
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(3, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(2, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(1, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
 
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[2]].position);
@@ -126,9 +106,9 @@ namespace VS.FileFormats.SHP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[0]].position);
                             meshWeights.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[0]].boneWeight);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[2]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[1]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[0]);
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(2, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(1, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(0, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
 
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[1]].position);
@@ -139,9 +119,9 @@ namespace VS.FileFormats.SHP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[3]].position);
                             meshWeights.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[3]].boneWeight);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[1]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[2]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[3]);
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(1, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(2, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(3, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
 
                             if (SerializedSHP.hasColoredVertices)
                             {
@@ -174,9 +154,9 @@ namespace VS.FileFormats.SHP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[2]].position);
                             meshWeights.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[2]].boneWeight);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[0]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[1]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[2]);
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(0, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(1, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(2, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
 
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[3]].position);
@@ -187,9 +167,9 @@ namespace VS.FileFormats.SHP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[1]].position);
                             meshWeights.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[1]].boneWeight);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[3]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[2]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[1]);
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(3, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(2, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(1, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
                             if (SerializedSHP.hasColoredVertices)
                             {
                                 // we have colored vertices
@@ -216,9 +196,9 @@ namespace VS.FileFormats.SHP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[2]].position);
                             meshWeights.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[2]].boneWeight);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[1]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[2]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[0]);
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(1, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(2, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(0, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
 
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[2]].position);
@@ -229,9 +209,9 @@ namespace VS.FileFormats.SHP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[0]].position);
                             meshWeights.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[0]].boneWeight);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[0]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[2]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[1]);
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(0, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(2, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(1, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
                             if (SerializedSHP.hasColoredVertices)
                             {
                                 // we have colored vertices
@@ -255,9 +235,9 @@ namespace VS.FileFormats.SHP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[2]].position);
                             meshWeights.Add(SerializedSHP.vertices[SerializedSHP.faces[i].vertices[2]].boneWeight);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[1]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[2]);
-                            meshTrianglesUV.Add(SerializedSHP.faces[i].uv[0]);
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(1, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(2, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedSHP.faces[i].GetUV(0, SerializedSHP.TIM.width - 1, SerializedSHP.TIM.height - 1));
                             if (SerializedSHP.hasColoredVertices)
                             {
                                 // we have colored vertices
@@ -364,6 +344,31 @@ namespace VS.FileFormats.SHP
                 _mr.rootBone = meshBones[0];
                 _mr.sharedMesh = shapeMesh;
             }
+        }
+
+        public GameObject GetWeaponBone()
+        {
+            foreach(Bone bone in SerializedSHP.bones)
+            {
+                if (bone.mountId == -16)
+                {
+                    return ToolBox.findBoneIn("bone_" + bone.index, gameObject);
+                }
+            }
+
+            return ToolBox.findBoneIn("bone_0", gameObject);
+        }
+        public GameObject GetShieldBone()
+        {
+            foreach (Bone bone in SerializedSHP.bones)
+            {
+                if (bone.mountId == -15)
+                {
+                    return ToolBox.findBoneIn("bone_" + bone.index, gameObject);
+                }
+            }
+
+            return ToolBox.findBoneIn("bone_0", gameObject);
         }
     }
 }

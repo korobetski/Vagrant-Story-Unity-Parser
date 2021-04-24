@@ -25,7 +25,7 @@ namespace VS.FileFormats.WEP
             Build();
         }
 
-        private void Build()
+        public void Build()
         {
             _mf = GetComponent<MeshFilter>();
             _mr = GetComponent<MeshRenderer>();
@@ -37,16 +37,6 @@ namespace VS.FileFormats.WEP
                 List<int> meshTriangles = new List<int>();
                 List<Vector2> meshTrianglesUV = new List<Vector2>();
                 List<BoneWeight> meshWeights = new List<BoneWeight>();
-
-                for (int i = 0; i < SerializedWEP.NumFaces; i++)
-                {
-                    for (int j = 0; j < SerializedWEP.Faces[i].verticesCount; j++)
-                    {
-                        float u = SerializedWEP.Faces[i].uv[j].x / (SerializedWEP.TIM.width - 1);
-                        float v = SerializedWEP.Faces[i].uv[j].y / (SerializedWEP.TIM.height - 1);
-                        SerializedWEP.Faces[i].uv[j] = new Vector2(u, v);
-                    }
-                }
 
                 foreach (Bone bone in SerializedWEP.Bones)
                 {
@@ -91,9 +81,9 @@ namespace VS.FileFormats.WEP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[0]].GetAbsPosition());
                             meshWeights.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[0]].boneWeight);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[2]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[1]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[0]);
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(2, SerializedWEP.TIM.width -1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(1, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(0, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
 
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[1]].GetAbsPosition());
@@ -104,9 +94,9 @@ namespace VS.FileFormats.WEP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[3]].GetAbsPosition());
                             meshWeights.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[3]].boneWeight);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[1]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[2]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[3]);
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(1, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(2, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(3, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
 
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[0]].GetAbsPosition());
@@ -117,9 +107,9 @@ namespace VS.FileFormats.WEP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[2]].GetAbsPosition());
                             meshWeights.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[2]].boneWeight);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[0]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[3]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[2]);
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(0, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(3, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(2, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
 
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[0]].GetAbsPosition());
@@ -130,9 +120,9 @@ namespace VS.FileFormats.WEP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[3]].GetAbsPosition());
                             meshWeights.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[3]].boneWeight);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[0]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[1]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[3]);
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(0, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(1, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(3, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
                         }
                         else
                         {
@@ -145,9 +135,9 @@ namespace VS.FileFormats.WEP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[2]].GetAbsPosition());
                             meshWeights.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[2]].boneWeight);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[0]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[1]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[2]);
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(0, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(1, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(2, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
 
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[3]].GetAbsPosition());
@@ -158,9 +148,9 @@ namespace VS.FileFormats.WEP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[1]].GetAbsPosition());
                             meshWeights.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[1]].boneWeight);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[3]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[2]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[1]);
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(3, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(2, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(1, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
                         }
                     }
                     else if (SerializedWEP.Faces[i].type == 0x24)
@@ -176,9 +166,9 @@ namespace VS.FileFormats.WEP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[2]].GetAbsPosition());
                             meshWeights.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[2]].boneWeight);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[1]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[2]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[0]);
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(1, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(2, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(0, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
 
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[2]].GetAbsPosition());
@@ -189,9 +179,9 @@ namespace VS.FileFormats.WEP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[0]].GetAbsPosition());
                             meshWeights.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[0]].boneWeight);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[0]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[1]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[2]);
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(0, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(1, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(2, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
                         }
                         else
                         {
@@ -204,9 +194,9 @@ namespace VS.FileFormats.WEP
                             meshTriangles.Add(meshVertices.Count);
                             meshVertices.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[2]].GetAbsPosition());
                             meshWeights.Add(SerializedWEP.Vertices[SerializedWEP.Faces[i].vertices[2]].boneWeight);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[1]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[2]);
-                            meshTrianglesUV.Add(SerializedWEP.Faces[i].uv[0]);
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(1, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(2, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
+                            meshTrianglesUV.Add(SerializedWEP.Faces[i].GetUV(0, SerializedWEP.TIM.width - 1, SerializedWEP.TIM.height - 1));
                         }
                     }
                 }
