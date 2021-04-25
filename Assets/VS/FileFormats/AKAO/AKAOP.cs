@@ -207,7 +207,7 @@ namespace VS.FileFormats.AKAO
             new AKAOP("Unknown Meta 0x18",  0xFE, 2, 0x18),
             new AKAOP("Notes Volume Slide", 0xFE, 4, 0x19),
             new AKAOP("Unknown Meta 0x1A",  0xFE, 2, 0x1A),
-            new AKAOP("Unknown Meta 0x1B",  0xFE, 2, 0x1B), // 1A Off
+            new AKAOP("Unknown Meta 0x1B",  0xFE, 2, 0x1B), // turn 1A Off
             new AKAOP("Unknown Meta 0x1C",  0xFE, 3, 0x1C),
             new AKAOP("Use Reserved",       0xFE, 2, 0x1D),
             new AKAOP("Use Reserved Off",   0xFE, 2, 0x1E),

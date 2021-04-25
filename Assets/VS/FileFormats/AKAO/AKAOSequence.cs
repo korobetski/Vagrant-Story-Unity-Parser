@@ -1,9 +1,11 @@
-﻿using Scripts.FileFormats.MIDI;
+﻿using FileFormats;
+using Scripts.FileFormats.MIDI;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using VS.Core;
 using VS.Utils;
 
 namespace VS.FileFormats.AKAO
@@ -42,6 +44,22 @@ namespace VS.FileFormats.AKAO
 
 
         public uint numTracks { get => ToolBox.GetNumPositiveBits(bitwiseNumTracks); }
+
+        public List<byte> programs
+        {
+            get
+            {
+                List<byte> progs = new List<byte>();
+                foreach (AKAOTrack trk in tracks)
+                {
+                    foreach (byte prg in trk.programs)
+                    {
+                        if (!progs.Contains(prg)) progs.Add(prg);
+                    }
+                }
+                return progs;
+            }
+        }
 
 
 
@@ -134,7 +152,7 @@ namespace VS.FileFormats.AKAO
             }
 
 
-            uint instrCount;
+            byte instrCount;
             // Instruments
             if (ptrInstruments > 0x30)
             {
@@ -154,7 +172,7 @@ namespace VS.FileFormats.AKAO
                     }
                 }
 
-                instrCount = (uint)instrPtrs.Count;
+                instrCount = (byte)instrPtrs.Count;
                 if (ptrDrums > 0x34)
                 {
                     instrCount++;
@@ -163,7 +181,7 @@ namespace VS.FileFormats.AKAO
                 instruments = new AKAOInstrument[instrPtrs.Count];
                 for (int i = 0; i < instrPtrs.Count; i++)
                 {
-                    AKAOInstrument instrument = new AKAOInstrument((uint)i);
+                    AKAOInstrument instrument = new AKAOInstrument((byte)i);
                     instrument.name = "Instrument #" + (ushort)i;
                     long instrStart = ptrInstruments + 0x20 + instrPtrs[i];
                     long instrEnd;
@@ -211,7 +229,7 @@ namespace VS.FileFormats.AKAO
                         instruments = new AKAOInstrument[1];
                     }
 
-                    AKAOInstrument drum = new AKAOInstrument(instrCount - 1, true);
+                    AKAOInstrument drum = new AKAOInstrument((byte)(instrCount - 1), true);
                     drum.name = "Drum";
                     int drumRegLoop = (int)(length - ptrDrums) / 0x08;
 
@@ -242,12 +260,13 @@ namespace VS.FileFormats.AKAO
 
         public void ConvertToMidi(bool produceSF2 = true)
         {
+            List<byte> A1PC = new List<byte>();
+
+
             // MIDI formats can handle 15 voice channels + 1 drum channel (9)
             // for now we create a new midi channel per AKAO track
             // we will merge channels with the same instrument later
             List<MIDIChannel> channels = new List<MIDIChannel>();
-
-
             for (uint t = 0; t < numTracks; t++)
             {
                 AKAOTrack track = tracks[t];
@@ -355,6 +374,7 @@ namespace VS.FileFormats.AKAO
                             break;
                         case "Program Change(A1)":
                             byte program = op.parameters[0];
+                            if (!A1PC.Contains(program)) A1PC.Add(program);
                             channel.AddEvent(MIDIEvent.MetaTrackName(string.Concat("Instrument ", program)));
                             channel.AddEvent(MIDIEvent.ProgramChange(delta, 0, program));
                             delta = 0;
@@ -409,7 +429,6 @@ namespace VS.FileFormats.AKAO
                             channel.AddEvent(MIDIEvent.ControllerReverb(delta, 0, op.parameters[1]));
                             delta = 0;
                             break;
-                            
 
                         case "Loop Start":
                             repeaterStartPositions.Add(e);
@@ -456,10 +475,14 @@ namespace VS.FileFormats.AKAO
                 }
             }
 
-
             MIDI midi = new MIDI();
             midi.MergeChannels(channels);
             midi.SaveAs(Filename);
+
+            if (produceSF2)
+            {
+                AKAO.BuildSoundFont(this, AKAO.GetAKAOSampleCollections(this, A1PC));
+            }
         }
     }
 

@@ -20,6 +20,8 @@ namespace VS.FileFormats.AKAO
         public uint loopStart = 0;
         private float _prev1 = 0;
         private float _prev2 = 0;
+        private ushort _unityKey = 0;
+        private List<short> _WAVDatas;
 
         public byte[] rawDatas { 
             set
@@ -33,13 +35,15 @@ namespace VS.FileFormats.AKAO
 
         public uint size { get => _size; }
         public uint numBlocks { get => _numBlocks; }
+        public ushort unityKey { get => _unityKey; set => _unityKey = value; }
+        public List<short> WAVDatas { get => _WAVDatas; }
 
         public WAV ConvertToWAV()
         {
-            List<short> WAVDatas = DecompressDatas();
+            _WAVDatas = DecompressDatas();
             bool looping = (loopStart > 0) ? true : false;
             uint lend = (uint)(size * 1.75);
-            WAV wav = new WAV(From16bTo8b(WAVDatas), 1, 1, 44100, 16, looping, loopStart, lend);
+            WAV wav = new WAV(From16bTo8b(_WAVDatas), 1, 1, 44100, 16, looping, loopStart, lend);
             return wav;
         }
 
