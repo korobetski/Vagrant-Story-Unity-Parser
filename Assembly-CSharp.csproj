@@ -69,7 +69,6 @@
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Synthesis\Synthesizer.Constants.cs" />
     <Compile Include="Assets\VS\Data\SmithMaterial.cs" />
     <Compile Include="Assets\VS\FileFormats\GEOM\NVector4.cs" />
-    <Compile Include="Assets\VS\Parser\ZUD.cs" />
     <Compile Include="Assets\Scripts\FileFormats\DLS.cs" />
     <Compile Include="Assets\VS\FileFormats\AKAO\AKAOSample.cs" />
     <Compile Include="Assets\VS\Data\Blade.cs" />
@@ -94,6 +93,7 @@
     <Compile Include="Assets\VS\FileFormats\AKAO\AKAOSampleCollection.cs" />
     <Compile Include="Assets\Scripts\FileFormats\XString.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Midi\MidiFile.cs" />
+    <Compile Include="Assets\Scripts\FileFormats\MIDI\MIDI.cs" />
     <Compile Include="Assets\VS\FileFormats\SHP\SHPLoader.cs" />
     <Compile Include="Assets\VS\FileFormats\AKAO\AKAO.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Util\Riff\LabelChunk.cs" />
@@ -108,6 +108,7 @@
     <Compile Include="Assets\VS\FileFormats\SEQ\SEQ.cs" />
     <Compile Include="Assets\VS\FileFormats\HELP\HF0.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Wave\PcmData.cs" />
+    <Compile Include="Assets\Scripts\FileFormats\MIDI\MIDIEvent.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Sf2\Modulator.cs" />
     <Compile Include="Assets\Scripts\Vagrant Story\Core\DamageType.cs" />
     <Compile Include="Assets\VS\FileFormats\AKAO\AKAORegion.cs" />
@@ -117,9 +118,7 @@
     <Compile Include="Assets\Scripts\Bestiary.cs" />
     <Compile Include="Assets\Scripts\Vagrant Story\Core\SpellEffect.cs" />
     <Compile Include="Assets\Scripts\FileFormats\SF2.cs" />
-    <Compile Include="Assets\VS\Parser\SHP.cs" />
     <Compile Include="Assets\Scripts\FileFormats\VLQ.cs" />
-    <Compile Include="Assets\VS\Parser\TIM.cs" />
     <Compile Include="Assets\VS\FileFormats\SYD\SYD.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\Components\Generators\WhiteNoiseGenerator.cs" />
     <Compile Include="Assets\VS\FileFormats\ITEM\Grip.cs" />
@@ -138,7 +137,6 @@
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Sf2\Enum.cs" />
     <Compile Include="Assets\Scripts\Forge.cs" />
     <Compile Include="Assets\Scripts\Vagrant Story\Database\SpellsDB.cs" />
-    <Compile Include="Assets\VS\Parser\ARM.cs" />
     <Compile Include="Assets\Scripts\FileFormats\SF2\SF2Types.cs" />
     <Compile Include="Assets\VS\Enums\Class.cs" />
     <Compile Include="Assets\VS\FileFormats\EFFECT\PSprite.cs" />
@@ -149,7 +147,6 @@
     <Compile Include="Assets\Scripts\SceneSwitcher.cs" />
     <Compile Include="Assets\Scripts\FileFormats\XMF.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Properties\AssemblyInfo.cs" />
-    <Compile Include="Assets\VS\Parser\WEP.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\DescriptorList.cs" />
     <Compile Include="Assets\VS\FileFormats\EFFECT\EFFECT.cs" />
     <Compile Include="Assets\VS\Parser\AKAO\AKAOInstrument.cs" />
@@ -157,11 +154,11 @@
     <Compile Include="Assets\Scripts\FileFormats\SMF.cs" />
     <Compile Include="Assets\VS\FileFormats\ZND\Skill.cs" />
     <Compile Include="Assets\VS\FileFormats\MPD\MPDTextureAnimation.cs" />
+    <Compile Include="Assets\Scripts\FileFormats\MIDI\MIDIChannel.cs" />
     <Compile Include="Assets\VS\FileFormats\ITEM\MiscItem.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Util\Riff\FormatChunk.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\PatchBank.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\Patches\Sf2Patch.cs" />
-    <Compile Include="Assets\VS\Parser\SEQ.cs" />
     <Compile Include="Assets\VS\FileFormats\STR\STR.cs" />
     <Compile Include="Assets\VS\FileFormats\EFFECT\PLG.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Util\Tables.cs" />
@@ -200,12 +197,10 @@
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Util\Riff\DataChunk.cs" />
     <Compile Include="Assets\Scripts\Vagrant Story\Items\Armor.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\Components\Filter.cs" />
-    <Compile Include="Assets\VS\Parser\BIN.cs" />
     <Compile Include="Assets\VS\FileFormats\SYD\SYDItem.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Sfz\SfzReader.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\Patches\Patch.cs" />
     <Compile Include="Assets\VS\FileFormats\ITEM\Gem.cs" />
-    <Compile Include="Assets\VS\Parser\MPD.cs" />
     <Compile Include="Assets\VS\FileFormats\MPD\MPDGroup.cs" />
     <Compile Include="Assets\VS\FileFormats\TIM\TIM.cs" />
     <Compile Include="Assets\VS\Data\ClassAffinityType.cs" />
@@ -241,7 +236,6 @@
     <Compile Include="Assets\VS\Utils\JsonHelper.cs" />
     <Compile Include="Assets\Scripts\FileFormats\WAV.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\Descriptors\IDescriptor.cs" />
-    <Compile Include="Assets\VS\Parser\SYD.cs" />
     <Compile Include="Assets\VS\FileFormats\ZND\ZNDWeapon.cs" />
     <Compile Include="Assets\VS\FileFormats\MPD\MPDItem11.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Midi\MidiTrack.cs" />
@@ -262,7 +256,6 @@
     <Compile Include="Assets\VS\FileFormats\TIM\Palette.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Synthesis\SynthHelper.cs" />
     <Compile Include="Assets\VS\Enums\Item.cs" />
-    <Compile Include="Assets\VS\Parser\EVT.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Sf2\Sf2Region.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Wave\WaveHelper.cs" />
     <Compile Include="Assets\VS\FileFormats\BIN\MONList.cs" />
@@ -343,7 +336,6 @@
     <Compile Include="Assets\VS\FileFormats\TIM\GIM.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\SampleDataAsset.cs" />
     <Compile Include="Assets\VS\FileFormats\GEOM\Group.cs" />
-    <Compile Include="Assets\VS\Parser\ZND.cs" />
   </ItemGroup>
   <ItemGroup>
      <None Include="Assets\Shaders\StandardTriplanar.shader" />

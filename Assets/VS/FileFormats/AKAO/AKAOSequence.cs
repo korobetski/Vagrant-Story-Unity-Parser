@@ -1,9 +1,8 @@
-﻿using System;
+﻿using Scripts.FileFormats.MIDI;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 using VS.Utils;
 
@@ -11,6 +10,7 @@ namespace VS.FileFormats.AKAO
 {
     public class AKAOSequence : ScriptableObject
     {
+        public static readonly ushort[] DELTA_TIME_TABLE = { 192, 96, 48, 24, 12, 6, 3, 32, 16, 8, 4 };
         public string Filename;
 
         public ushort id;
@@ -106,7 +106,7 @@ namespace VS.FileFormats.AKAO
                 ptrTracks[i] = (ushort)(buffer.BaseStream.Position + buffer.ReadUInt16());
             }
 
-            uint endTracks = 0;
+            uint endTracks;
             if (ptrInstruments > 0x30)
             {
                 endTracks = ptrInstruments;
@@ -130,11 +130,11 @@ namespace VS.FileFormats.AKAO
                 int trackLength = (int)ptrTracks[i + 1] - (int)ptrTracks[i];
                 if (trackLength < 0) trackLength = 0; 
                 tracks[i] = new AKAOTrack();
-                tracks[i].SetDatas(buffer.ReadBytes(trackLength));
+                tracks[i].SetDatas(buffer.ReadBytes(trackLength), ptrTracks[i]);
             }
 
 
-            uint instrCount = 0;
+            uint instrCount;
             // Instruments
             if (ptrInstruments > 0x30)
             {
@@ -235,6 +235,246 @@ namespace VS.FileFormats.AKAO
                     instruments[0] = drum;
                 }
 
+            }
+
+            if (unk2 == 0) ConvertToMidi();
+        }
+
+        public void ConvertToMidi(bool produceSF2 = true)
+        {
+            // MIDI formats can handle 15 voice channels + 1 drum channel (9)
+            // for now we create a new midi channel per AKAO track
+            // we will merge channels with the same instrument later
+            List<MIDIChannel> channels = new List<MIDIChannel>();
+
+
+            for (uint t = 0; t < numTracks; t++)
+            {
+                AKAOTrack track = tracks[t];
+                uint trackPtr = ptrTracks[t];
+
+                MIDIChannel channel = new MIDIChannel(0);
+                channel.id = t;
+                channel.programs = track.programs;
+                
+                channels.Add(channel);
+
+                int repeatIndex = -1;
+                int repeatNumber = 0;
+                List<long> repeaterStartPositions = new List<long>();
+                List<long> repeaterEndPositions = new List<long>();
+
+                bool keyPlaying = false;
+                byte currentKey = 0;
+                uint delta = 0;
+                byte octave = 0;
+                byte velocity = 0x80;
+
+                void NoteOff()
+                {
+                    if (keyPlaying == true)
+                    {
+                        channel.AddEvent(MIDIEvent.NoteOff(delta, 0, currentKey, velocity));
+                        delta = 0;
+                        currentKey = 0;
+                        keyPlaying = false;
+                    }
+                }
+
+                for (uint e = 0; e < track.operations.Length; e++)
+                {
+                    void BackToStart(byte inc = 2)
+                    {
+                        if (!repeaterEndPositions.Contains(e))
+                        {
+                            repeaterEndPositions.Add(e);
+                            repeatNumber = inc;
+                        }
+
+                        if (repeatNumber >= 2 && repeaterStartPositions.Count > repeatIndex)
+                        {
+                            e = (uint)repeaterStartPositions[repeatIndex];
+                            repeatNumber--;
+                        }
+                        else
+                        {
+                            if (repeatIndex > 0) // We want to keep the level 0 repeat start
+                            {
+                                repeaterStartPositions.RemoveAt(repeatIndex);
+                                repeatIndex--;
+                            }
+                        }
+                    }
+
+                    AKAOP op = track.operations[e];
+                    uint eventPtr = op.adr;
+                    switch (op.name)
+                    {
+                        case "Note On":
+                            NoteOff();
+                            int relativeKey = op.op / 11;
+                            uint length = (uint) op.op % 11;
+                            byte key = (byte)(octave * 12 + relativeKey);
+                            channel.AddEvent(MIDIEvent.NoteOn(delta, 0, key, velocity));
+                            delta = DELTA_TIME_TABLE[length];
+                            keyPlaying = true;
+                            currentKey = key;
+                            break;
+                        case "Note On *":
+                            NoteOff();
+                            relativeKey = op.op - 0xF0;
+                            length = op.parameters[0];
+                            key = (byte)(octave * 12 + relativeKey);
+                            channel.AddEvent(MIDIEvent.NoteOn(delta, 0, key, velocity));
+                            delta = length;
+                            keyPlaying = true;
+                            currentKey = key;
+                            break;
+                        case "Tie":
+                            length = (uint)op.op % 11;
+                            delta += DELTA_TIME_TABLE[length];
+                            break;
+                        case "Tie *":
+                            length = op.parameters[0];
+                            delta += length;
+                            break;
+                        case "Rest":
+                            NoteOff();
+                            length = (uint) op.op % 11;
+                            delta += DELTA_TIME_TABLE[length];
+                            break;
+                        case "Rest *":
+                            NoteOff();
+                            length = op.parameters[0];
+                            delta += length;
+                            break;
+                        case "End Track":
+                            NoteOff();
+                            //channel.AddEvent(MIDIEvent.MetaEndTrack());
+                            delta = 0;
+                            break;
+                        case "Program Change(A1)":
+                            byte program = op.parameters[0];
+                            channel.AddEvent(MIDIEvent.MetaTrackName(string.Concat("Instrument ", program)));
+                            channel.AddEvent(MIDIEvent.ProgramChange(delta, 0, program));
+                            delta = 0;
+                            break;
+                        case "Delta":
+                            length = op.parameters[0];
+                            delta = length;
+                            break;
+                        case "Volume":
+                            byte volume = op.parameters[0];
+                            channel.AddEvent(MIDIEvent.ControllerVolume(delta, 0, volume));
+                            delta = 0;
+                            break;
+                        case "Portamento":
+                            break;
+                        case "Octave":
+                            octave = op.parameters[0];
+                            break;
+                        case "Increase Octave":
+                            octave++;
+                            break;
+                        case "Decrease Octave":
+                            octave--;
+                            break;
+                        case "Expression":
+                            // we use expression to set next notes velocity instead
+                            // channel volume will only be controlled by op Volume
+                            byte expression = op.parameters[0];
+                            velocity = expression;
+                            //channel.AddEvent(MIDIEvent.ControllerExpression(delta, 0, expression));
+                            break;
+                        case "Expression Slide":
+                            break;
+                        case "Pan":
+                            byte pan = op.parameters[0];
+                            if (channel.pan == null) channel.pan = pan; 
+                            channel.AddEvent(MIDIEvent.ControllerPan(delta, 0, pan));
+                            delta = 0;
+                            break;
+                        case "Pan Slide":
+                            break;
+                        case "Reverb On":
+                            channel.AddEvent(MIDIEvent.ControllerReverb(delta, 0, 0x80));
+                            delta = 0;
+                            break;
+                        case "Reverb Off":
+                            channel.AddEvent(MIDIEvent.ControllerReverb(delta, 0, 0x00));
+                            delta = 0;
+                            break;
+                        case "Reverb Depth":
+                            // the first parameter seems to be always 0x00
+                            channel.AddEvent(MIDIEvent.ControllerReverb(delta, 0, op.parameters[1]));
+                            delta = 0;
+                            break;
+                            
+
+                        case "Loop Start":
+                            repeaterStartPositions.Add(e);
+                            repeatIndex++;
+                            break;
+                        case "Loop Return X":
+                            byte numLoop = op.parameters[0];
+                            BackToStart(numLoop);
+                            break;
+                        case "Loop Return":
+                            BackToStart();
+                            break;
+
+                        case "Tempo":
+                            ushort tempo = BitConverter.ToUInt16(op.parameters, 0);
+                            channel.AddEvent(MIDIEvent.MetaTempo(delta, tempo));
+                            delta = 0;
+                            break;
+                        case "Drum Mode On":
+                            channel.drum = true;
+                            break;
+                        case "Drum Mode Off":
+                            break;
+                        case "Jump To":
+                            break;
+                        case "Conditinal Jump":
+                            break;
+                        case "Loop Jump":
+                            break;
+                        case "Loop Break":
+                            break;
+                        case "Program Change * ":
+                            program = op.parameters[0];
+                            channel.AddEvent(MIDIEvent.MetaTrackName(string.Concat("Instrument ", program)));
+                            channel.AddEvent(MIDIEvent.ProgramChange(delta, 0, program));
+                            delta = 0;
+                            break;
+                        case "Time Signature":
+                            break;
+                        case "Measure Number":
+                            channel.AddEvent(MIDIEvent.MetaMarker(op.parameters[0], op.parameters[1]));
+                            break;
+                    }
+                }
+            }
+
+
+            MIDI midi = new MIDI();
+            midi.MergeChannels(channels);
+            midi.SaveAs(Filename);
+        }
+    }
+
+    [CustomEditor(typeof(AKAOSequence))]
+    public class AKAOSequenceEditor : Editor
+    {
+        bool sf2Trigger = true;
+        public override void OnInspectorGUI()
+        {
+            var akaoSeq = target as AKAOSequence;
+            DrawDefaultInspector();
+            sf2Trigger = GUILayout.Toggle(sf2Trigger, new GUIContent("Produce a SF2 (soundfont) file ?"));
+            if (GUILayout.Button("Export as MIDI File"))
+            {
+                akaoSeq.ConvertToMidi(sf2Trigger);
             }
         }
     }

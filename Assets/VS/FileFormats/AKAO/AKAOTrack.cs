@@ -6,11 +6,13 @@ namespace VS.FileFormats.AKAO
     [Serializable]
     public class AKAOTrack
     {
+        public List<byte> programs;
         public AKAOP[] operations;
 
 
-        public void SetDatas(byte[] _datas)
+        public void SetDatas(byte[] _datas, uint trackPtr)
         {
+            programs = new List<byte>();
             List<AKAOP> ops = new List<AKAOP>();
 
             uint i = 0;
@@ -25,7 +27,7 @@ namespace VS.FileFormats.AKAO
                     byte meta = _datas[i];
                     i++;
                     evt = AKAOP.GetMeta(meta).Clone();
-                    evt.adr = i - 2;
+                    evt.adr = trackPtr + i - 2;
                     if (evt.length > 2 && (i + evt.length - 2) <= _datas.Length) 
                     {
                         List<byte> parameters = new List<byte>();
@@ -40,7 +42,7 @@ namespace VS.FileFormats.AKAO
                 else
                 {
                     evt = AKAOP.GetOp(op).Clone();
-                    evt.adr = i - 1;
+                    evt.adr = trackPtr + i - 1;
                     evt.op = op;
                     if (evt.length > 1 && (i + evt.length - 1) <= _datas.Length)
                     {
@@ -55,6 +57,13 @@ namespace VS.FileFormats.AKAO
                 }
 
                 ops.Add(evt);
+                if (evt.name == "Program Change(A1)" || evt.name == "Program Change * ")
+                {
+                    if (!programs.Contains(evt.parameters[0]))
+                    {
+                        programs.Add(evt.parameters[0]);
+                    }
+                }
             }
 
             operations = ops.ToArray();
