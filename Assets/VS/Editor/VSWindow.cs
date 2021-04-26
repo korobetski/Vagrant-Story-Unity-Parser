@@ -719,7 +719,7 @@ public class VSWindow : EditorWindow
     {
         MPD mpd = ScriptableObject.CreateInstance<MPD>();
         mpd.ParseFromFile(path);
-        UnityEngine.Object[] subAssets = new UnityEngine.Object[] { mpd.miniMap, mpd.scriptSection, mpd.treasureSection };
+        UnityEngine.Object[] subAssets = new UnityEngine.Object[] { mpd.miniMap, mpd.scriptSection, mpd.treasureSection, mpd.AKAOSequence };
 
         ToolBox.SaveScriptableObject("Assets/Resources/Serialized/MPD/", mpd.Filename + ".MPD.yaml.asset", mpd, subAssets);
     }

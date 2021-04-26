@@ -270,7 +270,7 @@ namespace VS.FileFormats.AKAO
             for (uint t = 0; t < numTracks; t++)
             {
                 AKAOTrack track = tracks[t];
-                uint trackPtr = ptrTracks[t];
+                //uint trackPtr = ptrTracks[t];
 
                 MIDIChannel channel = new MIDIChannel(0);
                 channel.id = t;

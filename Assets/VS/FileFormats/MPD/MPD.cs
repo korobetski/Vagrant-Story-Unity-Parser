@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using UnityEditor;
 using UnityEngine;
+using VS.Core;
+using VS.FileFormats.AKAO;
 using VS.FileFormats.ITEM;
 using VS.Utils;
+
 
 namespace VS.FileFormats.MPD
 {
@@ -69,7 +71,7 @@ namespace VS.FileFormats.MPD
 
         public byte[] SubSection06;
         public byte[] SubSection07;
-        //public byte[] SubSection08;
+        private byte[] SubSection08;
 
         public MPDTrap[] traps;
 
@@ -79,7 +81,7 @@ namespace VS.FileFormats.MPD
         public MPDTextureAnimation[] textureAnimations;
 
         public MPDItemD[] SubSection0D;
-        //public byte[] SubSection0E;
+        private byte[] SubSection0E;
 
         public ARM.ARM miniMap;
 
@@ -88,11 +90,16 @@ namespace VS.FileFormats.MPD
 
         public byte[] FloatingStoneSection;
         public byte[] ChestInteractionSection;
-        public byte[] AKAOSection;
+        // AKAO
+        //public byte[] AKAOSection;
+        public byte[] AKAOSectionHeader;
+        public bool AKAOSign;
+        public byte[] AKAOHeader;
+        public AKAOSequence AKAOSequence;
 
-        //public byte[] SubSection15;
-        //public byte[] SubSection16;
-        //public byte[] SubSection17;
+        private byte[] SubSection15;
+        private byte[] SubSection16;
+        private byte[] SubSection17;
 
         public ushort[] CameraAreaSection;
 
@@ -371,7 +378,7 @@ namespace VS.FileFormats.MPD
 
                 if (lenSubSection08 > 0)
                 {
-                    //SubSection08 = buffer.ReadBytes((int)lenSubSection08);
+                    SubSection08 = buffer.ReadBytes((int)lenSubSection08);
                 }
 
                 if (lenTrapSection > 0)
@@ -401,6 +408,7 @@ namespace VS.FileFormats.MPD
 
                 if (lenSubSection0A > 0)
                 {
+                    long ptrSection0A = buffer.BaseStream.Position;
                     //SubSection0A = buffer.ReadBytes((int)lenSubSection0A);
                     uint numItemA = lenSubSection0A / 20;
                     SubSection0A = new MPDItemA[numItemA];
@@ -409,6 +417,8 @@ namespace VS.FileFormats.MPD
                         MPDItemA itemA = new MPDItemA(buffer.ReadBytes(20));
                         SubSection0A[i] = itemA;
                     }
+
+                    buffer.BaseStream.Position = ptrSection0A + lenSubSection0A;
                 }
 
                 if (lenSubSection0B > 0)
@@ -456,10 +466,10 @@ namespace VS.FileFormats.MPD
 
                 if (lenSubSection0D > 0)
                 {
-                    long sectionDPtr = buffer.BaseStream.Position;
+                    long ptrSection0D = buffer.BaseStream.Position;
                     //SubSection0D = buffer.ReadBytes((int)lenSubSection0D);
                     List<MPDItemD> _sectionD = new List<MPDItemD>();
-                    while(buffer.BaseStream.Position < sectionDPtr + lenSubSection0D)
+                    while(buffer.BaseStream.Position < ptrSection0D + lenSubSection0D)
                     {
                         byte len = buffer.ReadByte();
                         buffer.BaseStream.Position -= 1;
@@ -474,11 +484,13 @@ namespace VS.FileFormats.MPD
                     }
 
                     SubSection0D = _sectionD.ToArray();
+
+                    buffer.BaseStream.Position = ptrSection0D + lenSubSection0D;
                 }
 
                 if (lenSubSection0E > 0)
                 {
-                    //SubSection0E = buffer.ReadBytes((int)lenSubSection0E);
+                    SubSection0E = buffer.ReadBytes((int)lenSubSection0E);
                 }
 
                 if (lenMiniMapSection > 0)
@@ -488,7 +500,7 @@ namespace VS.FileFormats.MPD
                     // ARM Format, can be loaded in the ARMLoader
                     ARM.ARM arm = ScriptableObject.CreateInstance<ARM.ARM>();
                     arm.name = Filename + ".ARM";
-                    arm.ParseFromBuffer(buffer, buffer.BaseStream.Position + lenMiniMapSection);
+                    arm.ParseFromBuffer(buffer, ptrMiniMapSection + lenMiniMapSection);
 
                     miniMap = arm;
 
@@ -522,6 +534,8 @@ namespace VS.FileFormats.MPD
 
                 if (lenSubSection11 > 0)
                 {
+                    long ptrSection11 = buffer.BaseStream.Position;
+
                     //SubSection11 = buffer.ReadBytes((int)lenSubSection11);
                     uint numItem11 = lenSubSection11 / 12;
                     SubSection11 = new MPDItem11[numItem11];
@@ -530,132 +544,8 @@ namespace VS.FileFormats.MPD
                         MPDItem11 item11 = new MPDItem11(buffer.ReadBytes(12));
                         SubSection11[i] = item11;
                     }
-                    // MAP013.MPD
-                    //  4030 0600 050b 0f15 1a1c 0000
-                    //  6030 0600 050b 0f15 1a1c 0000
-                    //  8030 0600 050b 0f15 1a1c 0000
-                    //  a030 0600 050b 0f15 1a1c 0000
-                    //  4130 0600 050b 0f15 1a1c 0000
-                    //  6130 0600 050b 0f15 1a1c 0000
-                    //  8130 0600 050b 0f15 1a1c 0000
-                    //  a130 0600 050b 0f15 1a1c 0000
-                    //  4230 0600 050b 0f15 1a1c 0000
-                    //  6230 0600 050b 0f15 1a1c 0000
-                    //  8230 0600 050b 0f15 1a1c 0000
-                    //  a230 0600 050b 0f15 1a1c 0000
-                    //  2330 0600 050b 0f15 1a1c 0000
-                    //  4330 0600 050b 0f15 1a1c 0000
-                    //  6330 0600 050b 0f15 1a1c 0000
-                    //  8330 0600 050b 0f15 1a1c 0000
-                    //  a330 0600 050b 0f15 1a1c 0000
-                    // MAP015.MPD
-                    //  4031 0500 0417 2530 3100 0000
-                    //  4131 0500 0417 2530 3100 0000
-                    //  4231 0500 0417 2530 3100 0000
-                    //  433105000417253031000000
-                    //  443105000417253031000000
-                    //  453105000417253031000000
-                    //  463105000417253031000000
-                    //  473105000417253031000000
-                    //  483105000417253031000000
-                    //  493105000417253031000000
-                    //  4a3105000417253031000000
-                    //  4b3105000417253031000000
-                    //  4c3105000417253031000000
-                    //  4d3105000417253031000000
-                    //  203105000417253031000000
-                    //  213105000417253031000000
-                    //  223105000417253031000000
-                    //  233105000417253031000000
-                    //  243105000417253031000000
-                    //  253105000417253031000000
-                    //  263105000417253031000000
-                    //  273105000417253031000000
-                    //  283105000417253031000000
-                    //  293105000417253031000000
-                    //  2a3105000417253031000000
-                    //  2b3105000417253031000000
-                    //  2c3105000417253031000000
-                    //  2d3105000417253031000000
-                    //  003105000417253031000000
-                    //  013105000417253031000000
-                    //  023105000417253031000000
-                    //  033105000417253031000000
-                    //  043105000417253031000000
-                    //  053105000417253031000000
-                    //  063105000417253031000000
-                    //  073105000417253031000000
-                    //  083105000417253031000000
-                    //  093105000417253031000000
-                    //  0a3105000417253031000000
-                    //  0b3105000417253031000000
-                    //  0c3105000417253031000000
-                    //  0d3105000417253031000000
-                    //  407105000417253031000000
-                    //  417105000417253031000000
-                    //  427105000417253031000000
-                    //  437105000417253031000000
-                    //  447105000417253031000000
-                    //  207105000417253031000000
-                    //  217105000417253031000000
-                    //  227105000417253031000000
-                    //  237105000417253031000000
-                    //  247105000417253031000000
-                    //  007105000417253031000000
-                    //  017105000417253031000000
-                    //  027105000417253031000000
-                    //  037105000417253031000000
-                    //  0471 0500 0417 2530 3100 0000
-                    // MAP051.MPD
-                    // 2601 0400 0715 1a1b 2701 0400
-                    // MAP053.MPD
-                   //  7560 0300 0f1c 2400 7520 0300
-                   //  0f1c 2400 f560 0300 0f1c 2400
-                   //  f520 0300 0f1c 2400 1561 0300
-                   //  0f1c 2400 1521 0300 0f1c 2400
-                   //  7460 0300 0f1c 2400 7420 0300
-                   //  0f1c 2400 f460 0300 0f1c 2400
-                   //  f420 0300 0f1c 2400 1461 0300
-                   //  0f1c 2400 1421 0300 0f1c 2400
-                   //  3461 0300 0f1c 2400 3421 0300
-                   //  0f1c 2400 5360 0300 0f1c 2400
-                   //  5320 0300 0f1c 2400 7360 0300
-                   //  0f1c2400732003000f1c2400
-                   //  936003000f1c240093200300
-                   //  0f1c2400b36003000f1c2400
-                   //  b32003000f1c2400d3600300
-                   //  0f1c2400d32003000f1c2400
-                   //  f36003000f1c2400f3200300
-                   //  0f1c2400136103000f1c2400
-                   //  132103000f1c240033610300
-                   //  0f1c2400332103000f1c2400
-                   //  526003000f1c240052200300
-                   //  0f1c2400726003000f1c2400
-                   //  722003000f1c240092600300
-                   //  0f1c2400922003000f1c2400
-                   //  b26003000f1c2400b2200300
-                   //  0f1c2400d26003000f1c2400
-                   //  d22003000f1c2400f2600300
-                   //  0f1c2400f22003000f1c2400
-                   //  126103000f1c240012210300
-                   //  0f1c2400326103000f1c2400
-                   //  322103000f1c240071600300
-                   //  0f1c2400916003000f1c2400
-                   //  912003000f1c2400b1600300
-                   //  0f1c2400b12003000f1c2400
-                   //  d16003000f1c2400d1200300
-                   //  0f1c2400f16003000f1c2400
-                   //  f12003000f1c240011610300
-                   //  0f1c2400112103000f1c2400
-                   //  316103000f1c240031210300
-                   //  0f1c2400b06003000f1c2400
-                   //  d06003000f1c2400f0600300
-                   //  0f1c2400106103000f1c2400
-                   //  c9180200012c0000c9200200
-                   //  012c0000c8180200012c0000
-                   //  c8200200012c0000c7180200
-                   //  012c0000c7200200012c0000
-                   //  a6180200012c0000a6200200
+
+                    buffer.BaseStream.Position = ptrSection11 + lenSubSection11;
                 }
 
                 if (lenFloatingStoneSection > 0)
@@ -670,22 +560,60 @@ namespace VS.FileFormats.MPD
 
                 if (lenAKAOSection > 0)
                 {
-                    AKAOSection = buffer.ReadBytes((int)lenAKAOSection);
+                    //AKAOSection = buffer.ReadBytes((int)lenAKAOSection);
+
+                    // AKAO section header 12 bytes
+                    AKAOSectionHeader = buffer.ReadBytes(12);
+                    // AKAO signature
+                    AKAOSign = AKAO.AKAO.CheckHeader(buffer.ReadBytes(4));
+                    // single track format header
+                    AKAOHeader = buffer.ReadBytes(30);
+                    uint firstTrackLength = buffer.ReadUInt16();
+                    AKAOSequence = ScriptableObject.CreateInstance<AKAOSequence>();
+                    AKAOSequence.name = Filename + ".AKAO";
+                    AKAOSequence.Filename = AKAOSequence.name;
+                    AKAOSequence.length = (ushort)(lenAKAOSection - 12);
+
+                    // we need the associated ZND to get sample collection ID
+                    ZND.ZND SerializedZND = null;
+                    string zndFileName = ToolBox.MPDToZND(string.Concat(Filename, ".MPD"), false);
+                    if (zndFileName != null)
+                    {
+                        SerializedZND = Resources.Load<ZND.ZND>(string.Concat("Serialized/ZND/", zndFileName, ".yaml.asset"));
+                        if (SerializedZND == null)
+                        {
+                            // Corresponding serialized ZND not found, so we try to serialize
+                            VSPConfig conf = Memory.LoadConfig();
+                            string zndFilePath = string.Concat(conf.VSPath, "MAP/", zndFileName);
+                            SerializedZND = ScriptableObject.CreateInstance<ZND.ZND>();
+                            SerializedZND.ParseFromFile(zndFilePath);
+
+                            ToolBox.SaveScriptableObject("Assets/Resources/Serialized/ZND/", SerializedZND.Filename + ".ZND.yaml.asset", SerializedZND, SerializedZND.TIMs);
+                        }
+                    }
+
+                    AKAOSequence.sampleCollectionId = (SerializedZND != null) ? SerializedZND.waveId : (uint)50;
+                    AKAOSequence.bitwiseNumTracks = 0x03; // always two tracks ?
+                    AKAOSequence.tracks = new AKAOTrack[2];
+                    AKAOSequence.tracks[0] = new AKAOTrack();
+                    AKAOSequence.tracks[0].SetDatas(buffer.ReadBytes((int)(firstTrackLength)), (uint)buffer.BaseStream.Position);
+                    AKAOSequence.tracks[1] = new AKAOTrack();
+                    AKAOSequence.tracks[1].SetDatas(buffer.ReadBytes((int)(lenAKAOSection - 48 - firstTrackLength)), (uint)buffer.BaseStream.Position);
                 }
 
                 if (lenSubSection15 > 0)
                 {
-                    //SubSection15 = buffer.ReadBytes((int)lenSubSection15);
+                    SubSection15 = buffer.ReadBytes((int)lenSubSection15);
                 }
 
                 if (lenSubSection16 > 0)
                 {
-                    //SubSection16 = buffer.ReadBytes((int)lenSubSection16);
+                    SubSection16 = buffer.ReadBytes((int)lenSubSection16);
                 }
 
                 if (lenSubSection17 > 0)
                 {
-                    //SubSection17 = buffer.ReadBytes((int)lenSubSection17);
+                    SubSection17 = buffer.ReadBytes((int)lenSubSection17);
                 }
 
                 if (lenCameraAreaSection > 0)
