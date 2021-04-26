@@ -93,9 +93,7 @@ namespace VS.FileFormats.MPD
         // AKAO
         //public byte[] AKAOSection;
         public byte[] AKAOSectionHeader;
-        public bool AKAOSign;
-        public byte[] AKAOHeader;
-        public AKAOSequence AKAOSequence;
+        public AKAOSoundEffect AKAOSoundEffect;
 
         private byte[] SubSection15;
         private byte[] SubSection16;
@@ -564,41 +562,9 @@ namespace VS.FileFormats.MPD
 
                     // AKAO section header 12 bytes
                     AKAOSectionHeader = buffer.ReadBytes(12);
-                    // AKAO signature
-                    AKAOSign = AKAO.AKAO.CheckHeader(buffer.ReadBytes(4));
-                    // single track format header
-                    AKAOHeader = buffer.ReadBytes(30);
-                    uint firstTrackLength = buffer.ReadUInt16();
-                    AKAOSequence = ScriptableObject.CreateInstance<AKAOSequence>();
-                    AKAOSequence.name = Filename + ".AKAO";
-                    AKAOSequence.Filename = AKAOSequence.name;
-                    AKAOSequence.length = (ushort)(lenAKAOSection - 12);
-
-                    // we need the associated ZND to get sample collection ID
-                    ZND.ZND SerializedZND = null;
-                    string zndFileName = ToolBox.MPDToZND(string.Concat(Filename, ".MPD"), false);
-                    if (zndFileName != null)
-                    {
-                        SerializedZND = Resources.Load<ZND.ZND>(string.Concat("Serialized/ZND/", zndFileName, ".yaml.asset"));
-                        if (SerializedZND == null)
-                        {
-                            // Corresponding serialized ZND not found, so we try to serialize
-                            VSPConfig conf = Memory.LoadConfig();
-                            string zndFilePath = string.Concat(conf.VSPath, "MAP/", zndFileName);
-                            SerializedZND = ScriptableObject.CreateInstance<ZND.ZND>();
-                            SerializedZND.ParseFromFile(zndFilePath);
-
-                            ToolBox.SaveScriptableObject("Assets/Resources/Serialized/ZND/", SerializedZND.Filename + ".ZND.yaml.asset", SerializedZND, SerializedZND.TIMs);
-                        }
-                    }
-
-                    AKAOSequence.sampleCollectionId = (SerializedZND != null) ? SerializedZND.waveId : (uint)50;
-                    AKAOSequence.bitwiseNumTracks = 0x03; // always two tracks ?
-                    AKAOSequence.tracks = new AKAOTrack[2];
-                    AKAOSequence.tracks[0] = new AKAOTrack();
-                    AKAOSequence.tracks[0].SetDatas(buffer.ReadBytes((int)(firstTrackLength)), (uint)buffer.BaseStream.Position);
-                    AKAOSequence.tracks[1] = new AKAOTrack();
-                    AKAOSequence.tracks[1].SetDatas(buffer.ReadBytes((int)(lenAKAOSection - 48 - firstTrackLength)), (uint)buffer.BaseStream.Position);
+                    AKAOSoundEffect = ScriptableObject.CreateInstance<AKAOSoundEffect>();
+                    AKAOSoundEffect.name = string.Concat(Filename, ".AKAO");
+                    AKAOSoundEffect.ParseFromBuffer(buffer, lenAKAOSection - 12);
                 }
 
                 if (lenSubSection15 > 0)

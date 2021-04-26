@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using VS.Core;
 using VS.Utils;
 
 namespace VS.FileFormats.AKAO
@@ -267,10 +266,10 @@ namespace VS.FileFormats.AKAO
             // for now we create a new midi channel per AKAO track
             // we will merge channels with the same instrument later
             List<MIDIChannel> channels = new List<MIDIChannel>();
-            for (uint t = 0; t < numTracks; t++)
+            for (uint t = 0; t < tracks.Length; t++)
             {
                 AKAOTrack track = tracks[t];
-                //uint trackPtr = ptrTracks[t];
+                uint trackPtr = ptrTracks[t];
 
                 MIDIChannel channel = new MIDIChannel(0);
                 channel.id = t;

@@ -1,9 +1,8 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using VS.FileFormats.AKAO;
 using VS.FileFormats.GEOM;
-using VS.Parser;
-using VS.Utils;
 
 namespace VS.FileFormats.SHP
 {
@@ -26,9 +25,10 @@ namespace VS.FileFormats.SHP
         public short menuY;
         public byte[] unk1; // 12 bytes
         public byte[] shadow;
-        public byte[] unk2; // 4 bytes
+        private byte[] unk2; // 4 bytes padding
         public short menuScale;
-        public byte[] unk3; // 12 bytes
+        public byte[] unk3; // 6 bytes
+        public byte[] unk4; // 6 bytes padding
 
         public uint[] SEQ_LBAs;
         public ushort[] chainIds;
@@ -51,7 +51,7 @@ namespace VS.FileFormats.SHP
 
         public uint numAKAO;
         public uint[] ptrAKAO;
-        public AKAO.AKAO[] AKAOs;
+        public AKAOSoundEffect[] AKAOs;
 
         public uint numEffects;
         public uint lenEffects;
@@ -97,9 +97,12 @@ namespace VS.FileFormats.SHP
             menuY = buffer.ReadInt16(); // menu position Y
             unk1 = buffer.ReadBytes(12); // Unknown
             shadow = buffer.ReadBytes(6);
-            unk2 = buffer.ReadBytes(4); // Unknown
+            unk2 = buffer.ReadBytes(4); // padding
+
             menuScale = buffer.ReadInt16(); // Menu scale
-            unk3 = buffer.ReadBytes(12); // Unknown
+            unk3 = buffer.ReadBytes(6); // Unknown
+            unk4 = buffer.ReadBytes(6); // Unknown
+
 
             SEQ_LBAs = new uint[12];
             for (int i = 0; i < 12; i++)
@@ -324,18 +327,26 @@ namespace VS.FileFormats.SHP
             numAKAO = buffer.ReadUInt32();
 
             ptrAKAO = new uint[numAKAO + 1];
-            // one pointer for AKAO header, a second for AKAO datas
+            // first pointers can be null
             for (uint j = 0; j < numAKAO; j++)
             {
                 ptrAKAO[j] = buffer.ReadUInt32();
             }
-            ptrAKAO[numAKAO] = ptrSpellEffect;
-            AKAOs = new AKAO.AKAO[numAKAO];
+            ptrAKAO[numAKAO] = ptrSpellEffect- ptrAKAOSection;
+
+            List<AKAOSoundEffect> _soundEffects = new List<AKAOSoundEffect>();
             for (uint j = 0; j < numAKAO; j++)
             {
-                // TODO
+                if (ptrAKAO[j] > 0)
+                {
+                    AKAOSoundEffect ase = ScriptableObject.CreateInstance<AKAOSoundEffect>();
+                    ase.name = string.Concat(Filename," AKAO #", j);
+                    buffer.BaseStream.Position = ptrAKAOSection+ptrAKAO[j];
+                    ase.ParseFromBuffer(buffer, ptrAKAO[j + 1]-ptrAKAO[j]);
+                    _soundEffects.Add(ase);
+                }
             }
-
+            AKAOs = _soundEffects.ToArray();
 
             // Spell effect section
             if (buffer.BaseStream.Position != ptrSpellEffect)

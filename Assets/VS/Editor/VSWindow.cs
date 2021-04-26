@@ -653,9 +653,17 @@ public class VSWindow : EditorWindow
     private void ParseSHP(string path, string filename, bool UseDebug, bool erase = false)
     {
         SHP shp = ScriptableObject.CreateInstance<SHP>();
+        List<UnityEngine.Object> subAssets = new List<UnityEngine.Object>();
         shp.ParseFromFile(path);
-
-        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/SHP/", shp.Filename + ".SHP.yaml.asset", shp, new UnityEngine.Object[] { shp.TIM });
+        subAssets.Add(shp.TIM);
+        if (shp.AKAOs != null && shp.AKAOs.Length > 0)
+        {
+            for (uint i = 0; i < shp.AKAOs.Length; i++)
+            {
+                subAssets.Add(shp.AKAOs[i]);
+            }
+        }
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/SHP/", shp.Filename + ".SHP.yaml.asset", shp, subAssets.ToArray());
     }
 
     private void ParseSEQ(string path)
@@ -719,7 +727,7 @@ public class VSWindow : EditorWindow
     {
         MPD mpd = ScriptableObject.CreateInstance<MPD>();
         mpd.ParseFromFile(path);
-        UnityEngine.Object[] subAssets = new UnityEngine.Object[] { mpd.miniMap, mpd.scriptSection, mpd.treasureSection, mpd.AKAOSequence };
+        UnityEngine.Object[] subAssets = new UnityEngine.Object[] { mpd.miniMap, mpd.scriptSection, mpd.treasureSection, mpd.AKAOSoundEffect };
 
         ToolBox.SaveScriptableObject("Assets/Resources/Serialized/MPD/", mpd.Filename + ".MPD.yaml.asset", mpd, subAssets);
     }

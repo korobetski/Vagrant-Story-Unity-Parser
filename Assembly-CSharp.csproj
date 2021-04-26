@@ -336,6 +336,7 @@
     <Compile Include="Assets\VS\FileFormats\TIM\GIM.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\SampleDataAsset.cs" />
     <Compile Include="Assets\VS\FileFormats\GEOM\Group.cs" />
+    <Compile Include="Assets\VS\FileFormats\AKAO\AKAOSoundEffect.cs" />
   </ItemGroup>
   <ItemGroup>
      <None Include="Assets\Shaders\StandardTriplanar.shader" />
