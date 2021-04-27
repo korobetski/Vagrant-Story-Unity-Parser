@@ -263,6 +263,7 @@
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Sf2\Chunks\SampleHeaderChunk.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Sf2\SoundFont.cs" />
     <Compile Include="Assets\VS\FileFormats\EVT\EVT.cs" />
+    <Compile Include="Assets\VS\FileFormats\AKAO\AKAOSoundEffect.cs" />
     <Compile Include="Assets\VS\FileFormats\STATS\Caracteristics.cs" />
     <Compile Include="Assets\Scripts\FileFormats\SF2\SF2Utils.cs" />
     <Compile Include="Assets\Scripts\Vagrant Story\Database\CombatTechsDB.cs" />
@@ -336,7 +337,6 @@
     <Compile Include="Assets\VS\FileFormats\TIM\GIM.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Bank\SampleDataAsset.cs" />
     <Compile Include="Assets\VS\FileFormats\GEOM\Group.cs" />
-    <Compile Include="Assets\VS\FileFormats\AKAO\AKAOSoundEffect.cs" />
   </ItemGroup>
   <ItemGroup>
      <None Include="Assets\Shaders\StandardTriplanar.shader" />

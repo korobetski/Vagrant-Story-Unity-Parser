@@ -15,7 +15,7 @@ namespace VS.FileFormats.AKAO
         public ushort pad2;
         public byte[] unk2;
         public ushort firstTrackLength;
-        public AKAOTrack[] tracks; // always two tracks ?
+        public AKAOTrack[] tracks;
 
         public void ParseFromBuffer(BinaryReader buffer, long limit)
         {
@@ -33,7 +33,8 @@ namespace VS.FileFormats.AKAO
             pad2 = buffer.ReadUInt16();
             unk2 = buffer.ReadBytes(22);
             firstTrackLength = buffer.ReadUInt16();
-
+            // i must find a way to determine the number a tracks
+            // i seems its work with pairs of the sames length (stereo ?)
             tracks = new AKAOTrack[2];
             tracks[0] = new AKAOTrack();
             tracks[0].SetDatas(buffer.ReadBytes((int)(firstTrackLength)), (uint)buffer.BaseStream.Position);
