@@ -9,7 +9,7 @@ namespace VS.FileFormats.TIM
 {
     public class TIM:ScriptableObject
     {
-        public enum TIMType { WEP, SHP, ZND, DIS, FAR };
+        public enum TIMType { WEP, SHP, ZND, DIS, FAR, TIM };
 
         public string Filename;
 
@@ -114,7 +114,49 @@ namespace VS.FileFormats.TIM
                 File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/TIM/" + Filename + ".png", bytes);
             }
         }
-        
+
+        internal void SetCluts(BinaryReader buffer, bool is8bits = false, bool reverse = true)
+        {
+            if (is8bits)
+            {
+                clut = new byte[width * height * 2];
+                for (uint i = 0; i < height * width*2; i+=2)
+                {
+                    byte id = buffer.ReadByte();
+                    byte l = (byte)Mathf.RoundToInt(id / 16);
+                    byte r = (byte)(id % 16);
+                    clut[i] = r;
+                    clut[i + 1] = l;
+                }
+            }
+            else
+            {
+                clut = new byte[width * height];
+                for (uint i = 0; i < height * width; i++)
+                {
+                    byte id = buffer.ReadByte();
+                    clut[i] = id;
+                }
+            }
+
+            if (reverse) clut = ReverseCLUT();
+        }
+
+        internal void SetPalettesColors(BinaryReader buffer)
+        {
+            palettes = new Palette[numPalettes];
+
+            for (uint i = 0; i < numPalettes; i++)
+            {
+                palettes[i] = new Palette(numColors);
+                for (uint j = 0; j < numColors; j++)
+                {
+                    palettes[i].colors[j] = (ToolBox.BitColorConverter(buffer.ReadUInt16()));
+                }
+
+            }
+        }
+
         public void ParseDISFromBuffer(BinaryReader buffer)
         {
 
@@ -399,7 +441,7 @@ namespace VS.FileFormats.TIM
             File.WriteAllBytes("Assets/Resources/Textures/Weapon/WEP_" + Filename + "_tex.png", bytes);
         }
 
-        public Texture2D BuildTexture()
+        public Texture2D BuildTexture(bool is8bits = false)
         {
             List<Texture2D> textures;
             Texture2D pack = new Texture2D(1,1);
@@ -478,6 +520,44 @@ namespace VS.FileFormats.TIM
                     pack.filterMode = FilterMode.Point;
                     pack.wrapMode = TextureWrapMode.Repeat;
                     break;
+                default:
+                    textures = new List<Texture2D>();
+
+                    for (int h = 0; h < numPalettes; h++)
+                    {
+                        List<Color> colors = new List<Color>();
+                        for (int y = 0; y < height; y++)
+                        {
+                            if (is8bits)
+                            {
+                                for (int x = 0; x < width * 2; x++)
+                                {
+                                    colors.Add(palettes[h].colors[clut[(int)((y * width * 2) + x)]]);
+                                }
+
+                            }
+                            else
+                            {
+                                for (int x = 0; x < width; x++)
+                                {
+                                    colors.Add(palettes[h].colors[clut[(int)((y * width) + x)]]);
+                                }
+
+                            }
+                        }
+
+                        Texture2D tex = new Texture2D((int)width*2, (int)height, TextureFormat.ARGB32, false);
+                        tex.SetPixels(colors.ToArray());
+                        tex.Apply();
+                        textures.Add(tex);
+                    }
+
+                    if (is8bits) pack = new Texture2D((int)width *2 * numPalettes, (int)height, TextureFormat.ARGB32, false);
+                    else pack = new Texture2D((int)width * numPalettes, (int)height, TextureFormat.ARGB32, false);
+                    pack.PackTextures(textures.ToArray(), 0);
+                    pack.filterMode = FilterMode.Point;
+                    pack.wrapMode = TextureWrapMode.Repeat;
+                    break;
             }
 
             return pack;
@@ -485,7 +565,7 @@ namespace VS.FileFormats.TIM
         }
 
 
-        public Texture2D GetTexture(byte paletteId = 0)
+        public Texture2D GetTexture(byte paletteId = 0, bool is8bits = false)
         {
             Texture2D tex = new Texture2D(1,1);
             switch (type)
@@ -555,6 +635,32 @@ namespace VS.FileFormats.TIM
                         }
                     }
                     tex = new Texture2D((int)width, (int)height, TextureFormat.ARGB32, false);
+                    tex.SetPixels(colors.ToArray());
+                    tex.filterMode = FilterMode.Point;
+                    tex.wrapMode = TextureWrapMode.Repeat;
+                    tex.Apply();
+                    break;
+                default:
+                    colors = new List<Color>();
+                    for (int y = 0; y < height; y++)
+                    {
+                        if (is8bits)
+                        {
+                            for (int x = 0; x < width*2; x++)
+                            {
+                                colors.Add(palettes[paletteId].colors[clut[(int)((y * width*2) + x)]]);
+                            }
+                        } 
+                        else
+                        {
+                            for (int x = 0; x < width; x++)
+                            {
+                                colors.Add(palettes[paletteId].colors[clut[(int)((y * width) + x)]]);
+                            }
+                        }
+                    }
+                    if (is8bits) tex = new Texture2D((int)width*2, (int)height, TextureFormat.ARGB32, false);
+                    else tex = new Texture2D((int)width, (int)height, TextureFormat.ARGB32, false);
                     tex.SetPixels(colors.ToArray());
                     tex.filterMode = FilterMode.Point;
                     tex.wrapMode = TextureWrapMode.Repeat;

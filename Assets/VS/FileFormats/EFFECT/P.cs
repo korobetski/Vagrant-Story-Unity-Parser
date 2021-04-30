@@ -15,6 +15,8 @@ namespace VS.FileFormats.EFFECT
 
         public PSprite[] sprites;
 
+        public List<PChunk> chunks;
+
         public void ParseFromFile(string filepath)
         {
 
@@ -130,7 +132,75 @@ namespace VS.FileFormats.EFFECT
                 }
             }
 
-            // Lots of unknown things here
+            Debug.Log(string.Concat("buffer.BaseStream.Position : ", buffer.BaseStream.Position));
+
+
+            // TODO : lot of works to do here
+
+            chunks = new List<PChunk>();
+
+            // Section3
+            PChunk sec3 = new PChunk();
+            sec3.pointer = (ushort)buffer.BaseStream.Position;
+            sec3.length = buffer.ReadUInt16();
+            sec3.type = buffer.ReadUInt16();
+            // pointer are relative to this point ?
+            sec3.num = buffer.ReadUInt16();
+            sec3.pad = buffer.ReadUInt16();
+            sec3.pointers = new ushort[sec3.num + 1];
+            for (int i = 0; i < sec3.num; i++)
+            {
+                sec3.pointers[i] = (ushort)(sec3.pointer + 4 + buffer.ReadUInt16());
+            }
+            sec3.pointers[sec3.num] = (ushort)(sec3.pointer + sec3.length);
+            // 8 bytes align
+            int rem = (int)buffer.BaseStream.Position % 8;
+            if (rem != 0) buffer.ReadBytes(8 - rem);
+
+            sec3.items = new PChunkItem[sec3.num];
+            for (int i = 0; i < sec3.num; i++)
+            {
+                sec3.items[i] = new PChunkItem();
+                int len = Mathf.RoundToInt((sec3.pointers[i + 1] - sec3.pointers[i]) / 2);
+
+                sec3.items[i].d = new ushort[len];
+                for (int j = 0; j < len; j++)
+                {
+                    sec3.items[i].d[j] = buffer.ReadUInt16();
+                }
+            }
+            chunks.Add(sec3);
+
+            // Section4
+            PChunk sec4 = new PChunk();
+            sec4.pointer = (ushort)buffer.BaseStream.Position;
+            sec4.length = buffer.ReadUInt16();
+            sec4.type = buffer.ReadUInt16();
+            // pointer are relative to this point ?
+            sec4.num = buffer.ReadUInt16();
+            sec4.pad = buffer.ReadUInt16();
+            sec4.pointers = new ushort[sec4.num + 1];
+            for (int i = 0; i < sec4.num; i++)
+            {
+                sec4.pointers[i] = (ushort)(sec4.pointer + 4 + buffer.ReadUInt16());
+            }
+            sec4.pointers[sec4.num] = (ushort)(sec4.pointer + sec4.length);
+            // 8 bytes align
+            rem = (int)buffer.BaseStream.Position % 8;
+            if (rem != 0) buffer.ReadBytes(8 - rem);
+
+            sec4.items = new PChunkItem[sec4.num];
+            for (int i = 0; i < sec4.num; i++)
+            {
+                sec4.items[i] = new PChunkItem();
+                int len = Mathf.RoundToInt((sec4.pointers[i + 1] - sec4.pointers[i]) / 2);
+                sec4.items[i].d = new ushort[len];
+                for (int j = 0; j < len; j++)
+                {
+                    sec4.items[i].d[j] = buffer.ReadUInt16();
+                }
+            }
+            chunks.Add(sec4);
 
 
             // AKAO Section for the moment i'll crawl all the file to find the magic word AKAO (41 4B 41 4F)

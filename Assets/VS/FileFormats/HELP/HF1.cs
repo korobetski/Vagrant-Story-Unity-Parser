@@ -6,6 +6,7 @@ namespace VS.FileFormats.HELP
 {
     public class HF1
     {
+        public string Filename;
         public void ParseFromFile(string filepath)
         {
             FileParser fp = new FileParser();
@@ -14,6 +15,7 @@ namespace VS.FileFormats.HELP
             // in SMALL/HELP**.HF1
             if (fp.Ext == "HF1")
             {
+                Filename = fp.FileName+ "HF1";
                 ParseFromBuffer(fp.buffer, fp.FileSize);
             }
 
@@ -22,14 +24,15 @@ namespace VS.FileFormats.HELP
 
         public void ParseFromBuffer(BinaryReader buffer, long limit)
         {
-
-            string[] subs = L10n.Translate(buffer.ReadBytes((int)buffer.BaseStream.Length - 0)).Split('|');
-            foreach (string s in subs)
+            if ( buffer.BaseStream.Length > 8)
             {
-
-                Debug.Log(s);
+                /*
+                ToolBox.ColorScaleHexa(buffer, Filename, 64);
+                ToolBox.GreyScaleHexa(buffer, Filename, 64);
+                ToolBox.GreyScaleHexa(buffer, Filename, 128);
+                */
             }
-
+            // considering outputs of greyscales, i suspect these files to be a kind layout for .HF0
         }
     }
 }

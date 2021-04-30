@@ -12,11 +12,11 @@ namespace VS.FileFormats.MPD
         public byte scale = 8;
         public ushort overlapping;
         public short decX;
-        public ushort unk1;
+        public Vector2Int unk1;
         public short decY;
-        public ushort unk2;
+        public Vector2Int unk2; // when unk2 = 255-255 it seems that this group contains a sprite sheet animation
         public short decZ;
-        public ushort unk3;
+        public Vector2Int unk3;
         public byte[] unkBytes;
 
         public uint numTriangles;

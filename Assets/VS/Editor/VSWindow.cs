@@ -22,18 +22,18 @@ using VS.FileFormats.ZUD;
 using VS.Utils;
 
 //https://unity3d.college/2017/05/22/unity-attributes/
-
+//https://docs.unity3d.com/Manual/ScriptedImporters.html
 public class VSWindow : EditorWindow
 {
     private string VSPath = "";
     private string FilePath = "";
     private VSPConfig conf;
-
+    /*
     bool midTrigger = true;
     bool sf2Trigger = true;
     bool dlsTrigger = false;
     bool wavTrigger = false;
-
+    */
     [MenuItem("Window/Vagrant Story")]
     public static void ShowWindow()
     {
@@ -103,6 +103,41 @@ public class VSWindow : EditorWindow
             string fileName = h2[0];
             string ext = h2[1];
 
+            if (fileName == "SLES_027" && ext == "55")
+            {
+                FileParser fp = new FileParser();
+                fp.Read(VSPath + "SLES_027.55");
+                BIN binParser = new BIN();
+                binParser.ParseFromBuffer(fp.buffer, fp.FileSize);
+
+                fp.buffer.BaseStream.Position = 0x39EC8;
+
+                int width = 126;
+                int height = 20;
+                List<Color> cluts = new List<Color>();
+                for (uint x = 0; x < height; x++)
+                {
+                    List<Color> cl2 = new List<Color>();
+                    for (uint y = 0; y < width; y++)
+                    {
+                        cl2.Add(ToolBox.BitColorConverter(fp.buffer.ReadUInt16()));
+                    }
+                    cl2.Reverse();
+                    cluts.AddRange(cl2);
+                }
+                cluts.Reverse();
+                Texture2D tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
+                tex.SetPixels(cluts.ToArray());
+                tex.Apply();
+                byte[] bytes = tex.EncodeToPNG();
+                ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/Ex/");
+                File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Ex/NowLoading.png", bytes);
+
+                // NOW LOADING sprite in 126 x 20 pixels no clut @ 0x39EC8-> 0x3B278
+
+                fp.Close();
+            }
+
 
             switch (folder)
             {
@@ -141,6 +176,9 @@ public class VSWindow : EditorWindow
                         case "P":
                             ParseEFFECT(VSPath + FilePath);
                             break;
+                        case "BIN":
+                            ParseBIN(VSPath + FilePath);
+                            break;
                     }
                     break;
                 case "ENDING":
@@ -151,8 +189,10 @@ public class VSWindow : EditorWindow
                     switch (ext)
                     {
                         case "BIN":
-                            TIM parser = new TIM();
-                            //parser.ParseIllust(VSPath + FilePath);
+                            ParseBIN(VSPath + FilePath);
+                            break;
+                        case "PRG":
+                            ParsePRG(VSPath + FilePath);
                             break;
                     }
                     break;
@@ -197,6 +237,8 @@ public class VSWindow : EditorWindow
                     switch (ext)
                     {
                         case "BIN":
+                            // GAMEOVER.BIN :  8bits picture 96 pixels width, but without palette
+                            // SPMCIMG.BIN :  16bits picture 448w x 256h, palette should be in MENU7.PRG (maybe)
                             ParseBIN(VSPath + FilePath);
                             break;
                         case "PRG":
@@ -227,6 +269,10 @@ public class VSWindow : EditorWindow
                             break;
                         case "SEQ":
                             ParseSEQ(VSPath + FilePath);
+                            break;
+                        case "ESQ":
+                            ESQ esq = new ESQ();
+                            esq.ParseFromFile(VSPath + FilePath);
                             break;
                     }
                     break;
@@ -270,8 +316,11 @@ public class VSWindow : EditorWindow
                     break;
                 case "TITLE":
                     // TITLE.PRG
+                    ParsePRG(VSPath + FilePath);
                     break;
             }
+
+
         }
 
 
@@ -609,7 +658,19 @@ public class VSWindow : EditorWindow
                 parser.ParseFromFile(file);
                 fileParsed++;
             }
+            string[] files2 = Directory.GetFiles(VSPath + "SMALL/", "*.HF1");
+            fileToParse = files.Length;
 
+            fileParsed = 0;
+            foreach (string file in files2)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                HF1 parser = new HF1();
+                parser.ParseFromFile(file);
+                fileParsed++;
+            }
 
             EditorUtility.ClearProgressBar();
         }
@@ -797,14 +858,14 @@ public class VSWindow : EditorWindow
 
     private void ParseBIN(string path)
     {
-        BIN parser = new BIN();
+        BIN parser = ScriptableObject.CreateInstance<BIN>();
         parser.ParseFromFile(path);
     }
 
 
     private void ParsePRG(string v)
     {
-        PRG parser = new PRG();
+        PRG parser = ScriptableObject.CreateInstance<PRG>();
         parser.ParseFromFile(v);
     }
 

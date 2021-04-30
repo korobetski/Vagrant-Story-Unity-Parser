@@ -127,7 +127,6 @@ namespace VS.FileFormats.MPD
 
         public void ParseFromBuffer(BinaryReader buffer, long limit)
         {
-
             ptrRoomSection = buffer.ReadUInt32();
             lenRoomSection = buffer.ReadUInt32();
             ptrClearedSection = buffer.ReadUInt32();
@@ -190,11 +189,14 @@ namespace VS.FileFormats.MPD
                         groups[i].scaleFlag = buffer.ReadByte();
                         groups[i].overlapping = buffer.ReadUInt16();
                         groups[i].decX = buffer.ReadInt16();
-                        groups[i].unk1 = buffer.ReadUInt16();
+                        byte[] v = buffer.ReadBytes(2);
+                        groups[i].unk1 = new Vector2Int(v[0], v[1]);
                         groups[i].decY = buffer.ReadInt16();
-                        groups[i].unk2 = buffer.ReadUInt16();
+                        v = buffer.ReadBytes(2);
+                        groups[i].unk2 = new Vector2Int(v[0], v[1]);
                         groups[i].decZ = buffer.ReadInt16();
-                        groups[i].unk3 = buffer.ReadUInt16();
+                        v = buffer.ReadBytes(2);
+                        groups[i].unk3 = new Vector2Int(v[0], v[1]);
                         groups[i].unkBytes = buffer.ReadBytes(48);
 
 
@@ -533,8 +535,9 @@ namespace VS.FileFormats.MPD
                 if (lenSubSection11 > 0)
                 {
                     long ptrSection11 = buffer.BaseStream.Position;
-
                     //SubSection11 = buffer.ReadBytes((int)lenSubSection11);
+
+                    // maybe its 24 bytes per item instead
                     uint numItem11 = lenSubSection11 / 12;
                     SubSection11 = new MPDItem11[numItem11];
                     for (uint i = 0; i < numItem11; i++)

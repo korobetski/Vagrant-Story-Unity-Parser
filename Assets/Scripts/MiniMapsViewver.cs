@@ -11,6 +11,7 @@ public class MiniMapsViewver : MonoBehaviour
     public Dropdown myDropdown;
     public GameObject container;
     public Text roomNameTF;
+    public ARMLoader ARMLoader;
 
     private string[] ARMList;
     private string[] MPDList;
@@ -75,15 +76,6 @@ public class MiniMapsViewver : MonoBehaviour
             myDropdownValueChangedHandler(myDropdown);
         });
 
-        ARM arm = new ARM();
-        arm.ParseFromFile(conf.VSPath + "SMALL/SCEN001.ARM");
-        /*
-        GameObject miniMapGO = arm.BuildGameObject();
-        miniMapGO.transform.parent = container.transform;
-        miniMapGO.transform.localPosition = Vector3.zero;
-        miniMapGO.transform.localRotation = new Quaternion();
-        miniMapGO.transform.localScale = Vector3.one;
-        */
     }
     void Destroy()
     {
@@ -91,20 +83,9 @@ public class MiniMapsViewver : MonoBehaviour
     }
     private void myDropdownValueChangedHandler(Dropdown target)
     {
-        foreach (Transform child in container.transform)
-        {
-            Destroy(child.gameObject);
-        }
-        ARM arm = new ARM();
-        arm.ParseFromFile(conf.VSPath + "SMALL/" + ARMList[target.value]);
-        /*
-        GameObject miniMapGO = aRM.BuildGameObject();
-        miniMapGO.transform.parent = container.transform;
-        miniMapGO.transform.localPosition = Vector3.zero;
-        miniMapGO.transform.localRotation = new Quaternion();
-        miniMapGO.transform.localScale = Vector3.one;
-        */
+
     }
+
     void Update()
     {
         if (Input.GetButtonDown("Cancel"))
