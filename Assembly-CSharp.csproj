@@ -212,6 +212,7 @@
     <Compile Include="Assets\VS\Utils\ToolBox.cs" />
     <Compile Include="Assets\VS\Parser\FileParser.cs" />
     <Compile Include="Assets\VS\FileFormats\WEP\WEP.cs" />
+    <Compile Include="Assets\VS\FileFormats\SHP\ETM.cs" />
     <Compile Include="Assets\VS\FileFormats\SHP\ESQ.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Sf2\SoundFontInfo.cs" />
     <Compile Include="Assets\UnityMidi\Assets\UnityMidi\CSharpSynth\Source\AudioSynthesis\Synthesis\VoiceManager.cs" />

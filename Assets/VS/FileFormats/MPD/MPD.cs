@@ -429,7 +429,7 @@ namespace VS.FileFormats.MPD
                 if (lenTextureEffectsSection > 0)
                 {
                     long ptrTextureEffectsSection = buffer.BaseStream.Position;
-
+                    Debug.Log(string.Concat("ptrTextureEffectsSection : ", ptrTextureEffectsSection));
                     List<MPDTextureAnimation> texAnims = new List<MPDTextureAnimation>();
                     while (buffer.BaseStream.Position + 20 <= (ptrTextureEffectsSection + lenTextureEffectsSection))
                     {

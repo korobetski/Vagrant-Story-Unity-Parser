@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -270,8 +271,11 @@ public class VSWindow : EditorWindow
                         case "SEQ":
                             ParseSEQ(VSPath + FilePath);
                             break;
+                        case "ETM":
+                            ParseETM(VSPath + FilePath);
+                            break;
                         case "ESQ":
-                            ESQ esq = new ESQ();
+                            ESQ esq = ScriptableObject.CreateInstance<ESQ>();
                             esq.ParseFromFile(VSPath + FilePath);
                             break;
                     }
@@ -539,7 +543,25 @@ public class VSWindow : EditorWindow
             }
             EditorUtility.ClearProgressBar();
         }
-        
+
+        bool LoadETMTrigger = GUILayout.Button(new GUIContent("OBJ/*.ETM"));
+        if (LoadETMTrigger && VSPath != "")
+        {
+            string[] files = Directory.GetFiles(VSPath + "OBJ/", "*.ETM");
+            float fileToParse = files.Length;
+
+            float fileParsed = 0;
+            foreach (string file in files)
+            {
+                string[] h = file.Split("/"[0]);
+                string filename = h[h.Length - 1];
+                EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
+                ParseETM(file);
+                fileParsed++;
+            }
+            EditorUtility.ClearProgressBar();
+        }
+
 
         GUILayout.EndVertical();
         GUILayout.BeginVertical(options);
@@ -676,6 +698,7 @@ public class VSWindow : EditorWindow
         }
         GUILayout.EndVertical();
     }
+
     private ItemList BuildItemStrings()
     {
         ItemList  itemsStr = ScriptableObject.CreateInstance<ItemList>();
@@ -887,5 +910,11 @@ public class VSWindow : EditorWindow
         tim.ParseFromFile(file);
     }
 
+    private void ParseETM(string v)
+    {
+        ETM etm = ScriptableObject.CreateInstance<ETM>();
+        etm.ParseFromFile(v);
 
+        ToolBox.SaveScriptableObject("Assets/Resources/Serialized/ETM/", etm.Filename + ".yaml.asset", etm);
+    }
 }

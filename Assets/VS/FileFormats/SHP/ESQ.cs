@@ -4,7 +4,7 @@ using VS.Utils;
 
 namespace VS.FileFormats.SHP
 {
-    public class ESQ
+    public class ESQ:ScriptableObject
     {
 
         private string Filename;
@@ -25,13 +25,7 @@ namespace VS.FileFormats.SHP
 
         public void ParseFromBuffer(BinaryReader buffer, long limit)
         {
-            ToolBox.ColorScaleHexa(buffer, Filename, 32);
-            ToolBox.GreyScaleHexa(buffer, Filename, 32);
-            ToolBox.GreyScaleHexa(buffer, Filename, 64);
             ToolBox.GreyScaleHexa(buffer, Filename, 128);
-            ToolBox.GreyScaleHexa(buffer, Filename, 192);
-            ToolBox.GreyScaleHexa(buffer, Filename, 256);
-            ToolBox.GreyScaleHexa(buffer, Filename, 320);
         }
     }
 }

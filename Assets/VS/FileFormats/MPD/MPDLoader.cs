@@ -167,7 +167,7 @@ namespace VS.FileFormats.MPD
                     }
 
                     mesh.uv = meshTrianglesUV.ToArray();
-                    //mesh.normals = meshNormals.ToArray();
+                    mesh.RecalculateNormals();
                     mesh.colors32 = meshColors.ToArray();
 
                     MeshFilter mf = groupGO.AddComponent<MeshFilter>();

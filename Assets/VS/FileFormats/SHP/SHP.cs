@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using VS.Core;
 using VS.FileFormats.AKAO;
 using VS.FileFormats.GEOM;
 
@@ -18,7 +19,7 @@ namespace VS.FileFormats.SHP
         public ushort numPolygons;
         public uint numFaces { get => (uint)numTriangles + numQuads + numPolygons; }
 
-        public byte[][] overlay;
+        public Vector4[] overlays;
         public byte[] Padding0x24;
 
         public byte[] collider;
@@ -57,7 +58,7 @@ namespace VS.FileFormats.SHP
         public uint lenEffects;
         public byte[] unkFx;
         public ushort[] PtrEffects;
-        public uint[] effects;
+        public byte[] effects;
 
         public TIM.TIM TIM;
 
@@ -86,10 +87,11 @@ namespace VS.FileFormats.SHP
             numQuads = buffer.ReadUInt16();
             numPolygons = buffer.ReadUInt16();
 
-            byte[][] overlays = new byte[8][];
+            overlays = new Vector4[8];
             for (int i = 0; i < 8; i++)
             {
-                overlays[i] = buffer.ReadBytes(4);
+                byte[] ov = buffer.ReadBytes(4);
+                overlays[i] = new Vector4(ov[0], ov[1], ov[2], ov[3]);
             }
 
             Padding0x24 = buffer.ReadBytes(0x24); // Unknown
@@ -357,11 +359,11 @@ namespace VS.FileFormats.SHP
             lenEffects = buffer.ReadUInt32();
             unkFx = buffer.ReadBytes(12);
             PtrEffects = new ushort[1];
-            effects = new uint[1];
             // we skip datas
             if (buffer.BaseStream.Position + (lenEffects - 12) < buffer.BaseStream.Length)
             {
-                buffer.BaseStream.Position = buffer.BaseStream.Position + (lenEffects - 12);
+                effects = buffer.ReadBytes((int)(lenEffects - 12));
+                //buffer.BaseStream.Position = buffer.BaseStream.Position + (lenEffects - 12);
             }
 
             // Textures section
@@ -375,6 +377,17 @@ namespace VS.FileFormats.SHP
 
                 //ToolBox.SaveScriptableObject("Assets/Resources/Serialized/TIM/SHP/", Filename + ".yaml.asset", TIM);
 
+                //
+                VSPConfig conf = Memory.LoadConfig();
+                string[] files = Directory.GetFiles(conf.VSPath + "OBJ/", "*.ETM");
+                foreach (string file in files)
+                {
+                    string[] h = file.Split("/"[0]);
+                    string filename = h[h.Length - 1];
+                    ETM etm = ScriptableObject.CreateInstance<ETM>();
+                    etm.ParseFromFile(file);
+                    etm.BuildTextureWithSHPTIM(TIM, this.Filename);
+                }
             }
 
         }
