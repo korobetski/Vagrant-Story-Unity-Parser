@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 using VS.Core;
@@ -446,14 +447,35 @@ public class VSWindow : EditorWindow
             float fileToParse = files.Length;
             float fileParsed = 0f;
 
+
+            //string output = "All MPD Enemies : \r\n";
+
             foreach (string file in files)
             {
                 string[] h = file.Split("/"[0]);
                 string filename = h[h.Length - 1];
                 EditorUtility.DisplayProgressBar("VS Parsing", "Parsing : " + filename + ", " + fileParsed + " files parsed.", (fileParsed / fileToParse));
                 ParseMPD(file, false);
+                /*
+                MPD mpd = ScriptableObject.CreateInstance<MPD>();
+                mpd.ParseFromFile(file);
+                */
+                /*
+                if (mpd.lenEnemySection > 0)
+                {
+                    output = string.Concat(output, "Enemies in ", filename, " : \r\n");
+                    for (int i = 0; i < mpd.enemies.Length; i++)
+                    {
+                        output = string.Concat(output, "Enemy # ", (i + 1).ToString(), "  bytes = ", String.Join(" ", new List<byte>(mpd.enemies[i].datas).ConvertAll(i => i.ToString()).ToArray()),"\r\n");
+                    }
+                }
+                */
                 fileParsed++;
             }
+            /*
+            var path = @"C:\Users\cid22\mpdenemies.txt";
+            File.WriteAllText(path, output);
+            */
             EditorUtility.ClearProgressBar();
         }
 
@@ -811,9 +833,10 @@ public class VSWindow : EditorWindow
     {
         MPD mpd = ScriptableObject.CreateInstance<MPD>();
         mpd.ParseFromFile(path);
+        
         UnityEngine.Object[] subAssets = new UnityEngine.Object[] { mpd.miniMap, mpd.scriptSection, mpd.treasureSection, mpd.AKAOSoundEffect };
-
         ToolBox.SaveScriptableObject("Assets/Resources/Serialized/MPD/", mpd.Filename + ".MPD.yaml.asset", mpd, subAssets);
+        
     }
 
 

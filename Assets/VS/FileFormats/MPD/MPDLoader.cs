@@ -7,6 +7,7 @@ namespace VS.FileFormats.MPD
 {
     public class MPDLoader : MonoBehaviour
     {
+        [SerializeField] private Shader _vColoredUnlitShader;
         public MPD SerializedMPD;
         public ZND.ZND SerializedZND;
         public bool generate_collision_mesh = true;
@@ -47,12 +48,13 @@ namespace VS.FileFormats.MPD
                 // we create all needed materials
                 if (SerializedZND != null && SerializedZND.TIMs.Length > 0)
                 {
-                    Shader shader = Shader.Find("Particles/Standard Unlit");
+                    //Shader shader = Shader.Find("Shader Graphs/V Colored Unlit");
                     for (uint i = 0; i < SerializedMPD.materialRefs.Length; i++)
                     {
-                        Material mat = new Material(shader);
+                        Material mat = new Material(_vColoredUnlitShader);
                         mat.name = SerializedMPD.materialRefs[i];
                         mat.SetTexture("_MainTex", SerializedZND.GetTexture(SerializedMPD.materialRefs[i]));
+                        /*
                         mat.SetFloat("_Mode", 1);
                         mat.SetFloat("_ColorMode", 0);
                         mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
@@ -61,6 +63,7 @@ namespace VS.FileFormats.MPD
                         mat.EnableKeyword("_ALPHATEST_ON");
                         mat.DisableKeyword("_ALPHABLEND_ON");
                         mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                        */
                         materials.Add(mat);
                     }
                 }

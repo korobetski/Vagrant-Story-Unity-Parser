@@ -3,7 +3,11 @@ guid: f17c4ef2e4003a74a92a92bcfee65e7b
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - _vColoredUnlitShader: {fileID: -6465566751694194690, guid: c6bb41294fad03d409e93ad11cffd153,
+      type: 3}
+  - SerializedMPD: {instanceID: 0}
+  - SerializedZND: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

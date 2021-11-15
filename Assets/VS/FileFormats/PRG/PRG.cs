@@ -49,6 +49,7 @@ namespace VS.FileFormats.PRG
             switch (Filename)
             {
                 case "TITLE":
+                    ToolBox.ColorScaleHexa(buffer, Filename, 64);
                     /*
                     ToolBox.ColorScaleHexa(buffer, Filename, 64);
                     ToolBox.ColorScaleHexa(buffer, Filename, 128);
@@ -86,6 +87,8 @@ namespace VS.FileFormats.PRG
                     bytes = tex.GetTexture(0, true).EncodeToPNG();
                     ToolBox.DirExNorCreate(Application.dataPath + "/../Assets/Resources/Textures/Ex/");
                     File.WriteAllBytes(Application.dataPath + "/../Assets/Resources/Textures/Ex/Squaresoft.png", bytes);
+
+                    // palettes at 0x18A74, 16x16 colors, maybe for Square logo
 
                     buffer.BaseStream.Position = 0x46E48 + 0x20;
                     tex.type = TIM.TIM.TIMType.TIM;

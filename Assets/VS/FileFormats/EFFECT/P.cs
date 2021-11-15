@@ -136,7 +136,7 @@ namespace VS.FileFormats.EFFECT
 
 
             // TODO : lot of works to do here
-
+            /*
             chunks = new List<PChunk>();
 
             // Section3
@@ -194,14 +194,18 @@ namespace VS.FileFormats.EFFECT
             {
                 sec4.items[i] = new PChunkItem();
                 int len = Mathf.RoundToInt((sec4.pointers[i + 1] - sec4.pointers[i]) / 2);
-                sec4.items[i].d = new ushort[len];
-                for (int j = 0; j < len; j++)
+                if (len > 0 && len < 500)
                 {
-                    sec4.items[i].d[j] = buffer.ReadUInt16();
-                }
+                    sec4.items[i].d = new ushort[len];
+                    for (int j = 0; j < len; j++)
+                    {
+                        sec4.items[i].d[j] = buffer.ReadUInt16();
+                    }
+
+                } 
             }
             chunks.Add(sec4);
-
+            */
 
             // AKAO Section for the moment i'll crawl all the file to find the magic word AKAO (41 4B 41 4F)
             // AKAO instructions seems to be in an older version and then there is a sample

@@ -429,7 +429,7 @@ namespace VS.FileFormats.MPD
                 if (lenTextureEffectsSection > 0)
                 {
                     long ptrTextureEffectsSection = buffer.BaseStream.Position;
-                    Debug.Log(string.Concat("ptrTextureEffectsSection : ", ptrTextureEffectsSection));
+
                     List<MPDTextureAnimation> texAnims = new List<MPDTextureAnimation>();
                     while (buffer.BaseStream.Position + 20 <= (ptrTextureEffectsSection + lenTextureEffectsSection))
                     {
@@ -639,9 +639,10 @@ namespace VS.FileFormats.MPD
                     enemies[i] = new MPDEnemy();
                     enemies[i].datas = (buffer.ReadBytes(40));
                 }
+
+
                 /* 
 enemies in MAP010.MPD:
-             id
   - datas: 0000 0000 0000 0200 0a00 0000 0400 0602 1020 3f00 001d 0000 0000 0000 0000 0000 0000 0002 0000 0100
   - datas: 0001 0000 0500 0300 0b00 0000 0500 0a03 0120 3f00 001d 0000 0000 0000 0000 4301 0000 3202 0000 0000
   - datas: 0002 0000 0500 0301 0b00 b300 0100 0601 0220 3f00 001d 0000 0000 0000 0000 0000 0000 0002 0000 0000
