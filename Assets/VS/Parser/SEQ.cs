@@ -226,7 +226,7 @@ namespace VS.Parser
 
                             if (i == 0 && k == 0)
                             {
-                                Debug.Log("Anim " + i + " B " + j + " f " + k + " -> Quat : ( " + quat.w + ", " + quat.x + ", " + quat.y + ", " + quat.z + ")");
+                                //Debug.Log("Anim " + i + " B " + j + " f " + k + " -> Quat : ( " + quat.w + ", " + quat.x + ", " + quat.y + ", " + quat.z + ")");
                                 //Debug.Log("Anim " + i + " B " + j + " f " + k + " -> base : ( " + degrot.x + ", " + degrot.y + ", " + degrot.z + ")");
                                 //Debug.Log("Anim " + i + " B " + j + " f " + k + " -> euler : ( " + quat.eulerAngles.x +", "+ quat.eulerAngles.y + ", " + quat.eulerAngles.z + ")");
                             }
@@ -251,9 +251,18 @@ namespace VS.Parser
                         {
                             NVector4 key = scaleKeys[k];
                             int f = (int)key.f;
-                            if (key.x == null) key.x = scaleKeys[i - 1].x;
-                            if (key.y == null) key.y = scaleKeys[i - 1].y;
-                            if (key.z == null) key.z = scaleKeys[i - 1].z;
+                            if (key.x == null)
+                            {
+                                key.x = scaleKeys[k - 1].x;
+                            }
+                            if (key.y == null)
+                            {
+                                key.y = scaleKeys[k - 1].y;
+                            }
+                            if (key.z == null)
+                            {
+                                key.z = scaleKeys[k - 1].z;
+                            }
                             t += f;
                             scale.x += (float)key.x / 64 * f;
                             scale.y += (float)key.y / 64 * f;
@@ -624,10 +633,10 @@ namespace VS.Parser
 
     public class NVector4
     {
-        public int? x;
-        public int? y;
-        public int? z;
-        public int? f;
+        public int? x = null;
+        public int? y = null;
+        public int? z = null;
+        public int? f = null;
         public static NVector4 zero = new NVector4(0, 0, 0, 0);
         public static NVector4 one = new NVector4(1, 1, 1, 1);
 

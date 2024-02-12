@@ -84,7 +84,7 @@ namespace VS.Parser
             // Bones section
             bones = new List<VSBone>();
             for (uint i = 0; i < numBones; i++)
-            {
+            {   
                 VSBone bone = new VSBone();
                 bone.index = i;
                 bone.name = "bone_" + i;
@@ -110,7 +110,7 @@ namespace VS.Parser
                 VSGroup group = new VSGroup();
                 group.boneIndex = buffer.ReadInt16();
                 group.numVertices = buffer.ReadUInt16();
-                if (group.boneIndex != -1)
+                if (group.boneIndex != -1 && group.boneIndex < bones.Count)
                 {
                     group.bone = bones[group.boneIndex];
                 }
