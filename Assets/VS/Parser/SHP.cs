@@ -957,16 +957,16 @@ namespace VS.Parser
                 {
                     List<string> topa = new List<string>();
                     topa.Add("_COM.SEQ");
-                    //topa.Add("_BT1.SEQ");
-                    //topa.Add("_BT2.SEQ");
-                    //topa.Add("_BT3.SEQ");
-                    //topa.Add("_BT4.SEQ");
-                    //topa.Add("_BT5.SEQ");
-                    //topa.Add("_BT6.SEQ");
-                    //topa.Add("_BT7.SEQ");
-                    //topa.Add("_BT8.SEQ");
-                    //topa.Add("_BT9.SEQ");
-                    //topa.Add("_BTA.SEQ");
+                    topa.Add("_BT1.SEQ");
+                    topa.Add("_BT2.SEQ");
+                    topa.Add("_BT3.SEQ");
+                    topa.Add("_BT4.SEQ");
+                    topa.Add("_BT5.SEQ");
+                    topa.Add("_BT6.SEQ");
+                    topa.Add("_BT7.SEQ");
+                    topa.Add("_BT8.SEQ");
+                    topa.Add("_BT9.SEQ");
+                    topa.Add("_BTA.SEQ");
                     hash = file.Split("/"[0]);
                     if (hash[hash.Length - 1].StartsWith(shpId) && file.EndsWith(".SEQ"))
                     {
@@ -974,11 +974,10 @@ namespace VS.Parser
                         {
                             SEQ _seq = new SEQ();
                             _seq.Parse(file);
+                            /*
                             if (!posed || file == shpId + "_COM.SEQ")
                             {
                                 posed = true;
-
-
                                 _seq.FirstPoseModel(shpBase);
 
                                 Mesh baked = new Mesh();
@@ -1003,8 +1002,8 @@ namespace VS.Parser
 
                                 //OBJ shpObj = new OBJ(baked, FileName, mtl);
                                 //shpObj.Write();
-
                             }
+                            */
 
                             AnimationClip[] clips = _seq.BuildAnimationClips(shpBase);
                             AnimatorControllerLayer layer = new AnimatorControllerLayer();

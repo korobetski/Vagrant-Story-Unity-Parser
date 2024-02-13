@@ -640,6 +640,7 @@ public class VSWindow : EditorWindow
         excp.Add("C1"); // Stone
         excp.Add("C2"); // Stone
         excp.Add("C3"); // Stone
+        filename = filename.Substring(0, 2);
 
         SHP parser = new SHP();
         if (!excp.Contains(filename))
